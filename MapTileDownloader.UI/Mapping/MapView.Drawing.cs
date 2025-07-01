@@ -1,0 +1,184 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Avalonia.Input;
+using Mapsui;
+using Mapsui.Layers;
+using Mapsui.Nts;
+using Mapsui.Styles;
+using Mapsui.Extensions;
+using NetTopologySuite.Geometries;
+using Mapsui.UI.Avalonia.Extensions;
+using Avalonia.Interactivity;
+using BruTile.Predefined;
+using BruTile.Web;
+using Mapsui.Tiling.Layers;
+using SkiaSharp;
+
+namespace MapTileDownloader.UI.Mapping;
+
+public partial class MapView
+{
+    private MemoryLayer drawingLayer;
+    private bool isDrawing = false;
+    private Avalonia.Point mouseDownPoint;
+    private MemoryLayer mousePositionLayer;
+    private List<MPoint> vertices = new List<MPoint>();
+    public void StartDrawing()
+    {
+        vertices.Clear();
+        isDrawing = true;
+    }
+
+    private void EndDrawing()
+    {
+        isDrawing = false;
+        vertices.Clear();
+        mousePositionLayer.Features = null;
+    }
+
+    private void InitializeDrawing()
+    {
+        drawingLayer = new MemoryLayer
+        {
+            Name = nameof(drawingLayer),
+            Style = new VectorStyle  // 直接设置默认样式
+            {
+                Fill = new Brush(Color.FromArgb(100, 255, 0, 0)),
+                Outline = new Pen(Color.Red, 2),
+                Line = new Pen(Color.Red, 2),
+            }
+        };
+        Map.Layers.Add(drawingLayer);
+
+        mousePositionLayer = new MemoryLayer
+        {
+            Name = nameof(mousePositionLayer),
+            Style = new SymbolStyle  // 直接设置默认样式
+            {
+                SymbolType = SymbolType.Rectangle,
+                Fill = new Brush(Color.White),
+                Outline = new Pen(Color.Red, 4),
+                SymbolScale = 0.2,
+            },
+        };
+        Map.Layers.Add(mousePositionLayer);
+
+        // 绑定鼠标事件
+        PointerPressed += OnPointerPressed;
+        PointerMoved += OnPointerMoved;
+        PointerReleased += OnPointerReleased;
+    }
+
+    private static Cursor NoneCursor = new Cursor(StandardCursorType.None);
+
+    private static Cursor DefaultCursor = Cursor.Default;
+
+    private void OnPointerMoved(object sender, PointerEventArgs e)
+    {
+        Cursor = isDrawing ? NoneCursor : DefaultCursor;
+        if (!isDrawing)
+        {
+            return;
+        }
+
+        var screenPosition = e.GetPosition(this).ToMapsui();
+        var worldPosition = Map.Navigator.Viewport.ScreenToWorld(screenPosition);
+
+        if (vertices.Count > 0)
+        {
+            // 实时更新最后一个点（跟随鼠标）
+            vertices[^1] = worldPosition;
+            UpdateDrawing();
+        }
+        mousePositionLayer.Features = [new PointFeature(worldPosition)];
+        Refresh();
+    }
+
+    private void OnPointerPressed(object sender, PointerPressedEventArgs e)
+    {
+        if (!isDrawing)
+        {
+            return;
+        }
+
+        mouseDownPoint = e.GetPosition(this);
+        var properties = e.GetCurrentPoint(this).Properties;
+        if (properties.PointerUpdateKind == PointerUpdateKind.RightButtonPressed)
+        {
+            Withdraw();
+        }
+        else if (properties.PointerUpdateKind == PointerUpdateKind.LeftButtonPressed)
+        {
+            if (e.ClickCount == 2)
+            {
+                //最后一个点是双击的第一次添加的，不需要
+                vertices.RemoveAt(vertices.Count - 1);
+                UpdateDrawing();
+                EndDrawing();
+                return;
+            }
+            var screenPosition = e.GetPosition(this).ToMapsui();
+            var worldPosition = Map.Navigator.Viewport.ScreenToWorld(screenPosition);
+
+            vertices.Add(worldPosition);
+            if (vertices.Count == 1)
+            {
+                vertices.Add(worldPosition);
+            }
+            UpdateDrawing();
+        }
+    }
+
+    private void OnPointerReleased(object sender, PointerReleasedEventArgs e)
+    {
+        if (!isDrawing)
+        {
+            return;
+        }
+        //拖动地图，不进行落点
+        if (e.InitialPressMouseButton == MouseButton.Left)
+        {
+            var point = e.GetPosition(this);
+            if (Math.Sqrt(Math.Pow(point.X - mouseDownPoint.X, 2) + Math.Pow(point.Y - mouseDownPoint.Y, 2)) > 10)
+            {
+                Withdraw();
+            }
+        }
+    }
+
+    private void UpdateDrawing()
+    {
+        if (vertices.Count < 2)
+        {
+            drawingLayer.Features = null;
+        }
+        else
+        {
+            Geometry geometry = null;
+            if (vertices.Count < 3)
+            {
+                geometry = new LineString([.. vertices.Select(p => new Coordinate(p.X, p.Y))]);
+            }
+            else
+            {
+                geometry = new Polygon(vertices.ToClosedLinearRing());
+            }
+            drawingLayer.Features = [new GeometryFeature(geometry)];
+        }
+        Refresh();
+    }
+
+    private void Withdraw()
+    {
+        if (vertices.Count > 2)
+        {
+            vertices.RemoveAt(vertices.Count - 1);
+        }
+        else
+        {
+            vertices.Clear();
+        }
+        UpdateDrawing();
+    }
+}
