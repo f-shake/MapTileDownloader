@@ -6,15 +6,19 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationManifest>app.manifest</ApplicationManifest>    
+    <ApplicationIcon>../MapTileDownloader.UI/Assets/icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" >
     <PublishAot>true</PublishAot>
     <TrimMode>partial</TrimMode>
-    <ApplicationIcon>../MapTileDownloader.UI/Assets/icon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageReference Include="Serilog.Sinks.File" Version="6.0.0" />
+    <PackageReference Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" Publish="True" />
   </ItemGroup>
 
   <ItemGroup>

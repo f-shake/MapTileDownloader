@@ -13,7 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "#", "#", "{9FA3D6BD-1EC1-3B
 	ProjectSection(SolutionItems) = preProject
 		build_linux.ps1 = build_linux.ps1
 		build_windows.ps1 = build_windows.ps1
-		Directory.Build.props = Directory.Build.props
 		README.md = README.md
 	EndProjectSection
 EndProject

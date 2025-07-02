@@ -5,19 +5,29 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    xmlns:v="using:MapTileDownloader.UI.Views"
+    xmlns:vm="using:MapTileDownloader.UI.ViewModels"
     d:DesignHeight="600"
     d:DesignWidth="800"
     x:DataType="vm:MainViewModel"
     mc:Ignorable="d">
 
-    <UserControl.Styles>
-        <Style Selector="ListBox">
-            <Setter Property="Background" Value="Transparent" />
-        </Style>
-    </UserControl.Styles>
-
-    <Grid Margin="8">
-        <map:MapView x:Name="map" />
+    <Grid ColumnDefinitions="300,Auto,*">
+        <map:MapView
+            x:Name="map"
+            Grid.Column="2"
+            Margin="-8,0,0,0" />
+        <GridSplitter
+            Grid.Column="1"
+            Width="8"
+            Background="Transparent" />
+        <Grid>
+            <Expander
+                HorizontalAlignment="Stretch"
+                BorderThickness="0,8"
+                Header="数据源配置">
+                <v:DataSourcePanel />
+            </Expander>
+        </Grid>
     </Grid>
 </UserControl>

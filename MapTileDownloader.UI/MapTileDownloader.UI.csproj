@@ -3,9 +3,13 @@
     <TargetFramework>net8.0</TargetFramework>
     <LangVersion>latest</LangVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
-    <PublishAot>true</PublishAot>
   </PropertyGroup>
-
+  
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" >
+    <PublishAot>true</PublishAot>
+    <TrimMode>partial</TrimMode>
+  </PropertyGroup>
+  
   <ItemGroup>
     <AvaloniaResource Include="Assets\**" />
   </ItemGroup>
@@ -21,9 +25,16 @@
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageReference Include="FzLib.Avalonia" Version="2.2.5" />
-  </ItemGroup>
+    <PackageReference Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" Publish="True" />  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MapTileDownloader\MapTileDownloader.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Views\DataSourcePanel.axaml.cs">
+      <DependentUpon>DataSourceView.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 </Project>
