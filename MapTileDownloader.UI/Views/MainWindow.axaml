@@ -7,6 +7,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:MapTileDownloader.UI.Views"
     xmlns:vm="using:MapTileDownloader.UI.ViewModels"
+    Title="地图瓦片下载器"
     d:DesignHeight="450"
     d:DesignWidth="800"
     Icon="/Assets/icon.ico"

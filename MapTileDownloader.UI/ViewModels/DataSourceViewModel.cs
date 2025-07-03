@@ -33,7 +33,22 @@ public partial class DataSourceViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<TileSource> sources;
 
+    public event EventHandler SelectedSourceChanged;
+    
     [RelayCommand]
+
+    partial void OnSelectedSourceChanged(TileSource value)
+    {
+        CallSelectedSourceChanged();
+    }
+
+    [RelayCommand]
+    private void CallSelectedSourceChanged()
+    {
+        SelectedSourceChanged?.Invoke(this,EventArgs.Empty);
+    }
+    [RelayCommand]
+
     private void AddSource()
     {
         Sources.Add(new TileSource() { Name = "新数据源" });

@@ -2,13 +2,15 @@
     x:Class="MapTileDownloader.UI.Views.DataSourcePanel"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
     d:DesignHeight="600"
-    d:DesignWidth="800"
+    d:DesignWidth="300"
     x:DataType="vm:DataSourceViewModel"
     mc:Ignorable="d">
 
@@ -31,7 +33,38 @@
                 Classes="Icon"
                 Command="{Binding RemoveSourceCommand}"
                 Content="{StaticResource Remove}"
-                IsEnabled="False" />
+                IsEnabled="{Binding !!SelectedSource}" />
         </Grid>
+        <c:StackFormItemGroup IsEnabled="{Binding !!SelectedSource}">
+            <c:FormItem Label="名称：">
+                <TextBox Text="{Binding SelectedSource.Name}" />
+            </c:FormItem>
+            <c:FormItem Label="地址：">
+                <TextBox
+                    Text="{Binding SelectedSource.Url}"
+                    TextWrapping="Wrap" />
+            </c:FormItem>
+            <c:FormItem Label="格式：">
+                <ComboBox
+                    HorizontalAlignment="Stretch"
+                    SelectedItem="{Binding SelectedSource.Format}">
+                    <sys:String>JPG</sys:String>
+                    <sys:String>PNG</sys:String>
+                    <sys:String>WebP</sys:String>
+                </ComboBox>
+            </c:FormItem>
+            <c:FormItem Label="Host：">
+                <TextBox Text="{Binding SelectedSource.Host}" />
+            </c:FormItem>
+            <c:FormItem Label="Referer：">
+                <TextBox Text="{Binding SelectedSource.Referer}" />
+            </c:FormItem>
+            <c:FormItem Label="Agent：">
+                <TextBox Text="{Binding SelectedSource.UserAgent}" />
+            </c:FormItem>
+        </c:StackFormItemGroup>
+        <Button
+            Command="{Binding CallSelectedSourceChangedCommand}"
+            Content="刷新地图" />
     </StackPanel>
 </UserControl>

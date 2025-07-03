@@ -11,31 +11,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Avalonia;
+using MapTileDownloader.Models;
 
 namespace MapTileDownloader.UI.Mapping
 {
     public partial class MapView : MapControl
     {
+        public MapView()
+        {
+            InitializeMap();
+        }
+
+        private void InitializeMap()
+        {
+            Map.Layers.Add(new MemoryLayer());
+            InitializeDrawing();
+        }
 
         protected override void OnLoaded(RoutedEventArgs e)
         {
             base.OnLoaded(e);
-
-            InitializeMap();
         }
-        private void InitializeMap()
-        {           
-            // 加载地图瓦片（示例：自定义瓦片源）
-            var tileSource = new HttpTileSource(
-                new GlobalSphericalMercator(0, 18),
-                "https://s.fshake.com/map/google/{x}/{y}/{z}"
+
+        public void LoadTileMaps(TileSource tileSource)
+        {
+            if (Map.Layers.Count > 0)
+            {
+                Map.Layers.Remove(Map.Layers[0]);
+            }
+
+            if (tileSource == null || string.IsNullOrEmpty(tileSource.Url))
+            {
+                Map.Layers.Insert(0, new MemoryLayer());
+                return;
+            }
+
+            var s = new HttpTileSource(
+                new GlobalSphericalMercator(0, 20),
+                tileSource.Url
             );
-            Map.Layers.Add(new TileLayer(tileSource));
-
-            InitializeDrawing();
-
-            StartDrawing();
+            Map.Layers.Insert(0, new TileLayer(s));
         }
-
     }
 }

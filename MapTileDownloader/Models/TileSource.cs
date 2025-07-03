@@ -1,12 +1,28 @@
+using CommunityToolkit.Mvvm.ComponentModel;
+
 namespace MapTileDownloader.Models;
 
-public class TileSource
+// 改为分部类 + 继承 ObservableObject
+public partial class TileSource : ObservableObject
 {
-    public string Name { get; set; }
-    public string Url { get; set; }
-    public string UserAgent { get; set; }
-    public string Host { get; set; }
-    public string Referer { get; set; }
-    public string Origin { get; set; }
-    public string Format { get; set; }
+    [ObservableProperty]
+    private string name;
+
+    [ObservableProperty]
+    private string url;
+
+    [ObservableProperty]
+    private string userAgent;
+
+    [ObservableProperty]
+    private string host;
+
+    [ObservableProperty]
+    private string referer;
+
+    [ObservableProperty]
+    private string origin;
+
+    [ObservableProperty]
+    private string format = "JPG";
 }

@@ -22,6 +22,5 @@ public partial class DataSourcePanel : UserControl
     public DataSourcePanel()
     {
         InitializeComponent();
-        DataContext = new DataSourceViewModel();
     }
 }

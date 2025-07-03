@@ -22,12 +22,26 @@
             Width="8"
             Background="Transparent" />
         <Grid>
-            <Expander
-                HorizontalAlignment="Stretch"
-                BorderThickness="0,8"
-                Header="数据源配置">
-                <v:DataSourcePanel />
-            </Expander>
+            <TabControl TabStripPlacement="Top">
+                <TabControl.Styles>
+                    <Style Selector="TabItem">
+                        <Setter Property="MinHeight" Value="36" />
+                        <Setter Property="FontSize" Value="14" />
+                        <Setter Property="Padding" Value="12,6" />
+                        <Style Selector="^[TabStripPlacement=Top] /template/ Border#PART_SelectedPipe, ^[TabStripPlacement=Bottom] /template/ Border#PART_SelectedPipe">
+                            <Setter Property="Margin" Value="0" />
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                            <Setter Property="VerticalAlignment" Value="Bottom" />
+                        </Style>
+                    </Style>
+                </TabControl.Styles>
+                <TabItem Header="数据源">
+                    <v:DataSourcePanel DataContext="{Binding DataSourceViewModel}" />
+                </TabItem>
+                <TabItem Header="下载" />
+                <TabItem Header="拼接" />
+                <TabItem Header="HTTP服务" />
+            </TabControl>
         </Grid>
     </Grid>
 </UserControl>
