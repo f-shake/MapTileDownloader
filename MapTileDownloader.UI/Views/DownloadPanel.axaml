@@ -1,0 +1,25 @@
+<UserControl
+    x:Class="MapTileDownloader.UI.Views.DownloadPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
+    xmlns:map="using:MapTileDownloader.UI.Mapping"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    x:DataType="vm:DownloadViewModel"
+    mc:Ignorable="d">
+    <StackPanel
+        Orientation="Vertical"
+        Spacing="8">
+        <HeaderedContentControl
+            Classes="GroupBox"
+            Header="下载范围">
+            <Button Content="在地图中选择" Command="" />
+        </HeaderedContentControl>
+    </StackPanel>
+</UserControl>

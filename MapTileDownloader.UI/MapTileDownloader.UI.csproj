@@ -5,7 +5,7 @@
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
   </PropertyGroup>
   
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'" >
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishAot>true</PublishAot>
     <TrimMode>partial</TrimMode>
   </PropertyGroup>
@@ -15,22 +15,25 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="BinToss.GroupBox.Avalonia" Version="1.0.0" />
-    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
-    <PackageReference Include="Mapsui.Avalonia" Version="4.1.9" />
-    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-    <PackageReference Include="FzLib.Avalonia" Version="2.2.5" />
-    <PackageReference Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" Publish="True" />  </ItemGroup>
+    <PackageReference Include="Avalonia" />
+    <PackageReference Include="Avalonia.Themes.Fluent" />
+    <PackageReference Include="Avalonia.Fonts.Inter" />
+    <PackageReference Include="Avalonia.Controls.DataGrid" />
+    <PackageReference Include="BinToss.GroupBox.Avalonia" />
+    <PackageReference Include="CommunityToolkit.Mvvm" />
+    <PackageReference Include="Mapsui.Avalonia" />
+    <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" />
+    <PackageReference Include="FzLib.Avalonia" />
+    <PackageReference Include="HotAvalonia" />  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\MapTileDownloader\MapTileDownloader.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\DownloadPanel.axaml.cs">
+      <DependentUpon>DownloadPanel.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\DataSourcePanel.axaml.cs">
       <DependentUpon>DataSourceView.axaml</DependentUpon>
       <SubType>Code</SubType>

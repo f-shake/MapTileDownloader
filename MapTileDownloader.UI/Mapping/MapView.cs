@@ -49,8 +49,21 @@ namespace MapTileDownloader.UI.Mapping
 
             var s = new HttpTileSource(
                 new GlobalSphericalMercator(0, 20),
-                tileSource.Url
+                tileSource.Url,
+                userAgent:string.IsNullOrWhiteSpace(tileSource.UserAgent)?null:tileSource.UserAgent
             );
+            if (!string.IsNullOrWhiteSpace(tileSource.Host))
+            {
+                s.AddHeader("Host", tileSource.Host);
+            }
+            if (!string.IsNullOrWhiteSpace(tileSource.Origin))
+            {
+                s.AddHeader("Origin", tileSource.Origin);
+            }
+            if (!string.IsNullOrWhiteSpace(tileSource.Referer))
+            {
+                s.AddHeader("Referer", tileSource.Referer);
+            }
             Map.Layers.Insert(0, new TileLayer(s));
         }
     }

@@ -35,16 +35,19 @@
                 Content="{StaticResource Remove}"
                 IsEnabled="{Binding !!SelectedSource}" />
         </Grid>
-        <c:StackFormItemGroup IsEnabled="{Binding !!SelectedSource}">
-            <c:FormItem Label="名称：">
+        <StackPanel
+            IsEnabled="{Binding !!SelectedSource}"
+            Orientation="Vertical"
+            Spacing="16">
+            <c:FormItem Header="名称">
                 <TextBox Text="{Binding SelectedSource.Name}" />
             </c:FormItem>
-            <c:FormItem Label="地址：">
+            <c:FormItem Header="地址">
                 <TextBox
                     Text="{Binding SelectedSource.Url}"
                     TextWrapping="Wrap" />
             </c:FormItem>
-            <c:FormItem Label="格式：">
+            <c:FormItem Header="格式">
                 <ComboBox
                     HorizontalAlignment="Stretch"
                     SelectedItem="{Binding SelectedSource.Format}">
@@ -53,16 +56,19 @@
                     <sys:String>WebP</sys:String>
                 </ComboBox>
             </c:FormItem>
-            <c:FormItem Label="Host：">
+            <c:FormItem Header="Host">
                 <TextBox Text="{Binding SelectedSource.Host}" />
             </c:FormItem>
-            <c:FormItem Label="Referer：">
+            <c:FormItem Header="Referer">
                 <TextBox Text="{Binding SelectedSource.Referer}" />
             </c:FormItem>
-            <c:FormItem Label="Agent：">
+            <c:FormItem Header="Origin">
+                <TextBox Text="{Binding SelectedSource.Referer}" />
+            </c:FormItem>
+            <c:FormItem Header="User-Agent">
                 <TextBox Text="{Binding SelectedSource.UserAgent}" />
             </c:FormItem>
-        </c:StackFormItemGroup>
+        </StackPanel>
         <Button
             Command="{Binding CallSelectedSourceChangedCommand}"
             Content="刷新地图" />

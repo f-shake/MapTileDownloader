@@ -15,7 +15,6 @@ using MapTileDownloader.UI.Views;
 using Mapsui;
 
 namespace MapTileDownloader.UI.ViewModels;
-
 public partial class DataSourceViewModel : ViewModelBase
 {
     public DataSourceViewModel()

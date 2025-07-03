@@ -38,7 +38,9 @@
                 <TabItem Header="数据源">
                     <v:DataSourcePanel DataContext="{Binding DataSourceViewModel}" />
                 </TabItem>
-                <TabItem Header="下载" />
+                <TabItem Header="下载">
+                    <v:DownloadPanel DataContext="{Binding DownloadViewModel}" />
+                </TabItem>
                 <TabItem Header="拼接" />
                 <TabItem Header="HTTP服务" />
             </TabControl>

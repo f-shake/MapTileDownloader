@@ -1,6 +1,19 @@
 <Project>
-  <PropertyGroup>
-    <Nullable>disable</Nullable>
-    <AvaloniaVersion>11.2.6</AvaloniaVersion>
-  </PropertyGroup>
+    <PropertyGroup>
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageVersion Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+        <PackageVersion Include="Avalonia" Version="$(AvaloniaVersion)" />
+        <PackageVersion Include="Avalonia.Themes.Fluent" Version="$(AvaloniaVersion)" />
+        <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
+        <PackageVersion Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
+        <PackageVersion Include="BinToss.GroupBox.Avalonia" Version="1.0.0" />
+        <PackageVersion Include="Mapsui.Avalonia" Version="4.1.9" />
+        <PackageVersion Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+        <PackageVersion Include="FzLib.Avalonia" Version="$(FzLibVersion)" />
+        <PackageVersion Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" Publish="True" />
+        <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+        <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
+    </ItemGroup>
 </Project>
