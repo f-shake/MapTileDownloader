@@ -17,6 +17,11 @@ using Mapsui.Tiling.Layers;
 using SkiaSharp;
 using System.Threading;
 using System.Diagnostics;
+using Avalonia.Media;
+using Brush = Mapsui.Styles.Brush;
+using Color = Mapsui.Styles.Color;
+using Geometry = NetTopologySuite.Geometries.Geometry;
+using Pen = Mapsui.Styles.Pen;
 
 namespace MapTileDownloader.UI.Mapping;
 
@@ -29,16 +34,35 @@ public partial class MapView
     private List<MPoint> vertices = new List<MPoint>();
     private TaskCompletionSource<Coordinate[]> tcs;
     private CancellationToken cancellationToken;
+
+    public void DisplayPolygon(Coordinate[] coordinates)
+    {
+        if (coordinates == null || coordinates.Length < 3)
+        {
+            drawingLayer.Features = null;
+            Refresh();
+            return;
+        }
+
+        var points = coordinates.Select(c => new MPoint(c.X, c.Y)).ToList();
+        var polygon = new Polygon(points.ToClosedLinearRing());
+        var feature = new GeometryFeature(polygon);
+        drawingLayer.Features = [feature];
+        Refresh();
+    }
+    
     public Task<Coordinate[]> DrawAsync(CancellationToken cancellationToken = default)
     {
         if (cancellationToken != default)
         {
             cancellationToken.Register(CancelDrawing);
         }
+
         tcs = new TaskCompletionSource<Coordinate[]>();
         StartDrawing();
         return tcs.Task;
     }
+
     private void StartDrawing()
     {
         vertices.Clear();
@@ -66,11 +90,12 @@ public partial class MapView
 
     public Coordinate[] FinishDrawing()
     {
-        if(vertices.Count<3)
+        if (vertices.Count < 3)
         {
             CancelDrawing();
             return null;
         }
+
         EndDrawing();
         Refresh();
         Debug.Assert(drawingLayer.Features.Count() == 1);
@@ -86,6 +111,7 @@ public partial class MapView
             tcs.SetResult(results);
             tcs = null;
         }
+
         return results;
     }
 
@@ -94,7 +120,7 @@ public partial class MapView
         drawingLayer = new MemoryLayer
         {
             Name = nameof(drawingLayer),
-            Style = new VectorStyle  // 直接设置默认样式
+            Style = new VectorStyle // 直接设置默认样式
             {
                 Fill = new Brush(Color.FromArgb(100, 255, 0, 0)),
                 Outline = new Pen(Color.Red, 2),
@@ -106,7 +132,7 @@ public partial class MapView
         mousePositionLayer = new MemoryLayer
         {
             Name = nameof(mousePositionLayer),
-            Style = new SymbolStyle  // 直接设置默认样式
+            Style = new SymbolStyle // 直接设置默认样式
             {
                 SymbolType = SymbolType.Rectangle,
                 Fill = new Brush(Color.White),
@@ -143,6 +169,7 @@ public partial class MapView
             vertices[^1] = worldPosition;
             UpdateDrawing();
         }
+
         mousePositionLayer.Features = [new PointFeature(worldPosition)];
         Refresh();
     }
@@ -170,6 +197,7 @@ public partial class MapView
                 FinishDrawing();
                 return;
             }
+
             var screenPosition = e.GetPosition(this).ToMapsui();
             var worldPosition = Map.Navigator.Viewport.ScreenToWorld(screenPosition);
 
@@ -178,6 +206,7 @@ public partial class MapView
             {
                 vertices.Add(worldPosition);
             }
+
             UpdateDrawing();
         }
     }
@@ -188,6 +217,7 @@ public partial class MapView
         {
             return;
         }
+
         //拖动地图，不进行落点
         if (e.InitialPressMouseButton == MouseButton.Left)
         {
@@ -216,8 +246,10 @@ public partial class MapView
             {
                 geometry = new Polygon(vertices.ToClosedLinearRing());
             }
+
             drawingLayer.Features = [new GeometryFeature(geometry)];
         }
+
         Refresh();
     }
 
@@ -231,6 +263,7 @@ public partial class MapView
         {
             vertices.Clear();
         }
+
         UpdateDrawing();
     }
 }

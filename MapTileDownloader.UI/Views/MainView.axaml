@@ -36,10 +36,14 @@
                     </Style>
                 </TabControl.Styles>
                 <TabItem Header="数据源">
-                    <v:DataSourcePanel DataContext="{Binding DataSourceViewModel}" />
+                    <v:DataSourcePanel
+                        Margin="0,8"
+                        DataContext="{Binding DataSourceViewModel}" />
                 </TabItem>
                 <TabItem Header="下载">
-                    <v:DownloadPanel DataContext="{Binding DownloadViewModel}" />
+                    <v:DownloadPanel
+                        Margin="0,8"
+                        DataContext="{Binding DownloadViewModel}" />
                 </TabItem>
                 <TabItem Header="拼接" />
                 <TabItem Header="HTTP服务" />

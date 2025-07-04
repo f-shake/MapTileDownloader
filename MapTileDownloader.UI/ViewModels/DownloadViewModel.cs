@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
@@ -14,8 +15,15 @@ public partial class DownloadViewModel : ViewModelBase
     public DownloadViewModel()
     {
         Coordinates = Configs.Instance.DownloadArea;
-        //TODO：还应在地图上显示
+        MinLevel = Configs.Instance.MinLevel;
+        MaxLevel = Configs.Instance.MaxLevel;
+        DownloadDir = Configs.Instance.DownloadDir ?? Path.Combine(AppContext.BaseDirectory, "tiles");
+        if (Coordinates != null)
+        {
+            SendMessage(new DisplayPolygonOnMapMessage(Coordinates));
+        }
     }
+
     [ObservableProperty]
     private string selectionMessage;
 
@@ -25,16 +33,26 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private Coordinate[] coordinates;
 
+    [ObservableProperty]
+    private int minLevel;
+
+    [ObservableProperty]
+    private int maxLevel;
+
+    [ObservableProperty]
+    private string downloadDir;
+
     partial void OnCoordinatesChanged(Coordinate[] value)
     {
-        if(value==null)
+        if (value == null)
         {
             SelectionMessage = "还未选择区域";
         }
         else
         {
-            SelectionMessage=$"已选择区域（{value.Length}边形）";
+            SelectionMessage = $"已选择区域（{value.Length}边形）";
         }
+
         Configs.Instance.DownloadArea = value;
         Configs.Instance.Save();
     }
@@ -50,7 +68,6 @@ public partial class DownloadViewModel : ViewModelBase
         }
         catch (OperationCanceledException)
         {
-
         }
         finally
         {

@@ -36,14 +36,11 @@ public partial class MainView : UserControl
 
     private void RegisterMessages()
     {
-        WeakReferenceMessenger.Default.Register<UpdateTileSourceMessage>(this, (o, m) =>
-        {
-            map.LoadTileMaps(m.TileSource);
-        });
-        WeakReferenceMessenger.Default.Register<SelectOnMapMessage>(this, (o, m) =>
-        {
-            m.Task= map.DrawAsync(m.CancellationToken);
-        });
+        WeakReferenceMessenger.Default.Register<UpdateTileSourceMessage>(this,
+            (o, m) => { map.LoadTileMaps(m.TileSource); });
+        WeakReferenceMessenger.Default.Register<SelectOnMapMessage>(this,
+            (o, m) => { m.Task = map.DrawAsync(m.CancellationToken); });
+        WeakReferenceMessenger.Default.Register<DisplayPolygonOnMapMessage>(this,
+            (o, m) => { map.DisplayPolygon(m.Coordinates); });
     }
-
 }

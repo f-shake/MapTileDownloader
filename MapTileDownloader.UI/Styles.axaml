@@ -19,15 +19,9 @@
     <Style Selector="HeaderedContentControl.GroupBox">
         <Setter Property="Template">
             <ControlTemplate>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
+                <Grid
+                    ColumnDefinitions="Auto,*"
+                    RowDefinitions="Auto,*">
 
                     <!--  Header  -->
                     <Border

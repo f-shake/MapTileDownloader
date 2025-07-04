@@ -13,35 +13,93 @@
     d:DesignWidth="300"
     x:DataType="vm:DownloadViewModel"
     mc:Ignorable="d">
-    <StackPanel
-        Orientation="Vertical"
-        Spacing="8">
-        <HeaderedContentControl
-            Classes="GroupBox"
-            Header="下载范围">
+    <Grid RowDefinitions="*,16,Auto">
+        <ScrollViewer Padding="0,0,8,0">
             <StackPanel
                 Orientation="Vertical"
                 Spacing="8">
-                <Grid ColumnDefinitions="*,8,*">
-                    <Button
-                        Command="{Binding SelectOnMapCommand}"
-                        Content="在地图中选择" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding SelectOnMapCancelCommand}"
-                        Content="取消" />
-                </Grid>
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    Text="{Binding SelectionMessage}" />
-                <Grid ColumnDefinitions="*,8,*">
-                    <Button Content="导入" />
-                    <Button
-                        Grid.Column="2"
-                        Content="导出"
-                        IsEnabled="{Binding !!Coordinates}" />
-                </Grid>
+                <HeaderedContentControl
+                    x:Name="grp1"
+                    Classes="GroupBox"
+                    Header="下载范围">
+                    <StackPanel
+                        Orientation="Vertical"
+                        Spacing="8">
+                        <Grid ColumnDefinitions="*,8,*">
+                            <Button
+                                Command="{Binding SelectOnMapCommand}"
+                                Content="在地图中选择" />
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding SelectOnMapCancelCommand}"
+                                Content="取消" />
+                        </Grid>
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Text="{Binding SelectionMessage}" />
+                        <Grid ColumnDefinitions="*,8,*">
+                            <Button Content="导入" />
+                            <Button
+                                Grid.Column="2"
+                                Content="导出"
+                                IsEnabled="{Binding !!Coordinates}" />
+                        </Grid>
+                    </StackPanel>
+                </HeaderedContentControl>
+
+                <!--  由于TextBox的不知什么原因，下面这个GroupBox的宽度有问题，所以强制绑定到上面  -->
+                <HeaderedContentControl
+                    Width="{Binding #grp1.Bounds.Width}"
+                    Classes="GroupBox"
+                    Header="下载选项">
+                    <StackPanel
+                        Orientation="Vertical"
+                        Spacing="8">
+                        <c:FormItem Header="{Binding MinLevel, StringFormat={}最小级别 ({0})}">
+                            <Slider
+                                x:Name="sldMin"
+                                IsSnapToTickEnabled="True"
+                                Maximum="{Binding MaxLevel}"
+                                Minimum="0"
+                                TickFrequency="1"
+                                TickPlacement="BottomRight"
+                                ToolTip.Tip="{Binding MinLevel}"
+                                Value="{Binding MinLevel}" />
+                        </c:FormItem>
+                        <c:FormItem Header="{Binding MaxLevel, StringFormat={}最大级别 ({0})}">
+                            <Slider
+                                x:Name="sldMax"
+                                IsSnapToTickEnabled="True"
+                                Maximum="20"
+                                Minimum="{Binding MinLevel}"
+                                TickFrequency="1"
+                                TickPlacement="BottomRight"
+                                ToolTip.Tip="{Binding MaxLevel}"
+                                Value="{Binding MaxLevel}" />
+                        </c:FormItem>
+                        <c:FormItem Header="下载目录">
+                            <TextBox
+                                MaxLines="5"
+                                Text="{Binding DownloadDir}"
+                                TextWrapping="Wrap" />
+                        </c:FormItem>
+                    </StackPanel>
+                </HeaderedContentControl>
             </StackPanel>
-        </HeaderedContentControl>
-    </StackPanel>
+        </ScrollViewer>
+        <StackPanel
+            Grid.Row="2"
+            Orientation="Vertical"
+            Spacing="8">
+            <ProgressBar />
+            <TextBlock />
+            <UniformGrid
+                ColumnSpacing="8"
+                Columns="3">
+                <Button Content="初始化" />
+                <Button Content="开始下载" />
+                <Button Content="停止" />
+            </UniformGrid>
+        </StackPanel>
+    </Grid>
 </UserControl>

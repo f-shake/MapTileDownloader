@@ -46,7 +46,10 @@ public class Configs
         }
     };
 
-    public Coordinate[] DownloadArea { get; set; } 
+    public Coordinate[] DownloadArea { get; set; }
+    public int MinLevel { get; set; } = 0;
+    public int MaxLevel { get; set; } = 20;
+    public string DownloadDir { get; set; } 
 
     public void Save()
     {
