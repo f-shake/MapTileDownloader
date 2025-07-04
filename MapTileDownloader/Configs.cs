@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MapTileDownloader.Models;
+using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader;
 
@@ -7,15 +8,6 @@ public class Configs
 {
     public const string CONFIG_FILE = "config.json";
     private static Configs instance;
-
-    public List<TileSource> TileSources { get; set; } = new List<TileSource>
-    {
-        new TileSource
-        {
-            Name = "ESRI影像",
-            Url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        }
-    };
 
     public static Configs Instance
     {
@@ -44,4 +36,22 @@ public class Configs
             return instance;
         }
     }
+
+    public List<TileSource> TileSources { get; set; } = new List<TileSource>
+    {
+        new TileSource
+        {
+            Name = "ESRI影像",
+            Url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+        }
+    };
+
+    public Coordinate[] DownloadArea { get; set; } 
+
+    public void Save()
+    {
+        var json = JsonSerializer.Serialize(this, MapTileDownloaderJsonContext.Config.Configs);
+        File.WriteAllText(CONFIG_FILE, json);
+    }
 }
+

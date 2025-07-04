@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Avalonia.Input;
 using Mapsui;
 using Mapsui.Layers;
@@ -14,6 +15,8 @@ using BruTile.Predefined;
 using BruTile.Web;
 using Mapsui.Tiling.Layers;
 using SkiaSharp;
+using System.Threading;
+using System.Diagnostics;
 
 namespace MapTileDownloader.UI.Mapping;
 
@@ -24,10 +27,34 @@ public partial class MapView
     private Avalonia.Point mouseDownPoint;
     private MemoryLayer mousePositionLayer;
     private List<MPoint> vertices = new List<MPoint>();
-    public void StartDrawing()
+    private TaskCompletionSource<Coordinate[]> tcs;
+    private CancellationToken cancellationToken;
+    public Task<Coordinate[]> DrawAsync(CancellationToken cancellationToken = default)
+    {
+        if (cancellationToken != default)
+        {
+            cancellationToken.Register(CancelDrawing);
+        }
+        tcs = new TaskCompletionSource<Coordinate[]>();
+        StartDrawing();
+        return tcs.Task;
+    }
+    private void StartDrawing()
     {
         vertices.Clear();
         isDrawing = true;
+    }
+
+    private void CancelDrawing()
+    {
+        EndDrawing();
+        drawingLayer.Features = null;
+        Refresh();
+        if (tcs != null)
+        {
+            tcs.SetException(new OperationCanceledException("取消了绘制"));
+            tcs = null;
+        }
     }
 
     private void EndDrawing()
@@ -35,6 +62,31 @@ public partial class MapView
         isDrawing = false;
         vertices.Clear();
         mousePositionLayer.Features = null;
+    }
+
+    public Coordinate[] FinishDrawing()
+    {
+        if(vertices.Count<3)
+        {
+            CancelDrawing();
+            return null;
+        }
+        EndDrawing();
+        Refresh();
+        Debug.Assert(drawingLayer.Features.Count() == 1);
+        var feature = drawingLayer.Features.Single();
+        Debug.Assert(feature is GeometryFeature);
+        var geometry = (feature as GeometryFeature).Geometry;
+        Debug.Assert(geometry is Polygon);
+        var polygon = geometry as Polygon;
+        var results = polygon.Shell.Coordinates;
+        Debug.Assert(results is { Length: >= 3 });
+        if (tcs != null)
+        {
+            tcs.SetResult(results);
+            tcs = null;
+        }
+        return results;
     }
 
     private void InitializeDrawing()
@@ -115,7 +167,7 @@ public partial class MapView
                 //最后一个点是双击的第一次添加的，不需要
                 vertices.RemoveAt(vertices.Count - 1);
                 UpdateDrawing();
-                EndDrawing();
+                FinishDrawing();
                 return;
             }
             var screenPosition = e.GetPosition(this).ToMapsui();

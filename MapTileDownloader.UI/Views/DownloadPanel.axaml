@@ -19,7 +19,29 @@
         <HeaderedContentControl
             Classes="GroupBox"
             Header="下载范围">
-            <Button Content="在地图中选择" Command="" />
+            <StackPanel
+                Orientation="Vertical"
+                Spacing="8">
+                <Grid ColumnDefinitions="*,8,*">
+                    <Button
+                        Command="{Binding SelectOnMapCommand}"
+                        Content="在地图中选择" />
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding SelectOnMapCancelCommand}"
+                        Content="取消" />
+                </Grid>
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    Text="{Binding SelectionMessage}" />
+                <Grid ColumnDefinitions="*,8,*">
+                    <Button Content="导入" />
+                    <Button
+                        Grid.Column="2"
+                        Content="导出"
+                        IsEnabled="{Binding !!Coordinates}" />
+                </Grid>
+            </StackPanel>
         </HeaderedContentControl>
     </StackPanel>
 </UserControl>
