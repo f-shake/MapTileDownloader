@@ -13,6 +13,7 @@ using Avalonia.Interactivity;
 using BruTile.Predefined;
 using BruTile.Web;
 using CommunityToolkit.Mvvm.Messaging;
+using FzLib.Avalonia.Messages;
 using Mapsui.Tiling.Layers;
 using Mapsui.UI.Avalonia.Extensions;
 using MapTileDownloader.UI.Messages;
@@ -36,6 +37,10 @@ public partial class MainView : UserControl
 
     private void RegisterMessages()
     {
+        this.RegisterCommonDialogMessage();
+        this.RegisterDialogHostMessage();
+        this.RegisterGetClipboardMessage();
+        this.RegisterGetStorageProviderMessage();
         WeakReferenceMessenger.Default.Register<UpdateTileSourceMessage>(this,
             (o, m) => { map.LoadTileMaps(m.TileDataSource); });
         WeakReferenceMessenger.Default.Register<SelectOnMapMessage>(this,

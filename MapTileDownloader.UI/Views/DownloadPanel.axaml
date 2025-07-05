@@ -93,6 +93,35 @@
             Spacing="8">
             <ProgressBar />
             <TextBlock />
+            <ListBox
+                MaxHeight="300"
+                ItemsSource="{Binding Levels}"
+                SelectedItem="{Binding SelectedLevel}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Grid RowDefinitions="Auto,4,Auto">
+                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                                <TextBlock Text="{Binding Level, StringFormat={}第{0}级}" />
+                                <TextBlock
+                                    Grid.Column="2"
+                                    Text="{Binding DownloadedCount}" />
+                                <TextBlock
+                                    Grid.Column="3"
+                                    Text="/" />
+                                <TextBlock
+                                    Grid.Column="4"
+                                    Text="{Binding Count}" />
+
+                            </Grid>
+                            <ProgressBar
+                                Grid.Row="2"
+                                Maximum="{Binding Count}"
+                                Minimum="0"
+                                Value="{Binding DownloadedCount}" />
+                        </Grid>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
             <UniformGrid
                 ColumnSpacing="8"
                 Columns="3">

@@ -32,13 +32,44 @@ public partial class MapView
 {
     public void DisplayTiles(TileDataSource tileDataSource, IList<TileIndex> tiles)
     {
-        var tileHelper=new TileHelper(tileDataSource);
-        tileGridLayer.Features = tiles
-            .Select(p=>tileHelper.GetTilePolygon(p))
-            .Select(p=>new GeometryFeature(p))
-            .ToList();
-        Refresh();
+        if (tiles == null || !tiles.Any())
+        {
+            tileGridLayer.Features = []; // 清空图层
+        }
+        else
+        {
+            var tileHelper = new TileHelper(tileDataSource);
+
+            // 生成瓦片几何图形 + 标注
+            tileGridLayer.Features = tiles.Select(tileIndex =>
+            {
+                // 1. 获取瓦片多边形
+                var polygon = tileHelper.GetTilePolygon(tileIndex);
+
+                // 2. 创建要素并绑定标注属性
+                var feature = new GeometryFeature(polygon)
+                {
+                    ["Col"] = tileIndex.Col, // 存储列号
+                    ["Row"] = tileIndex.Row, // 存储行号
+                    ["LabelText"] = $"X={tileIndex.Col}, Y={tileIndex.Row}" // 标注文本
+                };
+
+                // 3. 设置标注样式
+                feature.Styles.Add(new LabelStyle
+                {
+                    Text = $"X={tileIndex.Col}\nY={tileIndex.Row}", // 动态获取标注
+                    ForeColor = Color.Black,
+                    HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center,
+                    VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center,
+                    Offset = new Offset { X = 0, Y = 0 },
+                    CollisionDetection = true,
+                    MaxVisible =  Math.Pow(2, 20-tileIndex.Level),
+                });
+
+                return feature;
+            }).ToList();
+        }
+
+        Refresh(); // 刷新地图显示
     }
-    
-    
 }
