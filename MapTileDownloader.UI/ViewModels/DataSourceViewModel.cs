@@ -19,24 +19,24 @@ public partial class DataSourceViewModel : ViewModelBase
 {
     public DataSourceViewModel()
     {
-        Sources = new ObservableCollection<TileSource>(Configs.Instance.TileSources);
+        Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
         if (Sources.Count > 0)
         {
-            SelectedSource = Sources[0];
+            SelectedDataSource = Sources[0];
         }
     }
 
     [ObservableProperty]
-    private TileSource selectedSource;
+    private TileDataSource selectedDataSource;
 
     [ObservableProperty]
-    private ObservableCollection<TileSource> sources;
+    private ObservableCollection<TileDataSource> sources;
 
     public event EventHandler SelectedSourceChanged;
     
     [RelayCommand]
 
-    partial void OnSelectedSourceChanged(TileSource value)
+    partial void OnSelectedDataSourceChanged(TileDataSource value)
     {
         CallSelectedSourceChanged();
     }
@@ -50,16 +50,16 @@ public partial class DataSourceViewModel : ViewModelBase
 
     private void AddSource()
     {
-        Sources.Add(new TileSource() { Name = "新数据源" });
-        SelectedSource = Sources[^1];
+        Sources.Add(new TileDataSource() { Name = "新数据源" });
+        SelectedDataSource = Sources[^1];
     }
     
     [RelayCommand]
     private void RemoveSource()
     {
-        if (SelectedSource != null)
+        if (SelectedDataSource != null)
         {
-            Sources.Remove(SelectedSource);
+            Sources.Remove(SelectedDataSource);
         }
     }
 }

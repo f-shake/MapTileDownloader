@@ -2,7 +2,7 @@ using MapTileDownloader.Models;
 
 namespace MapTileDownloader.UI.Messages;
 
-public class UpdateTileSourceMessage(TileSource tileSource)
+public class UpdateTileSourceMessage(TileDataSource tileDataSource)
 {
-    public TileSource TileSource { get; } = tileSource;
+    public TileDataSource TileDataSource { get; } = tileDataSource;
 }

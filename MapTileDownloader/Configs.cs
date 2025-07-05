@@ -37,9 +37,9 @@ public class Configs
         }
     }
 
-    public List<TileSource> TileSources { get; set; } = new List<TileSource>
+    public List<TileDataSource> TileSources { get; set; } = new List<TileDataSource>
     {
-        new TileSource
+        new TileDataSource
         {
             Name = "ESRI影像",
             Url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",

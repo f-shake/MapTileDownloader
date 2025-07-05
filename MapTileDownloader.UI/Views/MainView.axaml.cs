@@ -31,16 +31,20 @@ public partial class MainView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        map.LoadTileMaps((DataContext as MainViewModel)!.DataSourceViewModel.SelectedSource);
+        map.LoadTileMaps((DataContext as MainViewModel)!.DataSourceViewModel.SelectedDataSource);
     }
 
     private void RegisterMessages()
     {
         WeakReferenceMessenger.Default.Register<UpdateTileSourceMessage>(this,
-            (o, m) => { map.LoadTileMaps(m.TileSource); });
+            (o, m) => { map.LoadTileMaps(m.TileDataSource); });
         WeakReferenceMessenger.Default.Register<SelectOnMapMessage>(this,
             (o, m) => { m.Task = map.DrawAsync(m.CancellationToken); });
         WeakReferenceMessenger.Default.Register<DisplayPolygonOnMapMessage>(this,
             (o, m) => { map.DisplayPolygon(m.Coordinates); });
+        WeakReferenceMessenger.Default.Register<DisplayTilesOnMapMessage>(this,
+            (o, m) => { map.DisplayTiles((DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource,m.Tiles); });
+        WeakReferenceMessenger.Default.Register<GetSelectedDataSourceMessage>(this,
+            (o, m) => { m.DataSource = (DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource; });
     }
 }

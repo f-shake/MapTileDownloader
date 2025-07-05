@@ -96,7 +96,9 @@
             <UniformGrid
                 ColumnSpacing="8"
                 Columns="3">
-                <Button Content="初始化" />
+                <Button
+                    Command="{Binding InitializeCommand}"
+                    Content="初始化" />
                 <Button Content="开始下载" />
                 <Button Content="停止" />
             </UniformGrid>

@@ -27,10 +27,8 @@ namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
-    private MemoryLayer drawingLayer;
     private bool isDrawing = false;
     private Avalonia.Point mouseDownPoint;
-    private MemoryLayer mousePositionLayer;
     private List<MPoint> vertices = new List<MPoint>();
     private TaskCompletionSource<Coordinate[]> tcs;
     private CancellationToken cancellationToken;
@@ -117,31 +115,6 @@ public partial class MapView
 
     private void InitializeDrawing()
     {
-        drawingLayer = new MemoryLayer
-        {
-            Name = nameof(drawingLayer),
-            Style = new VectorStyle // 直接设置默认样式
-            {
-                Fill = new Brush(Color.FromArgb(100, 255, 0, 0)),
-                Outline = new Pen(Color.Red, 2),
-                Line = new Pen(Color.Red, 2),
-            }
-        };
-        Map.Layers.Add(drawingLayer);
-
-        mousePositionLayer = new MemoryLayer
-        {
-            Name = nameof(mousePositionLayer),
-            Style = new SymbolStyle // 直接设置默认样式
-            {
-                SymbolType = SymbolType.Rectangle,
-                Fill = new Brush(Color.White),
-                Outline = new Pen(Color.Red, 4),
-                SymbolScale = 0.2,
-            },
-        };
-        Map.Layers.Add(mousePositionLayer);
-
         // 绑定鼠标事件
         PointerPressed += OnPointerPressed;
         PointerMoved += OnPointerMoved;

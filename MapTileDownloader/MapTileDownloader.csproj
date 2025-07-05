@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="BruTile" />
     <PackageReference Include="CommunityToolkit.Mvvm" />
     <PackageReference Include="NetTopologySuite" />
   </ItemGroup>

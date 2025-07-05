@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MapTileDownloader.Helpers;
 using MapTileDownloader.UI.Messages;
 using NetTopologySuite.Geometries;
 
@@ -73,5 +74,13 @@ public partial class DownloadViewModel : ViewModelBase
         {
             IsEnabled = true;
         }
+    }
+
+    [RelayCommand]
+    private void Initialize()
+    {
+        var tileHelper = new TileHelper(SendMessage(new GetSelectedDataSourceMessage()).DataSource);
+        var tiles = tileHelper.GetIntersectingTiles(Coordinates, 2);
+        SendMessage(new DisplayTilesOnMapMessage(tiles));
     }
 }

@@ -8,8 +8,8 @@ using NetTopologySuite.Geometries;
 namespace MapTileDownloader;
 
 [JsonSerializable(typeof(Configs))]
-[JsonSerializable(typeof(List<TileSource>))]
-[JsonSerializable(typeof(TileSource))]
+[JsonSerializable(typeof(List<TileDataSource>))]
+[JsonSerializable(typeof(TileDataSource))]
 [JsonSerializable(typeof(Coordinate))]
 [JsonSerializable(typeof(Coordinate[]))]
 [JsonSourceGenerationOptions(
