@@ -1,34 +1,28 @@
-using CommunityToolkit.Mvvm.ComponentModel;
-
 namespace MapTileDownloader.Models;
 
-// 改为分部类 + 继承 ObservableObject
-public partial class TileDataSource : ObservableObject
+public partial class TileDataSource : SimpleNotifyPropertyChangedBase
 {
-    [ObservableProperty]
     private string name;
 
-    [ObservableProperty]
-    private string url;
+    public string Name
+    {
+        get => name;
+        set => SetField(ref name, value);
+    }
 
-    [ObservableProperty]
-    private string userAgent;
+    public string Url { get; set; }
 
-    [ObservableProperty]
-    private string host;
+    public string UserAgent { get; set; }
 
-    [ObservableProperty]
-    private string referer;
+    public string Host { get; set; }
 
-    [ObservableProperty]
-    private string origin;
+    public string Referer { get; set; }
 
-    [ObservableProperty]
-    private string format = "JPG";
+    public string Origin { get; set; }
 
-    [ObservableProperty]
-    private bool inverseYAxis;
+    public string Format { get; set; } = "JPG";
 
-    [ObservableProperty]
-    private int maxLevel = 20;
+    public bool InverseYAxis { get; set; }
+
+    public int MaxLevel { get; set; } = 20;
 }

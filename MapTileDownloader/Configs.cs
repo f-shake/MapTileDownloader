@@ -13,7 +13,7 @@ public class Configs
     {
         get
         {
-            if (instance != null)
+            if (instance == null)
             {
                 if (File.Exists(CONFIG_FILE))
                 {

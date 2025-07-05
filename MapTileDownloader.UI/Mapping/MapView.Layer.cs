@@ -56,7 +56,7 @@ public partial class MapView
             Name = nameof(drawingLayer),
             Style = new VectorStyle // 直接设置默认样式
             {
-                Fill = new Brush(Color.FromArgb(100, 255, 0, 0)),
+                Fill = new Brush(Color.FromArgb(32, 255, 255, 255)),
                 Outline = new Pen(Color.Red, 2),
                 Line = new Pen(Color.Red, 2),
             }

@@ -32,17 +32,27 @@
                             <Button
                                 Grid.Column="2"
                                 Command="{Binding SelectOnMapCancelCommand}"
-                                Content="取消" />
+                                Content="取消"
+                                IsVisible="{Binding IsSelecting}" />
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding ClearCommand}"
+                                Content="清除已选范围"
+                                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
+                                IsVisible="{Binding !IsSelecting}" />
                         </Grid>
                         <TextBlock
                             HorizontalAlignment="Center"
                             Text="{Binding SelectionMessage}" />
                         <Grid ColumnDefinitions="*,8,*">
-                            <Button Content="导入" />
+                            <Button
+                                Command="{Binding ImportCoordinatesCommand}"
+                                Content="导入" />
                             <Button
                                 Grid.Column="2"
+                                Command="{Binding ExportCoordinatesCommand}"
                                 Content="导出"
-                                IsEnabled="{Binding !!Coordinates}" />
+                                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}" />
                         </Grid>
                     </StackPanel>
                 </HeaderedContentControl>
@@ -100,18 +110,13 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <Grid RowDefinitions="Auto,4,Auto">
-                            <Grid ColumnDefinitions="Auto,*,Auto,Auto,Auto">
+                            <Grid ColumnDefinitions="Auto,*,Auto">
                                 <TextBlock Text="{Binding Level, StringFormat={}第{0}级}" />
-                                <TextBlock
-                                    Grid.Column="2"
-                                    Text="{Binding DownloadedCount}" />
-                                <TextBlock
-                                    Grid.Column="3"
-                                    Text="/" />
-                                <TextBlock
-                                    Grid.Column="4"
-                                    Text="{Binding Count}" />
-
+                                <TextBlock Grid.Column="2">
+                                    <Run Text="{Binding DownloadedCount}" />
+                                    <Run Text="/" />
+                                    <Run Text="{Binding Count}" />
+                                </TextBlock>
                             </Grid>
                             <ProgressBar
                                 Grid.Row="2"

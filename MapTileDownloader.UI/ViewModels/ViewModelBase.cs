@@ -3,11 +3,20 @@ using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using FzLib.Avalonia.Messages;
+using MapTileDownloader.UI.Messages;
 
 namespace MapTileDownloader.UI.ViewModels;
 
-public class ViewModelBase : ObservableObject
+public abstract partial class ViewModelBase : ObservableObject
 {
+    [ObservableProperty]
+    private bool isInitialized;
+
+    public virtual void Initialize()
+    {
+        IsInitialized = true;
+    }
+
     public TMessage SendMessage<TMessage>(TMessage message) where TMessage : class
     {
         return WeakReferenceMessenger.Default.Send(message);
@@ -41,5 +50,22 @@ public class ViewModelBase : ObservableObject
             Title = title,
             Exception = exception
         }).Task;
+    }
+
+    public async Task TryWithLoadingAsync(Task task, string errorTitle = "错误")
+    {
+        SendMessage(new LoadingMessage(true));
+        try
+        {
+            await task;
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync(errorTitle, ex);
+        }
+        finally
+        {
+            SendMessage(new LoadingMessage(false));
+        }
     }
 }

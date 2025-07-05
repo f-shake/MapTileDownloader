@@ -12,6 +12,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Avalonia;
+using Avalonia.Threading;
 using MapTileDownloader.Models;
 using NetTopologySuite.Geometries;
 
@@ -29,6 +30,7 @@ namespace MapTileDownloader.UI.Mapping
             Map.BackColor = Color.Gray;
             InitializeLayers();
             InitializeDrawing();
+            InitializeTile();
         }
 
         public void ZoomToGeometry(Geometry geometry, double growFactor = 0.1)

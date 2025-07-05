@@ -31,7 +31,6 @@ public partial class MapView
     private Avalonia.Point mouseDownPoint;
     private List<MPoint> vertices = new List<MPoint>();
     private TaskCompletionSource<Coordinate[]> tcs;
-    private CancellationToken cancellationToken;
 
     public void DisplayPolygon(Coordinate[] coordinates)
     {
@@ -46,6 +45,7 @@ public partial class MapView
         var polygon = new Polygon(points.ToClosedLinearRing());
         var feature = new GeometryFeature(polygon);
         drawingLayer.Features = [feature];
+        ZoomToGeometry(polygon);
         Refresh();
     }
     
@@ -102,7 +102,7 @@ public partial class MapView
         var geometry = (feature as GeometryFeature).Geometry;
         Debug.Assert(geometry is Polygon);
         var polygon = geometry as Polygon;
-        var results = polygon.Shell.Coordinates;
+        var results = polygon.Shell.Coordinates[..^1].ToArray();
         Debug.Assert(results is { Length: >= 3 });
         if (tcs != null)
         {

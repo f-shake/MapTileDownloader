@@ -1,4 +1,5 @@
-﻿using Avalonia.Controls;
+﻿using System;
+using Avalonia.Controls;
 using Avalonia.Input;
 using Mapsui;
 using Mapsui.Layers;
@@ -9,10 +10,14 @@ using Mapsui.Extensions;
 using NetTopologySuite.Geometries;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using Avalonia;
 using Avalonia.Interactivity;
+using Avalonia.Threading;
 using BruTile.Predefined;
 using BruTile.Web;
 using CommunityToolkit.Mvvm.Messaging;
+using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Messages;
 using Mapsui.Tiling.Layers;
 using Mapsui.UI.Avalonia.Extensions;
@@ -23,6 +28,8 @@ namespace MapTileDownloader.UI.Views;
 
 public partial class MainView : UserControl
 {
+    private CancellationTokenSource loadingToken = null;
+
     public MainView()
     {
         InitializeComponent();
@@ -33,6 +40,7 @@ public partial class MainView : UserControl
     {
         base.OnLoaded(e);
         map.LoadTileMaps((DataContext as MainViewModel)!.DataSourceViewModel.SelectedDataSource);
+        (DataContext as MainViewModel)!.Initialize();
     }
 
     private void RegisterMessages()
@@ -48,8 +56,36 @@ public partial class MainView : UserControl
         WeakReferenceMessenger.Default.Register<DisplayPolygonOnMapMessage>(this,
             (o, m) => { map.DisplayPolygon(m.Coordinates); });
         WeakReferenceMessenger.Default.Register<DisplayTilesOnMapMessage>(this,
-            (o, m) => { map.DisplayTiles((DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource,m.Tiles); });
+            async (o, m) =>
+            {
+                await map.DisplayTilesAsync((DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource,
+                    m.Tiles);
+            });
         WeakReferenceMessenger.Default.Register<GetSelectedDataSourceMessage>(this,
             (o, m) => { m.DataSource = (DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource; });
+        WeakReferenceMessenger.Default.Register<LoadingMessage>(this, (o, m) =>
+        {
+            Dispatcher.UIThread.Invoke(() =>
+            {
+                if (m.IsVisible && o is Visual v)
+                {
+                    try
+                    {
+                        loadingToken ??= LoadingOverlay.ShowLoading(v);
+                    }
+                    catch (Exception ex)
+                    {
+                    }
+                }
+                else
+                {
+                    if (loadingToken != null)
+                    {
+                        loadingToken.Cancel();
+                        loadingToken = null;
+                    }
+                }
+            });
+        });
     }
 }

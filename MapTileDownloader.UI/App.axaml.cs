@@ -15,7 +15,7 @@ public partial class App : Application
     {
         AvaloniaXamlLoader.Load(this);
     }
-
+    
     public override void OnFrameworkInitializationCompleted()
     {
         // Line below is needed to remove Avalonia data validation.
@@ -31,6 +31,7 @@ public partial class App : Application
             desktop.Exit += (s, e) =>
             {
                 WeakReferenceMessenger.Default.Send(new AppExitMessage());
+                Configs.Instance.Save();
             };
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)

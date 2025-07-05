@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Input;
@@ -30,46 +31,67 @@ namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
-    public void DisplayTiles(TileDataSource tileDataSource, IList<TileIndex> tiles)
+    private int currentDisplayingLevel = -1;
+
+    private void InitializeTile()
+    {
+        Map.Navigator.ViewportChanged += NavigatorOnViewportChanged;
+    }
+
+    private void NavigatorOnViewportChanged(object sender, PropertyChangedEventArgs e)
+    {
+    }
+
+    public async Task DisplayTilesAsync(TileDataSource tileDataSource, IList<TileIndex> tiles)
     {
         if (tiles == null || !tiles.Any())
         {
+            currentDisplayingLevel = -1;
             tileGridLayer.Features = []; // 清空图层
+            Refresh();
+            return;
         }
-        else
+
+        currentDisplayingLevel = tiles[0].Level;
+        var tileHelper = new TileHelper(tileDataSource);
+
+        // 生成瓦片几何图形 + 标注
+        var features = new List<GeometryFeature>();
+
+        await Task.Run(() =>
         {
-            var tileHelper = new TileHelper(tileDataSource);
-
-            // 生成瓦片几何图形 + 标注
-            tileGridLayer.Features = tiles.Select(tileIndex =>
+            foreach (var tileIndex in tiles)
             {
-                // 1. 获取瓦片多边形
-                var polygon = tileHelper.GetTilePolygon(tileIndex);
-
-                // 2. 创建要素并绑定标注属性
-                var feature = new GeometryFeature(polygon)
+                if (tileIndex.Level != currentDisplayingLevel)
                 {
-                    ["Col"] = tileIndex.Col, // 存储列号
-                    ["Row"] = tileIndex.Row, // 存储行号
-                    ["LabelText"] = $"X={tileIndex.Col}, Y={tileIndex.Row}" // 标注文本
-                };
+                    throw new ArgumentException("瓦片的级别不统一", nameof(tiles));
+                }
 
-                // 3. 设置标注样式
+                var polygon = tileHelper.GetTilePolygon(tileIndex);
+                var feature = new GeometryFeature(polygon);
+
                 feature.Styles.Add(new LabelStyle
                 {
-                    Text = $"X={tileIndex.Col}\nY={tileIndex.Row}", // 动态获取标注
+                    Text = $"X={tileIndex.Col}\nY={tileIndex.Row}",
                     ForeColor = Color.Black,
                     HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center,
                     VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center,
                     Offset = new Offset { X = 0, Y = 0 },
-                    CollisionDetection = true,
-                    MaxVisible =  Math.Pow(2, 20-tileIndex.Level),
+                    CollisionDetection = false,
+                    MaxVisible = 0.5 * GetDisplayThreshold(),
                 });
 
-                return feature;
-            }).ToList();
-        }
+                features.Add(feature);
+            }
+        });
+        tileGridLayer.Features = features;
 
-        Refresh(); // 刷新地图显示
+        tileGridLayer.MaxVisible = GetDisplayThreshold();
+        Refresh();
+    }
+
+    private double GetDisplayThreshold()
+    {
+        return Math.Pow(2, 20 - currentDisplayingLevel);
     }
 }
