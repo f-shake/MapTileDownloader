@@ -11,7 +11,7 @@ public class TileHelper(TileDataSource tileDataSource)
     public TileDataSource TileDataSource { get; } = tileDataSource;
 
     public GlobalSphericalMercator TileSchema { get; } =
-        new GlobalSphericalMercator(tileDataSource.InverseYAxis ? YAxis.TMS : YAxis.OSM, 0, tileDataSource.MaxLevel);
+        new GlobalSphericalMercator(YAxis.OSM, 0, tileDataSource.MaxLevel);
 
 
     public long EstimateIntersectingTileCount(Coordinate[] polygonCoordinates3857, int zoomLevel)
@@ -66,8 +66,14 @@ public class TileHelper(TileDataSource tileDataSource)
 
         int minCol = (int)Math.Floor((envelope.MinX - TileSchema.OriginX) / (tileSize * resolution));
         int maxCol = (int)Math.Floor((envelope.MaxX - TileSchema.OriginX) / (tileSize * resolution));
-        int minRow = (int)Math.Floor((envelope.MinY - TileSchema.OriginY) / (tileSize * resolution));
-        int maxRow = (int)Math.Floor((envelope.MaxY - TileSchema.OriginY) / (tileSize * resolution));
+
+        int minRow = 0;
+        int maxRow = 0;
+
+        minRow = (int)Math.Floor((TileSchema.OriginY - envelope.MaxY) / (tileSize * resolution));
+        maxRow = (int)Math.Floor((TileSchema.OriginY - envelope.MinY) / (tileSize * resolution));
+        minRow = Math.Abs(minRow);
+        maxRow = Math.Abs(maxRow);
 
         var preparedPolygon = PreparedGeometryFactory.Prepare(polygon3857);
         var tiles = new List<TileIndex>();
@@ -78,8 +84,8 @@ public class TileHelper(TileDataSource tileDataSource)
             {
                 double minX = TileSchema.OriginX + col * tileSize * resolution;
                 double maxX = TileSchema.OriginX + (col + 1) * tileSize * resolution;
-                double minY = TileSchema.OriginY + row * tileSize * resolution;
-                double maxY = TileSchema.OriginY + (row + 1) * tileSize * resolution;
+                double minY = TileSchema.OriginY - row * tileSize * resolution;
+                double maxY = TileSchema.OriginY - (row + 1) * tileSize * resolution;
 
                 var tilePolygon = new Polygon(new LinearRing([
                     new Coordinate(minX, minY),
@@ -98,6 +104,7 @@ public class TileHelper(TileDataSource tileDataSource)
 
         return tiles;
     }
+
     public Polygon GetTilePolygon(TileIndex tile)
     {
         var resolution = TileSchema.Resolutions[tile.Level].UnitsPerPixel;
@@ -105,8 +112,8 @@ public class TileHelper(TileDataSource tileDataSource)
 
         double minX = TileSchema.OriginX + tile.Col * tileSize * resolution;
         double maxX = minX + tileSize * resolution;
-        double minY = TileSchema.OriginY + tile.Row * tileSize * resolution;
-        double maxY = minY + tileSize * resolution;
+        double maxY = TileSchema.OriginY - tile.Row * tileSize * resolution;
+        double minY = maxY - tileSize * resolution;
 
         var coordinates = new[]
         {

@@ -15,6 +15,7 @@
     <PackageVersion Include="FzLib.Avalonia" Version="2.3.2" />
     <PackageVersion Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" Publish="True" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.6" />
     <PackageVersion Include="NetTopologySuite" Version="2.5.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
   </ItemGroup>

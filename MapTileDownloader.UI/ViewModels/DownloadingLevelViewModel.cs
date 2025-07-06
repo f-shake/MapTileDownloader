@@ -1,6 +1,9 @@
+using System;
 using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Threading;
+using Avalonia.Threading;
 using MapTileDownloader.Models;
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -23,14 +26,10 @@ public partial class DownloadingLevelViewModel : ObservableObject, IDownloadingL
                     return;
                 }
 
-                if (e.OldStatus is DownloadStatus.Ready or DownloadStatus.Downloading)
+                if (e.OldStatus <= e.NewStatus && e.OldStatus <= DownloadStatus.Downloading)
                 {
-                    DownloadedCount++;
-                }
-
-                if (e.NewStatus is DownloadStatus.Ready or DownloadStatus.Downloading)
-                {
-                    DownloadedCount--;
+                    Interlocked.Increment(ref downloadedCount); 
+                    OnPropertyChanged(nameof(DownloadedCount));
                 }
             };
         }

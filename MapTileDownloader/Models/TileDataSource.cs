@@ -8,8 +8,6 @@ public class TileDataSource : SimpleNotifyPropertyChangedBase
 
     public string Host { get; set; }
 
-    public bool InverseYAxis { get; set; }
-
     public int MaxLevel { get; set; } = 20;
 
     public string Name

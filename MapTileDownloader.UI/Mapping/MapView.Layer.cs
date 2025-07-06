@@ -121,6 +121,7 @@ public partial class MapView
                 Fill = new Brush(Color.Transparent),
                 Outline = new Pen(Color.Gray, 2),
                 Line = new Pen(Color.Gray, 2),
+                Opacity = 0.33f
             },
         };
         Map.Layers.Add(tileGridLayer);

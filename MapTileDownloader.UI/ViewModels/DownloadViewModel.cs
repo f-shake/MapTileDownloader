@@ -11,6 +11,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using MapTileDownloader.Models;
@@ -46,6 +47,9 @@ public partial class DownloadViewModel : ViewModelBase
 
     [ObservableProperty]
     private string selectionMessage;
+
+    [ObservableProperty]
+    private int maxConcurrency = 10;
 
     public override void Initialize()
     {
@@ -272,10 +276,36 @@ public partial class DownloadViewModel : ViewModelBase
         }
     }
 
+    public static string SanitizeFileName(string name)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        // 替换非法字符（Windows 不允许的）
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new StringBuilder();
+
+        foreach (var c in name)
+        {
+            sanitized.Append(Array.IndexOf(invalidChars, c) >= 0 ? '_' : c);
+        }
+
+        // 去除前后空格，防止出现空文件名
+        var result = sanitized.ToString().Trim();
+
+        // 限制长度（如需符合 Windows 限制 255）
+        if (result.Length > 128)
+        {
+            result = result[..128];
+        }
+
+        return string.IsNullOrWhiteSpace(result) ? "未知" : result;
+    }
+
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
-        var downloader = new DownloadHelper();
+        var mbtilesPath = Path.Combine(DownloadDir, SanitizeFileName(TileSource.Name) + ".mbtiles");
+        var downloader = new DownloadHelper(TileSource, mbtilesPath, MaxConcurrency);
         try
         {
             await downloader.DownloadTilesAsync(Levels, cancellationToken);
@@ -294,6 +324,5 @@ public partial class DownloadViewModel : ViewModelBase
         }
     }
 
-    private IMapService Map => SendMessage(new GetMapServiceMessage()).MapService;
     private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
 }

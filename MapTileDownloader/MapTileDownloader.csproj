@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="BruTile" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="NetTopologySuite" />
   </ItemGroup>
 

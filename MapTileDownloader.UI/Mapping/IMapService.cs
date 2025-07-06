@@ -13,4 +13,5 @@ public interface IMapService
     Task<Coordinate[]> DrawAsync(CancellationToken cancellationToken);
     Task LoadTileGridsAsync(TileDataSource tileDataSource, IEnumerable<IDownloadingLevel> levels);
     void DisplayTileGrids(int level);
+    void LoadTileMaps(TileDataSource tileDataSource);
 }

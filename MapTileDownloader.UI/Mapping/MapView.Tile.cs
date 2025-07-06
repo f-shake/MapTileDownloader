@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using Color = Mapsui.Styles.Color;
 
 namespace MapTileDownloader.UI.Mapping;
@@ -30,8 +31,11 @@ public partial class MapView
         _ = Task.Delay(1000).ContinueWith(_ =>
         {
             refreshPending = false;
-            Refresh();
-        }, TaskScheduler.FromCurrentSynchronizationContext());
+            Dispatcher.UIThread.Post(() =>
+            {
+                Refresh();
+            });
+        });
     }
 
     public void DisplayTileGrids(int level)
@@ -81,6 +85,7 @@ public partial class MapView
                         Fill = new Brush(Color.Transparent),
                         Outline = new Pen(Color.Gray, 2),
                         Line = new Pen(Color.Gray, 2),
+                        Opacity = 0.33f
                     });
                     feature.Styles.Add(new LabelStyle
                     {

@@ -39,8 +39,9 @@ public partial class DataSourceViewModel : ViewModelBase
     [RelayCommand]
     partial void OnSelectedDataSourceChanged(TileDataSource value)
     {
-        CallSelectedSourceChanged();
+        Map.LoadTileMaps(SelectedDataSource);
     }
+    
     [RelayCommand]
     private void RemoveSource()
     {

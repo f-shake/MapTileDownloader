@@ -56,9 +56,6 @@
                         <sys:String>WebP</sys:String>
                     </ComboBox>
                 </c:FormItem>
-                <CheckBox
-                    Content="反转Y轴"
-                    IsChecked="{Binding SelectedDataSource.InverseYAxis}" />
                 <c:FormItem Header="{Binding SelectedDataSource.MaxLevel, StringFormat={}最大级别 ({0})}">
                     <Slider
                         IsSnapToTickEnabled="True"

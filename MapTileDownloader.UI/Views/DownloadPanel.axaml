@@ -88,10 +88,32 @@
                                 Value="{Binding MaxLevel}" />
                         </c:FormItem>
                         <c:FormItem Header="下载目录">
-                            <TextBox
-                                MaxLines="5"
-                                Text="{Binding DownloadDir}"
-                                TextWrapping="Wrap" />
+                            <Grid
+                                ColumnDefinitions="*,8,*"
+                                RowDefinitions="Auto,8,Auto">
+                                <TextBox
+                                    Grid.ColumnSpan="3"
+                                    MaxLines="5"
+                                    Text="{Binding DownloadDir}"
+                                    TextWrapping="Wrap" />
+                                <Button
+                                    Grid.Row="2"
+                                    Content="浏览.." />
+                                <Button
+                                    Grid.Row="2"
+                                    Grid.Column="2"
+                                    Content="打开" />
+                            </Grid>
+                        </c:FormItem>
+                        <c:FormItem Header="{Binding MaxConcurrency, StringFormat={}最大并行数量 ({0})}">
+                            <Slider
+                                IsSnapToTickEnabled="True"
+                                Maximum="20"
+                                Minimum="1"
+                                TickFrequency="1"
+                                TickPlacement="BottomRight"
+                                ToolTip.Tip="{Binding MaxConcurrency}"
+                                Value="{Binding MaxConcurrency}" />
                         </c:FormItem>
                     </StackPanel>
                 </HeaderedContentControl>
