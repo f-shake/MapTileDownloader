@@ -1,4 +1,11 @@
-﻿using System;
+﻿using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FzLib.Avalonia.Messages;
+using MapTileDownloader.Helpers;
+using MapTileDownloader.UI.Messages;
+using NetTopologySuite.Geometries;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -6,19 +13,38 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Input;
-using Avalonia.Platform.Storage;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
-using FzLib.Avalonia.Messages;
-using MapTileDownloader.Helpers;
-using MapTileDownloader.UI.Messages;
-using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader.UI.ViewModels;
 
 public partial class DownloadViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private Coordinate[] coordinates;
+
+    [ObservableProperty]
+    private string downloadDir;
+
+    [ObservableProperty]
+    private bool isEnabled = true;
+
+    [ObservableProperty]
+    private bool isSelecting = false;
+
+    [ObservableProperty]
+    private ObservableCollection<LevelTilesViewModel> levels;
+
+    [ObservableProperty]
+    private int maxLevel;
+
+    [ObservableProperty]
+    private int minLevel;
+
+    [ObservableProperty]
+    private LevelTilesViewModel selectedLevel;
+
+    [ObservableProperty]
+    private string selectionMessage;
+
     public override void Initialize()
     {
         Coordinates = Configs.Instance.DownloadArea;
@@ -31,45 +57,6 @@ public partial class DownloadViewModel : ViewModelBase
         }
 
         base.Initialize();
-    }
-
-    [ObservableProperty]
-    private string selectionMessage;
-
-    [ObservableProperty]
-    private bool isEnabled = true;
-
-    [ObservableProperty]
-    private Coordinate[] coordinates;
-
-    [ObservableProperty]
-    private int minLevel;
-
-    [ObservableProperty]
-    private int maxLevel;
-
-    [ObservableProperty]
-    private string downloadDir;
-
-    [ObservableProperty]
-    private ObservableCollection<LevelTilesViewModel> levels;
-
-    [ObservableProperty]
-    private LevelTilesViewModel selectedLevel;
-
-    [ObservableProperty]
-    private bool isSelecting = false;
-
-    partial void OnCoordinatesChanged(Coordinate[] value)
-    {
-        if (value == null)
-        {
-            SelectionMessage = "还未选择区域";
-        }
-        else
-        {
-            SelectionMessage = $"已选择区域（{value.Length}边形）";
-        }
     }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -85,39 +72,6 @@ public partial class DownloadViewModel : ViewModelBase
         }
     }
 
-    private void SaveConfigs()
-    {
-        Configs.Instance.DownloadArea = Coordinates;
-        Configs.Instance.MinLevel = MinLevel;
-        Configs.Instance.MaxLevel = MaxLevel;
-        Configs.Instance.DownloadDir = DownloadDir;
-        Configs.Instance.Save();
-    }
-
-    [RelayCommand(IncludeCancelCommand = true)]
-    private async Task SelectOnMapAsync(CancellationToken cancellationToken)
-    {
-        IsEnabled = false;
-        IsSelecting = true;
-        var m = SendMessage(new SelectOnMapMessage(cancellationToken));
-        try
-        {
-            Coordinates = await m.Task;
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("地图错误", ex);
-        }
-        finally
-        {
-            IsEnabled = true;
-            IsSelecting = false;
-        }
-    }
-
     [RelayCommand]
     private void Clear()
     {
@@ -126,36 +80,44 @@ public partial class DownloadViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private Task InitializeAsync()
+    private async Task ExportCoordinatesAsync()
     {
-        var tileHelper = new TileHelper(SendMessage(new GetSelectedDataSourceMessage()).DataSource);
-        return TryWithLoadingAsync(Task.Run(() =>
+        if (Coordinates is not { Length: > 0 })
         {
-            Levels = new ObservableCollection<LevelTilesViewModel>();
-            var count = tileHelper.EstimateIntersectingTileCount(Coordinates, MaxLevel);
-            if (count > 1_000_000)
-            {
-                throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
-                return;
-            }
+            await ShowErrorAsync("范围为空", "下载范围为空");
+            return;
+        }
 
-            for (int i = MinLevel; i <= MaxLevel; i++)
+        var options = new FilePickerSaveOptions
+        {
+            DefaultExtension = "csv", // 默认文件扩展名
+            SuggestedFileName = "tiles.csv", // 可选：默认文件名
+            FileTypeChoices = new List<FilePickerFileType>
             {
-                var tiles = tileHelper.GetIntersectingTiles(Coordinates, i);
-                var levelTile = new LevelTilesViewModel(i, tiles);
-                Levels.Add(levelTile);
+                new FilePickerFileType("CSV 文件")
+                {
+                    Patterns = ["*.csv"],
+                    MimeTypes = ["text/csv"]
+                }
             }
-        }));
-    }
+        };
+        var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
 
-    partial void OnSelectedLevelChanged(LevelTilesViewModel value)
-    {
-        if (value == null)
+        var filePath = file?.TryGetLocalPath();
+        if (filePath == null)
         {
             return;
         }
 
-        SendMessage(new DisplayTilesOnMapMessage(value.Tiles));
+        var content = string.Join(Environment.NewLine, ["X,Y", .. Coordinates.Select(p => $"{p.X},{p.Y}")]);
+        try
+        {
+            await File.WriteAllTextAsync(filePath, content);
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("保存失败", ex);
+        }
     }
 
     [RelayCommand]
@@ -226,45 +188,81 @@ public partial class DownloadViewModel : ViewModelBase
         }
     }
 
-
     [RelayCommand]
-    private async Task ExportCoordinatesAsync()
+    private Task InitializeAsync()
     {
-        if (Coordinates is not { Length: > 0 })
+        var tileHelper = new TileHelper(SendMessage(new GetSelectedDataSourceMessage()).DataSource);
+        return TryWithLoadingAsync(Task.Run(() =>
         {
-            await ShowErrorAsync("范围为空", "下载范围为空");
-            return;
-        }
-
-        var options = new FilePickerSaveOptions
-        {
-            DefaultExtension = "csv", // 默认文件扩展名
-            SuggestedFileName = "tiles.csv", // 可选：默认文件名
-            FileTypeChoices = new List<FilePickerFileType>
+            Levels = new ObservableCollection<LevelTilesViewModel>();
+            var count = tileHelper.EstimateIntersectingTileCount(Coordinates, MaxLevel);
+            if (count > 1_000_000)
             {
-                new FilePickerFileType("CSV 文件")
-                {
-                    Patterns = ["*.csv"],
-                    MimeTypes = ["text/csv"]
-                }
+                throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
+                return;
             }
-        };
-        var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
 
-        var filePath = file?.TryGetLocalPath();
-        if (filePath == null)
+            for (int i = MinLevel; i <= MaxLevel; i++)
+            {
+                var tiles = tileHelper.GetIntersectingTiles(Coordinates, i);
+                var levelTile = new LevelTilesViewModel(i, tiles);
+                Levels.Add(levelTile);
+            }
+        }));
+    }
+
+    partial void OnCoordinatesChanged(Coordinate[] value)
+    {
+        if (value == null)
+        {
+            SelectionMessage = "还未选择区域";
+        }
+        else
+        {
+            SelectionMessage = $"已选择区域（{value.Length}边形）";
+        }
+    }
+
+    partial void OnSelectedLevelChanged(LevelTilesViewModel value)
+    {
+        if (value == null)
         {
             return;
         }
 
-        var content = string.Join(Environment.NewLine, ["X,Y", ..Coordinates.Select(p => $"{p.X},{p.Y}")]);
+        SendMessage(new DisplayTilesOnMapMessage(value.Tiles));
+    }
+
+    private void SaveConfigs()
+    {
+        Configs.Instance.DownloadArea = Coordinates;
+        Configs.Instance.MinLevel = MinLevel;
+        Configs.Instance.MaxLevel = MaxLevel;
+        Configs.Instance.DownloadDir = DownloadDir;
+        Configs.Instance.Save();
+    }
+
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task SelectOnMapAsync(CancellationToken cancellationToken)
+    {
+        IsEnabled = false;
+        IsSelecting = true;
+        var m = SendMessage(new SelectOnMapMessage(cancellationToken));
         try
         {
-            await File.WriteAllTextAsync(filePath, content);
+            Coordinates = await m.Task;
+        }
+        catch (OperationCanceledException)
+        {
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync("保存失败", ex);
+            await ShowErrorAsync("地图错误", ex);
+        }
+        finally
+        {
+            IsEnabled = true;
+            IsSelecting = false;
         }
     }
 }

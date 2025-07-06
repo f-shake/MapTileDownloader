@@ -1,28 +1,14 @@
-﻿using System;
+﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Input;
-using Mapsui;
-using Mapsui.Layers;
-using Mapsui.Nts;
-using Mapsui.Styles;
-using Mapsui.UI.Avalonia;
-using Mapsui.Extensions;
-using NetTopologySuite.Geometries;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using Avalonia;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
-using BruTile.Predefined;
-using BruTile.Web;
 using CommunityToolkit.Mvvm.Messaging;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Messages;
-using Mapsui.Tiling.Layers;
-using Mapsui.UI.Avalonia.Extensions;
 using MapTileDownloader.UI.Messages;
 using MapTileDownloader.UI.ViewModels;
+using System;
+using System.Threading;
 
 namespace MapTileDownloader.UI.Views;
 

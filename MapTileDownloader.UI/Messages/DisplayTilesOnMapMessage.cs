@@ -1,5 +1,5 @@
-using System.Collections.Generic;
 using BruTile;
+using System.Collections.Generic;
 
 namespace MapTileDownloader.UI.Messages;
 

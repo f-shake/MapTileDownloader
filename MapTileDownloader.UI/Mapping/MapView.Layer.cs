@@ -1,52 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Input;
+﻿using BruTile.Predefined;
+using BruTile.Web;
 using Mapsui;
 using Mapsui.Layers;
-using Mapsui.Nts;
 using Mapsui.Styles;
-using Mapsui.Extensions;
-using NetTopologySuite.Geometries;
-using Mapsui.UI.Avalonia.Extensions;
-using Avalonia.Interactivity;
-using BruTile.Predefined;
-using BruTile.Web;
 using Mapsui.Tiling.Layers;
-using SkiaSharp;
-using System.Threading;
-using System.Diagnostics;
-using Avalonia.Media;
 using MapTileDownloader.Models;
 using Brush = Mapsui.Styles.Brush;
 using Color = Mapsui.Styles.Color;
-using Geometry = NetTopologySuite.Geometries.Geometry;
 using Pen = Mapsui.Styles.Pen;
 
 namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
+    /// <summary>
+    /// 绘制和范围图层
+    /// </summary>
     private MemoryLayer drawingLayer;
-    private MemoryLayer mousePositionLayer;
-    private MemoryLayer tileGridLayer;
-    
-    private void InitializeLayers()
-    {
-        AddPlaceholderBaseLayer();
-        AddTileGridLayer();
-        AddDrawingLayer();
-        AddMousePositionLayer();
-    }
 
-    private void AddPlaceholderBaseLayer()
+    /// <summary>
+    /// 绘制时鼠标位置图层
+    /// </summary>
+    private MemoryLayer mousePositionLayer;
+
+    /// <summary>
+    /// 瓦片网格图层
+    /// </summary>
+    private MemoryLayer tileGridLayer;
+
+    /// <summary>
+    /// XYZ底图
+    /// </summary>
+    private TileLayer baseLayer;
+
+    public void LoadTileMaps(TileDataSource tileDataSource)
     {
+        if (Map.Layers.Count > 0)
+        {
+            Map.Layers.Remove(Map.Layers[0]);
+        }
+
+        if (tileDataSource == null || string.IsNullOrEmpty(tileDataSource.Url))
+        {
+            Map.Layers.Insert(0, new MemoryLayer());
+            return;
+        }
+
         var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            "http://localhost/{x}/{y}/{z}"
+            new GlobalSphericalMercator(0,tileDataSource.MaxLevel),
+            tileDataSource.Url,
+            userAgent: string.IsNullOrWhiteSpace(tileDataSource.UserAgent) ? null : tileDataSource.UserAgent
         );
-        Map.Layers.Add(new TileLayer(s));
+        if (!string.IsNullOrWhiteSpace(tileDataSource.Host))
+        {
+            s.AddHeader("Host", tileDataSource.Host);
+        }
+
+        if (!string.IsNullOrWhiteSpace(tileDataSource.Origin))
+        {
+            s.AddHeader("Origin", tileDataSource.Origin);
+        }
+
+        if (!string.IsNullOrWhiteSpace(tileDataSource.Referer))
+        {
+            s.AddHeader("Referer", tileDataSource.Referer);
+        }
+
+        baseLayer = new TileLayer(s);
+        Map.Layers.Insert(0, baseLayer);
     }
 
     private void AddDrawingLayer()
@@ -79,6 +100,17 @@ public partial class MapView
         };
         Map.Layers.Add(mousePositionLayer);
     }
+
+    private void AddPlaceholderBaseLayer()
+    {
+        var s = new HttpTileSource(
+            new GlobalSphericalMercator(0, 20),
+            "http://localhost/{x}/{y}/{z}"
+        );
+        baseLayer = new TileLayer(s);
+        Map.Layers.Add(baseLayer);
+    }
+
     private void AddTileGridLayer()
     {
         tileGridLayer = new MemoryLayer
@@ -94,40 +126,11 @@ public partial class MapView
         Map.Layers.Add(tileGridLayer);
     }
 
-
-    public void LoadTileMaps(TileDataSource tileDataSource)
+    private void InitializeLayers()
     {
-        if (Map.Layers.Count > 0)
-        {
-            Map.Layers.Remove(Map.Layers[0]);
-        }
-
-        if (tileDataSource == null || string.IsNullOrEmpty(tileDataSource.Url))
-        {
-            Map.Layers.Insert(0, new MemoryLayer());
-            return;
-        }
-
-        var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            tileDataSource.Url,
-            userAgent: string.IsNullOrWhiteSpace(tileDataSource.UserAgent) ? null : tileDataSource.UserAgent
-        );
-        if (!string.IsNullOrWhiteSpace(tileDataSource.Host))
-        {
-            s.AddHeader("Host", tileDataSource.Host);
-        }
-
-        if (!string.IsNullOrWhiteSpace(tileDataSource.Origin))
-        {
-            s.AddHeader("Origin", tileDataSource.Origin);
-        }
-
-        if (!string.IsNullOrWhiteSpace(tileDataSource.Referer))
-        {
-            s.AddHeader("Referer", tileDataSource.Referer);
-        }
-
-        Map.Layers.Insert(0, new TileLayer(s));
+        AddPlaceholderBaseLayer();
+        AddTileGridLayer();
+        AddDrawingLayer();
+        AddMousePositionLayer();
     }
 }

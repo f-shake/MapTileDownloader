@@ -1,22 +1,18 @@
-﻿using Avalonia;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using CommunityToolkit.Mvvm.Messaging;
-using FzLib.Avalonia.Messages;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows.Input;
 using MapTileDownloader.Models;
-using MapTileDownloader.UI.Messages;
-using MapTileDownloader.UI.Views;
-using Mapsui;
+using System;
+using System.Collections.ObjectModel;
 
 namespace MapTileDownloader.UI.ViewModels;
 public partial class DataSourceViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private TileDataSource selectedDataSource;
+
+    [ObservableProperty]
+    private ObservableCollection<TileDataSource> sources;
+
     public DataSourceViewModel()
     {
         Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
@@ -25,35 +21,26 @@ public partial class DataSourceViewModel : ViewModelBase
             SelectedDataSource = Sources[0];
         }
     }
-
-    [ObservableProperty]
-    private TileDataSource selectedDataSource;
-
-    [ObservableProperty]
-    private ObservableCollection<TileDataSource> sources;
-
     public event EventHandler SelectedSourceChanged;
-    
-    [RelayCommand]
-
-    partial void OnSelectedDataSourceChanged(TileDataSource value)
-    {
-        CallSelectedSourceChanged();
-    }
 
     [RelayCommand]
-    private void CallSelectedSourceChanged()
-    {
-        SelectedSourceChanged?.Invoke(this,EventArgs.Empty);
-    }
-    [RelayCommand]
-
     private void AddSource()
     {
         Sources.Add(new TileDataSource() { Name = "新数据源" });
         SelectedDataSource = Sources[^1];
     }
-    
+
+    [RelayCommand]
+    private void CallSelectedSourceChanged()
+    {
+        SelectedSourceChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    [RelayCommand]
+    partial void OnSelectedDataSourceChanged(TileDataSource value)
+    {
+        CallSelectedSourceChanged();
+    }
     [RelayCommand]
     private void RemoveSource()
     {

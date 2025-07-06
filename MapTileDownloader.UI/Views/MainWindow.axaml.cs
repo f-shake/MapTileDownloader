@@ -1,6 +1,4 @@
-﻿using Avalonia.Controls;
-using FzLib.Avalonia.Controls;
-using System;
+﻿using FzLib.Avalonia.Controls;
 
 namespace MapTileDownloader.UI.Views;
 

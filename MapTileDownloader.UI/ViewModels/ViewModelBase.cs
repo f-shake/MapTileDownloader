@@ -1,9 +1,9 @@
-﻿using System;
-using System.Threading.Tasks;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using FzLib.Avalonia.Messages;
 using MapTileDownloader.UI.Messages;
+using System;
+using System.Threading.Tasks;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -32,16 +32,6 @@ public abstract partial class ViewModelBase : ObservableObject
         }).Task;
     }
 
-    public Task ShowOkAsync(string title, string message)
-    {
-        return SendMessage(new CommonDialogMessage()
-        {
-            Type = CommonDialogMessage.CommonDialogType.Ok,
-            Title = title,
-            Message = message
-        }).Task;
-    }
-
     public Task ShowErrorAsync(string title, Exception exception)
     {
         return SendMessage(new CommonDialogMessage()
@@ -52,6 +42,15 @@ public abstract partial class ViewModelBase : ObservableObject
         }).Task;
     }
 
+    public Task ShowOkAsync(string title, string message)
+    {
+        return SendMessage(new CommonDialogMessage()
+        {
+            Type = CommonDialogMessage.CommonDialogType.Ok,
+            Title = title,
+            Message = message
+        }).Task;
+    }
     public async Task TryWithLoadingAsync(Task task, string errorTitle = "错误")
     {
         SendMessage(new LoadingMessage(true));

@@ -1,37 +1,28 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Avalonia.Input;
+﻿using Avalonia.Input;
 using Mapsui;
+using Mapsui.Extensions;
 using Mapsui.Layers;
 using Mapsui.Nts;
-using Mapsui.Styles;
-using Mapsui.Extensions;
-using NetTopologySuite.Geometries;
 using Mapsui.UI.Avalonia.Extensions;
-using Avalonia.Interactivity;
-using BruTile.Predefined;
-using BruTile.Web;
-using Mapsui.Tiling.Layers;
-using SkiaSharp;
-using System.Threading;
+using NetTopologySuite.Geometries;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using Avalonia.Media;
-using Brush = Mapsui.Styles.Brush;
-using Color = Mapsui.Styles.Color;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Geometry = NetTopologySuite.Geometries.Geometry;
-using Pen = Mapsui.Styles.Pen;
 
 namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
+    private static Cursor DefaultCursor = Cursor.Default;
+    private static Cursor NoneCursor = new Cursor(StandardCursorType.None);
     private bool isDrawing = false;
     private Avalonia.Point mouseDownPoint;
-    private List<MPoint> vertices = new List<MPoint>();
     private TaskCompletionSource<Coordinate[]> tcs;
-
+    private List<MPoint> vertices = new List<MPoint>();
     public void DisplayPolygon(Coordinate[] coordinates)
     {
         if (coordinates == null || coordinates.Length < 3)
@@ -48,7 +39,7 @@ public partial class MapView
         ZoomToGeometry(polygon);
         Refresh();
     }
-    
+
     public Task<Coordinate[]> DrawAsync(CancellationToken cancellationToken = default)
     {
         if (cancellationToken != default)
@@ -59,31 +50,6 @@ public partial class MapView
         tcs = new TaskCompletionSource<Coordinate[]>();
         StartDrawing();
         return tcs.Task;
-    }
-
-    private void StartDrawing()
-    {
-        vertices.Clear();
-        isDrawing = true;
-    }
-
-    private void CancelDrawing()
-    {
-        EndDrawing();
-        drawingLayer.Features = null;
-        Refresh();
-        if (tcs != null)
-        {
-            tcs.SetException(new OperationCanceledException("取消了绘制"));
-            tcs = null;
-        }
-    }
-
-    private void EndDrawing()
-    {
-        isDrawing = false;
-        vertices.Clear();
-        mousePositionLayer.Features = null;
     }
 
     public Coordinate[] FinishDrawing()
@@ -113,6 +79,25 @@ public partial class MapView
         return results;
     }
 
+    private void CancelDrawing()
+    {
+        EndDrawing();
+        drawingLayer.Features = null;
+        Refresh();
+        if (tcs != null)
+        {
+            tcs.SetException(new OperationCanceledException("取消了绘制"));
+            tcs = null;
+        }
+    }
+
+    private void EndDrawing()
+    {
+        isDrawing = false;
+        vertices.Clear();
+        mousePositionLayer.Features = null;
+    }
+
     private void InitializeDrawing()
     {
         // 绑定鼠标事件
@@ -120,10 +105,6 @@ public partial class MapView
         PointerMoved += OnPointerMoved;
         PointerReleased += OnPointerReleased;
     }
-
-    private static Cursor NoneCursor = new Cursor(StandardCursorType.None);
-
-    private static Cursor DefaultCursor = Cursor.Default;
 
     private void OnPointerMoved(object sender, PointerEventArgs e)
     {
@@ -202,6 +183,11 @@ public partial class MapView
         }
     }
 
+    private void StartDrawing()
+    {
+        vertices.Clear();
+        isDrawing = true;
+    }
     private void UpdateDrawing()
     {
         if (vertices.Count < 2)

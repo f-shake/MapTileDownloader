@@ -7,34 +7,6 @@ using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader;
 
-[JsonSerializable(typeof(Configs))]
-[JsonSerializable(typeof(List<TileDataSource>))]
-[JsonSerializable(typeof(TileDataSource))]
-[JsonSerializable(typeof(Coordinate))]
-[JsonSerializable(typeof(Coordinate[]))]
-[JsonSourceGenerationOptions(
-    WriteIndented = true,
-    PropertyNameCaseInsensitive = true,
-    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-)]
-internal partial class MapTileDownloaderJsonContext : JsonSerializerContext
-{
-    static MapTileDownloaderJsonContext()
-    {
-        Config = new MapTileDownloaderJsonContext(new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNameCaseInsensitive = true,
-            WriteIndented = true,
-            NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            Converters = { new CoordinateConverter(), new CoordinateArrayConverter() } // 添加转换器
-        });
-    }
-
-    public static MapTileDownloaderJsonContext Config { get; }
-}
-
 // 自定义 Coordinate 转换器
 public class CoordinateConverter : JsonConverter<Coordinate>
 {
@@ -82,6 +54,33 @@ public class CoordinateConverter : JsonConverter<Coordinate>
     }
 }
 
+[JsonSerializable(typeof(Configs))]
+[JsonSerializable(typeof(List<TileDataSource>))]
+[JsonSerializable(typeof(TileDataSource))]
+[JsonSerializable(typeof(Coordinate))]
+[JsonSerializable(typeof(Coordinate[]))]
+[JsonSourceGenerationOptions(
+    WriteIndented = true,
+    PropertyNameCaseInsensitive = true,
+    DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+)]
+internal partial class MapTileDownloaderJsonContext : JsonSerializerContext
+{
+    static MapTileDownloaderJsonContext()
+    {
+        Config = new MapTileDownloaderJsonContext(new JsonSerializerOptions
+        {
+            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+            PropertyNameCaseInsensitive = true,
+            WriteIndented = true,
+            NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
+            Converters = { new CoordinateConverter(), new CoordinateArrayConverter() } // 添加转换器
+        });
+    }
+
+    public static MapTileDownloaderJsonContext Config { get; }
+}
 // 自定义 Coordinate[] 转换器
 public class CoordinateArrayConverter : JsonConverter<Coordinate[]>
 {
