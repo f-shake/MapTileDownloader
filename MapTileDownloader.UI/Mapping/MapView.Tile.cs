@@ -15,59 +15,127 @@ namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
-    private int currentDisplayingLevel = -1;
+    private Dictionary<int, List<GeometryFeature>> featuresPerLevel;
+    private bool refreshPending = false;
 
-    public async Task DisplayTilesAsync(TileDataSource tileDataSource, IList<TileIndex> tiles)
+    private void RequestRefresh()
     {
-        if (tiles == null || !tiles.Any())
+        if (refreshPending)
         {
-            currentDisplayingLevel = -1;
-            tileGridLayer.Features = []; // 清空图层
-            Refresh();
             return;
         }
 
-        currentDisplayingLevel = tiles[0].Level;
-        var tileHelper = new TileHelper(tileDataSource);
+        refreshPending = true;
 
-        // 生成瓦片几何图形 + 标注
-        var features = new List<GeometryFeature>();
-
-        await Task.Run(() =>
+        _ = Task.Delay(1000).ContinueWith(_ =>
         {
-            foreach (var tileIndex in tiles)
-            {
-                if (tileIndex.Level != currentDisplayingLevel)
-                {
-                    throw new ArgumentException("瓦片的级别不统一", nameof(tiles));
-                }
+            refreshPending = false;
+            Refresh();
+        }, TaskScheduler.FromCurrentSynchronizationContext());
+    }
 
-                var polygon = tileHelper.GetTilePolygon(tileIndex);
-                var feature = new GeometryFeature(polygon);
+    public void DisplayTileGrids(int level)
+    {
+        if (featuresPerLevel == null)
+        {
+            throw new Exception("还未初始化瓦片网格");
+        }
 
-                feature.Styles.Add(new LabelStyle
-                {
-                    Text = $"X={tileIndex.Col}\nY={tileIndex.Row}",
-                    ForeColor = Color.Black,
-                    HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center,
-                    VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center,
-                    Offset = new Offset { X = 0, Y = 0 },
-                    CollisionDetection = false,
-                    MaxVisible = 0.5 * GetDisplayThreshold(),
-                });
+        if (!featuresPerLevel.TryGetValue(level, out var features))
+        {
+            throw new ArgumentException($"已加载的瓦片中不包含级别{level}", nameof(level));
+        }
 
-                features.Add(feature);
-            }
-        });
         tileGridLayer.Features = features;
 
-        tileGridLayer.MaxVisible = GetDisplayThreshold();
+        tileGridLayer.MaxVisible = 5 * GetDisplayThreshold(level);
         Refresh();
     }
 
-    private double GetDisplayThreshold()
+    public async Task LoadTileGridsAsync(TileDataSource tileDataSource, IEnumerable<IDownloadingLevel> levels)
     {
-        return Math.Pow(2, 20 - currentDisplayingLevel);
+        if (levels == null || !levels.Any())
+        {
+            throw new ArgumentException("提供的levels为空", nameof(levels));
+        }
+
+        featuresPerLevel = new Dictionary<int, List<GeometryFeature>>();
+        var tileHelper = new TileHelper(tileDataSource);
+
+        // 生成瓦片几何图形 + 标注
+
+        await Task.Run(() =>
+        {
+            foreach (var level in levels)
+            {
+                var tiles = level.Tiles;
+
+                var features = new List<GeometryFeature>();
+                foreach (var tile in tiles)
+                {
+                    var polygon = tileHelper.GetTilePolygon(tile.TileIndex);
+                    var feature = new GeometryFeature(polygon);
+
+                    feature.Styles.Add(new VectorStyle
+                    {
+                        Fill = new Brush(Color.Transparent),
+                        Outline = new Pen(Color.Gray, 2),
+                        Line = new Pen(Color.Gray, 2),
+                    });
+                    feature.Styles.Add(new LabelStyle
+                    {
+                        Text = $"X={tile.TileIndex.Col}\nY={tile.TileIndex.Row}",
+                        ForeColor = Color.Black,
+                        HorizontalAlignment = LabelStyle.HorizontalAlignmentEnum.Center,
+                        VerticalAlignment = LabelStyle.VerticalAlignmentEnum.Center,
+                        Offset = new Offset { X = 0, Y = 0 },
+                        CollisionDetection = false,
+                        MaxVisible = 0.5 * GetDisplayThreshold(level.Level),
+                    });
+
+                    void SetBackground(Color color)
+                    {
+                        VectorStyle style = feature.Styles.OfType<VectorStyle>().First();
+
+                        style.Fill = new Brush(color);
+                        RequestRefresh();
+                    }
+
+                    tile.DownloadStatusChanged += (s, e) =>
+                    {
+                        switch (e.NewStatus)
+                        {
+                            case DownloadStatus.Ready:
+                                SetBackground(Color.Transparent);
+                                break;
+                            case DownloadStatus.Downloading:
+                                SetBackground(Color.Orange);
+                                break;
+                            case DownloadStatus.Success:
+                                SetBackground(Color.Green);
+                                break;
+                            case DownloadStatus.Skip:
+                                SetBackground(Color.Yellow);
+                                break;
+                            case DownloadStatus.Failed:
+                                SetBackground(Color.Red);
+                                break;
+                            default:
+                                throw new ArgumentOutOfRangeException();
+                        }
+                    };
+
+                    features.Add(feature);
+                }
+
+                featuresPerLevel.Add(level.Level, features);
+            }
+        });
+    }
+
+    private double GetDisplayThreshold(int level)
+    {
+        return Math.Pow(2, 20 - level);
     }
 
     private void InitializeTile()

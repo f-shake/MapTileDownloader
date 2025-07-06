@@ -3,6 +3,7 @@ using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MapTileDownloader.Helpers;
 
 namespace MapTileDownloader.UI.Mapping;
 
@@ -15,7 +16,7 @@ public static class MapsuiExtension
         {
             throw new ArgumentException("提供的点数量应不少于3个", nameof(points));
         }
-        return new LinearRing([.. points.Select(ToCoordinate).Append(points[0].ToCoordinate())]);
+        return new LinearRing(points.Select(ToCoordinate).ToList().ToClosed().ToArray());
     }
 
     public static Coordinate ToCoordinate(this MPoint point)

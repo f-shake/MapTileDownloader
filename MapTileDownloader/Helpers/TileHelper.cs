@@ -17,7 +17,7 @@ public class TileHelper(TileDataSource tileDataSource)
     public long EstimateIntersectingTileCount(Coordinate[] polygonCoordinates3857, int zoomLevel)
     {
         var geometryFactory = new GeometryFactory();
-        var polygon3857 = geometryFactory.CreatePolygon(polygonCoordinates3857);
+        var polygon3857 = geometryFactory.CreatePolygon(polygonCoordinates3857.ToClosed().ToArray());
         var envelope = polygon3857.EnvelopeInternal;
 
         double resolution = TileSchema.Resolutions[zoomLevel].UnitsPerPixel;
@@ -57,7 +57,7 @@ public class TileHelper(TileDataSource tileDataSource)
     public List<TileIndex> GetIntersectingTiles(Coordinate[] polygonCoordinates3857, int zoomLevel)
     {
         var geometryFactory = new GeometryFactory();
-        var polygon3857 = geometryFactory.CreatePolygon(polygonCoordinates3857);
+        var polygon3857 = geometryFactory.CreatePolygon(polygonCoordinates3857.ToClosed().ToArray());
 
         var envelope = polygon3857.EnvelopeInternal;
 

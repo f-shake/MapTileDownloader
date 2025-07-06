@@ -5,7 +5,7 @@ using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader.UI.Mapping
 {
-    public partial class MapView : MapControl
+    public partial class MapView : MapControl,IMapService
     {
         public MapView()
         {

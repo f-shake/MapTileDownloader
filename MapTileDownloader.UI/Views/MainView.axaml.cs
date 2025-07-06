@@ -35,18 +35,8 @@ public partial class MainView : UserControl
         this.RegisterDialogHostMessage();
         this.RegisterGetClipboardMessage();
         this.RegisterGetStorageProviderMessage();
-        WeakReferenceMessenger.Default.Register<UpdateTileSourceMessage>(this,
-            (o, m) => { map.LoadTileMaps(m.TileDataSource); });
-        WeakReferenceMessenger.Default.Register<SelectOnMapMessage>(this,
-            (o, m) => { m.Task = map.DrawAsync(m.CancellationToken); });
-        WeakReferenceMessenger.Default.Register<DisplayPolygonOnMapMessage>(this,
-            (o, m) => { map.DisplayPolygon(m.Coordinates); });
-        WeakReferenceMessenger.Default.Register<DisplayTilesOnMapMessage>(this,
-            async (o, m) =>
-            {
-                await map.DisplayTilesAsync((DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource,
-                    m.Tiles);
-            });
+        WeakReferenceMessenger.Default.Register<GetMapServiceMessage>(this,
+            (o, m) => { m.MapService = map; });
         WeakReferenceMessenger.Default.Register<GetSelectedDataSourceMessage>(this,
             (o, m) => { m.DataSource = (DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource; });
         WeakReferenceMessenger.Default.Register<LoadingMessage>(this, (o, m) =>

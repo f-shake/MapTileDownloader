@@ -1,6 +1,6 @@
 namespace MapTileDownloader.Models;
 
-public partial class TileDataSource : SimpleNotifyPropertyChangedBase
+public class TileDataSource : SimpleNotifyPropertyChangedBase
 {
     private string name;
 

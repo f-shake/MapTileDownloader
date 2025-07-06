@@ -133,8 +133,13 @@
                 <Button
                     Command="{Binding InitializeCommand}"
                     Content="初始化" />
-                <Button Content="开始下载" />
-                <Button Content="停止" />
+                <Button
+                    Command="{Binding DownloadTilesCommand}"
+                    Content="开始下载"
+                    IsEnabled="{Binding CanDownload}" />
+                <Button
+                    Command="{Binding DownloadTilesCancelCommand}"
+                    Content="停止" />
             </UniformGrid>
         </StackPanel>
     </Grid>

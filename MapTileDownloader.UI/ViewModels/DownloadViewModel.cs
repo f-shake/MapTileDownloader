@@ -13,6 +13,8 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using MapTileDownloader.Models;
+using MapTileDownloader.UI.Mapping;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -25,13 +27,13 @@ public partial class DownloadViewModel : ViewModelBase
     private string downloadDir;
 
     [ObservableProperty]
-    private bool isEnabled = true;
+    private bool canDownload = false;
 
     [ObservableProperty]
     private bool isSelecting = false;
 
     [ObservableProperty]
-    private ObservableCollection<LevelTilesViewModel> levels;
+    private ObservableCollection<DownloadingLevelViewModel> levels;
 
     [ObservableProperty]
     private int maxLevel;
@@ -40,7 +42,7 @@ public partial class DownloadViewModel : ViewModelBase
     private int minLevel;
 
     [ObservableProperty]
-    private LevelTilesViewModel selectedLevel;
+    private DownloadingLevelViewModel selectedLevel;
 
     [ObservableProperty]
     private string selectionMessage;
@@ -53,7 +55,7 @@ public partial class DownloadViewModel : ViewModelBase
         DownloadDir = Configs.Instance.DownloadDir ?? Path.Combine(AppContext.BaseDirectory, "tiles");
         if (Coordinates != null)
         {
-            SendMessage(new DisplayPolygonOnMapMessage(Coordinates));
+            Map.DisplayPolygon(Coordinates);
         }
 
         base.Initialize();
@@ -76,7 +78,7 @@ public partial class DownloadViewModel : ViewModelBase
     private void Clear()
     {
         Coordinates = null;
-        SendMessage(new DisplayPolygonOnMapMessage(null));
+        Map.DisplayPolygon(null);
     }
 
     [RelayCommand]
@@ -179,7 +181,7 @@ public partial class DownloadViewModel : ViewModelBase
             }
 
             Coordinates = importedCoordinates.ToArray();
-            SendMessage(new DisplayPolygonOnMapMessage(Coordinates));
+            Map.DisplayPolygon(Coordinates);
             await ShowOkAsync("导入成功", $"已导入 {importedCoordinates.Count} 个坐标点");
         }
         catch (Exception ex)
@@ -189,12 +191,13 @@ public partial class DownloadViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private Task InitializeAsync()
+    private async Task InitializeAsync()
     {
-        var tileHelper = new TileHelper(SendMessage(new GetSelectedDataSourceMessage()).DataSource);
-        return TryWithLoadingAsync(Task.Run(() =>
+        var tileSource = TileSource;
+        var tileHelper = new TileHelper(tileSource);
+        await TryWithLoadingAsync(Task.Run(() =>
         {
-            Levels = new ObservableCollection<LevelTilesViewModel>();
+            Levels = new ObservableCollection<DownloadingLevelViewModel>();
             var count = tileHelper.EstimateIntersectingTileCount(Coordinates, MaxLevel);
             if (count > 1_000_000)
             {
@@ -205,10 +208,16 @@ public partial class DownloadViewModel : ViewModelBase
             for (int i = MinLevel; i <= MaxLevel; i++)
             {
                 var tiles = tileHelper.GetIntersectingTiles(Coordinates, i);
-                var levelTile = new LevelTilesViewModel(i, tiles);
+                var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p => new DownloadingTileViewModel(p)));
                 Levels.Add(levelTile);
             }
+
+
+            Map.LoadTileGridsAsync(tileSource, Levels);
         }));
+
+        CanDownload = true;
+        DownloadTilesCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnCoordinatesChanged(Coordinate[] value)
@@ -223,14 +232,14 @@ public partial class DownloadViewModel : ViewModelBase
         }
     }
 
-    partial void OnSelectedLevelChanged(LevelTilesViewModel value)
+    partial void OnSelectedLevelChanged(DownloadingLevelViewModel value)
     {
         if (value == null)
         {
             return;
         }
 
-        SendMessage(new DisplayTilesOnMapMessage(value.Tiles));
+        Map.DisplayTileGrids(value.Level);
     }
 
     private void SaveConfigs()
@@ -245,12 +254,10 @@ public partial class DownloadViewModel : ViewModelBase
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task SelectOnMapAsync(CancellationToken cancellationToken)
     {
-        IsEnabled = false;
         IsSelecting = true;
-        var m = SendMessage(new SelectOnMapMessage(cancellationToken));
         try
         {
-            Coordinates = await m.Task;
+            Coordinates = await Map.DrawAsync(cancellationToken);
         }
         catch (OperationCanceledException)
         {
@@ -261,8 +268,32 @@ public partial class DownloadViewModel : ViewModelBase
         }
         finally
         {
-            IsEnabled = true;
             IsSelecting = false;
         }
     }
+
+    [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
+    private async Task DownloadTilesAsync(CancellationToken cancellationToken)
+    {
+        var downloader = new DownloadHelper();
+        try
+        {
+            await downloader.DownloadTilesAsync(Levels, cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("下载失败", ex);
+        }
+        finally
+        {
+            CanDownload = false;
+            DownloadTilesCommand.NotifyCanExecuteChanged();
+        }
+    }
+
+    private IMapService Map => SendMessage(new GetMapServiceMessage()).MapService;
+    private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
 }
