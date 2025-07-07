@@ -66,6 +66,8 @@ public partial class DownloadViewModel : ViewModelBase
     private int failedCount;
 
     private int skipCount;
+    
+    private int maxDownloadingLevel;
 
 
     private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
@@ -156,6 +158,11 @@ public partial class DownloadViewModel : ViewModelBase
                     throw new ArgumentOutOfRangeException();
             }
 
+            maxDownloadingLevel = Math.Max(maxDownloadingLevel, e.Tile.TileIndex.Level);
+            if (SelectedLevel != Levels[maxDownloadingLevel])
+            {
+                SelectedLevel = Levels[maxDownloadingLevel];
+            }
             Message = $"共{TotalCount}，成功{successCount}，失败{failedCount}，跳过{skipCount}";
             OnPropertyChanged(nameof(DownloadedCount));
         };
@@ -307,6 +314,7 @@ public partial class DownloadViewModel : ViewModelBase
         successCount = 0;
         failedCount = 0;
         skipCount = 0;
+        maxDownloadingLevel = 0;
 
         var tileSource = TileSource;
         var tileHelper = new TileHelper(tileSource);

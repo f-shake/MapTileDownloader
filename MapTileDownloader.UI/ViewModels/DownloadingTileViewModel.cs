@@ -18,7 +18,7 @@ public partial class DownloadingTileViewModel(TileIndex tileIndex) : ObservableO
 
         var oldStatus = Status;
         Status = newStatus;
-        DownloadStatusChanged?.Invoke(this, new DownloadStatusChangedEventArgs(oldStatus, newStatus, newMessage));
+        DownloadStatusChanged?.Invoke(this, new DownloadStatusChangedEventArgs(this, oldStatus, newStatus, newMessage));
     }
 
     public event EventHandler<DownloadStatusChangedEventArgs> DownloadStatusChanged;

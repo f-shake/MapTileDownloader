@@ -177,13 +177,13 @@ public class DownloadHelper
         return await response.Content.ReadAsByteArrayAsync(cancellationToken);
     }
 
-    private Task SaveTileToMBTilesAsync(BruTile.TileIndex tileIndex, byte[] data)
+    private async Task SaveTileToMBTilesAsync(BruTile.TileIndex tileIndex, byte[] data)
     {
         int z = tileIndex.Level;
         int x = tileIndex.Col;
         int y = tileIndex.Row;
 
-        using var cmd = mbtilesConnection.CreateCommand();
+        await using var cmd = mbtilesConnection.CreateCommand();
         cmd.CommandText = """
                           INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data)
                           VALUES (@z, @x, @y, @data);
@@ -192,7 +192,7 @@ public class DownloadHelper
         cmd.Parameters.AddWithValue("@x", x);
         cmd.Parameters.AddWithValue("@y", y);
         cmd.Parameters.AddWithValue("@data", data);
-        return cmd.ExecuteNonQueryAsync();
+        await cmd.ExecuteNonQueryAsync();
     }
 
     private string BuildTileUrl(BruTile.TileIndex index)

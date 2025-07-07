@@ -13,7 +13,10 @@
                 <Setter Property="Foreground" Value="{DynamicResource ButtonForegroundDisabled}" />
             </Style>
         </Style>
+    </Style>
 
+    <Style Selector="ListBox">
+        <Setter Property="Background" Value="Transparent" />
     </Style>
 
     <Style Selector="HeaderedContentControl.GroupBox">
