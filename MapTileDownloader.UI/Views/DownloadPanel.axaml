@@ -87,22 +87,24 @@
                                 ToolTip.Tip="{Binding MaxLevel}"
                                 Value="{Binding MaxLevel}" />
                         </c:FormItem>
-                        <c:FormItem Header="下载目录">
+                        <c:FormItem Header="保存至">
                             <Grid
                                 ColumnDefinitions="*,8,*"
                                 RowDefinitions="Auto,8,Auto">
                                 <TextBox
                                     Grid.ColumnSpan="3"
                                     MaxLines="5"
-                                    Text="{Binding DownloadDir}"
+                                    Text="{Binding DownloadFile}"
                                     TextWrapping="Wrap" />
                                 <Button
                                     Grid.Row="2"
+                                    Command="{Binding PickDownloadFileCommand}"
                                     Content="浏览.." />
                                 <Button
                                     Grid.Row="2"
                                     Grid.Column="2"
-                                    Content="打开" />
+                                    Command="{Binding OpenDownloadDirCommand}"
+                                    Content="打开目录" />
                             </Grid>
                         </c:FormItem>
                         <c:FormItem Header="{Binding MaxConcurrency, StringFormat={}最大并行数量 ({0})}">
@@ -123,8 +125,12 @@
             Grid.Row="2"
             Orientation="Vertical"
             Spacing="8">
-            <ProgressBar />
-            <TextBlock />
+            <ProgressBar
+                Maximum="{Binding TotalCount}"
+                Value="{Binding DownloadedCount}" />
+            <TextBlock
+                Text="{Binding Message}"
+                TextTrimming="CharacterEllipsis" />
             <ListBox
                 MaxHeight="300"
                 ItemsSource="{Binding Levels}"
@@ -151,7 +157,8 @@
             </ListBox>
             <UniformGrid
                 ColumnSpacing="8"
-                Columns="3">
+                Columns="3"
+                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}">
                 <Button
                     Command="{Binding InitializeCommand}"
                     Content="初始化" />

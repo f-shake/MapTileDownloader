@@ -16,25 +16,29 @@ using System.Threading;
 using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
+using System.Diagnostics;
 
 namespace MapTileDownloader.UI.ViewModels;
 
 public partial class DownloadViewModel : ViewModelBase
 {
     [ObservableProperty]
+    private bool canDownload = false;
+
+    [ObservableProperty]
     private Coordinate[] coordinates;
 
     [ObservableProperty]
-    private string downloadDir;
-
-    [ObservableProperty]
-    private bool canDownload = false;
+    private string downloadFile;
 
     [ObservableProperty]
     private bool isSelecting = false;
 
     [ObservableProperty]
     private ObservableCollection<DownloadingLevelViewModel> levels;
+
+    [ObservableProperty]
+    private int maxConcurrency = 10;
 
     [ObservableProperty]
     private int maxLevel;
@@ -49,14 +53,61 @@ public partial class DownloadViewModel : ViewModelBase
     private string selectionMessage;
 
     [ObservableProperty]
-    private int maxConcurrency = 10;
+    private int totalCount;
+
+    [ObservableProperty]
+    private int downloadedCount;
+
+    [ObservableProperty]
+    private string message;
+
+    private int successCount;
+
+    private int failedCount;
+
+    private int skipCount;
+
+
+    private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
+
+    public string GetSanitizeFileName()
+    {
+        if (string.IsNullOrWhiteSpace(TileSource?.Name))
+        {
+            return "未知";
+        }
+
+        var name = TileSource.Name;
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        // 替换非法字符（Windows 不允许的）
+        var invalidChars = Path.GetInvalidFileNameChars();
+        var sanitized = new StringBuilder();
+
+        foreach (var c in name)
+        {
+            sanitized.Append(Array.IndexOf(invalidChars, c) >= 0 ? '_' : c);
+        }
+
+        // 去除前后空格，防止出现空文件名
+        var result = sanitized.ToString().Trim();
+
+        // 限制长度（如需符合 Windows 限制 255）
+        if (result.Length > 128)
+        {
+            result = result[..128];
+        }
+
+        return (string.IsNullOrWhiteSpace(result) ? "未知" : result) + ".mbtiles";
+    }
 
     public override void Initialize()
     {
         Coordinates = Configs.Instance.DownloadArea;
         MinLevel = Configs.Instance.MinLevel;
         MaxLevel = Configs.Instance.MaxLevel;
-        DownloadDir = Configs.Instance.DownloadDir ?? Path.Combine(AppContext.BaseDirectory, "tiles");
+        DownloadFile = Configs.Instance.DownloadFile ??
+                       Path.Combine(AppContext.BaseDirectory, "tiles", GetSanitizeFileName());
         if (Coordinates != null)
         {
             Map.DisplayPolygon(Coordinates);
@@ -72,7 +123,7 @@ public partial class DownloadViewModel : ViewModelBase
                 nameof(Coordinates)
                 or nameof(MinLevel)
                 or nameof(MaxLevel)
-                or nameof(DownloadDir))
+                or nameof(DownloadFile))
         {
             SaveConfigs();
         }
@@ -83,6 +134,60 @@ public partial class DownloadViewModel : ViewModelBase
     {
         Coordinates = null;
         Map.DisplayPolygon(null);
+    }
+
+    private void RegisterDownloadEvent(DownloadingLevelViewModel level)
+    {
+        level.DownloadedCountIncrease += (s, e) =>
+        {
+            Interlocked.Increment(ref downloadedCount);
+            switch (e.NewStatus)
+            {
+                case DownloadStatus.Success:
+                    Interlocked.Increment(ref successCount);
+                    break;
+                case DownloadStatus.Skip:
+                    Interlocked.Increment(ref skipCount);
+                    break;
+                case DownloadStatus.Failed:
+                    Interlocked.Increment(ref failedCount);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            Message = $"共{TotalCount}，成功{successCount}，失败{failedCount}，跳过{skipCount}";
+            OnPropertyChanged(nameof(DownloadedCount));
+        };
+    }
+
+    [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
+    private async Task DownloadTilesAsync(CancellationToken cancellationToken)
+    {
+        var downloader = new DownloadHelper(TileSource, DownloadFile, MaxConcurrency);
+        try
+        {
+            foreach (var level in Levels)
+            {
+                RegisterDownloadEvent(level);
+            }
+
+            await downloader.DownloadTilesAsync(Levels, cancellationToken);
+            Message = "下载完成";
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("下载失败", ex);
+            Message = "下载失败";
+        }
+        finally
+        {
+            CanDownload = false;
+            DownloadTilesCommand.NotifyCanExecuteChanged();
+        }
     }
 
     [RelayCommand]
@@ -197,8 +302,15 @@ public partial class DownloadViewModel : ViewModelBase
     [RelayCommand]
     private async Task InitializeAsync()
     {
+        TotalCount = 0;
+        DownloadedCount = 0;
+        successCount = 0;
+        failedCount = 0;
+        skipCount = 0;
+
         var tileSource = TileSource;
         var tileHelper = new TileHelper(tileSource);
+
         await TryWithLoadingAsync(Task.Run(() =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
@@ -206,7 +318,6 @@ public partial class DownloadViewModel : ViewModelBase
             if (count > 1_000_000)
             {
                 throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
-                return;
             }
 
             for (int i = MinLevel; i <= MaxLevel; i++)
@@ -215,6 +326,8 @@ public partial class DownloadViewModel : ViewModelBase
                 var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p => new DownloadingTileViewModel(p)));
                 Levels.Add(levelTile);
             }
+
+            TotalCount = Levels.Select(p => p.Count).Sum();
 
 
             Map.LoadTileGridsAsync(tileSource, Levels);
@@ -251,7 +364,8 @@ public partial class DownloadViewModel : ViewModelBase
         Configs.Instance.DownloadArea = Coordinates;
         Configs.Instance.MinLevel = MinLevel;
         Configs.Instance.MaxLevel = MaxLevel;
-        Configs.Instance.DownloadDir = DownloadDir;
+        Configs.Instance.DownloadFile = DownloadFile;
+
         Configs.Instance.Save();
     }
 
@@ -276,53 +390,47 @@ public partial class DownloadViewModel : ViewModelBase
         }
     }
 
-    public static string SanitizeFileName(string name)
+    [RelayCommand]
+    private async Task OpenDownloadDirAsync()
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        // 替换非法字符（Windows 不允许的）
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new StringBuilder();
-
-        foreach (var c in name)
+        if (string.IsNullOrWhiteSpace(DownloadFile))
         {
-            sanitized.Append(Array.IndexOf(invalidChars, c) >= 0 ? '_' : c);
+            return;
         }
 
-        // 去除前后空格，防止出现空文件名
-        var result = sanitized.ToString().Trim();
-
-        // 限制长度（如需符合 Windows 限制 255）
-        if (result.Length > 128)
-        {
-            result = result[..128];
-        }
-
-        return string.IsNullOrWhiteSpace(result) ? "未知" : result;
-    }
-
-    [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
-    private async Task DownloadTilesAsync(CancellationToken cancellationToken)
-    {
-        var mbtilesPath = Path.Combine(DownloadDir, SanitizeFileName(TileSource.Name) + ".mbtiles");
-        var downloader = new DownloadHelper(TileSource, mbtilesPath, MaxConcurrency);
         try
         {
-            await downloader.DownloadTilesAsync(Levels, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
+            Process.Start(new ProcessStartInfo(Path.GetDirectoryName(DownloadFile)) { UseShellExecute = true });
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync("下载失败", ex);
-        }
-        finally
-        {
-            CanDownload = false;
-            DownloadTilesCommand.NotifyCanExecuteChanged();
+            await ShowErrorAsync("无法打开目录", ex);
         }
     }
 
-    private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
+    [RelayCommand]
+    private async Task PickDownloadFileAsync()
+    {
+        var storageProvider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
+        var options = new FilePickerSaveOptions
+        {
+            DefaultExtension = "mbtiles",
+            SuggestedFileName = GetSanitizeFileName(),
+            FileTypeChoices = new List<FilePickerFileType>
+            {
+                new FilePickerFileType("MB Tiles 地图瓦片数据库文件")
+                {
+                    Patterns = ["*.mbtiles"],
+                }
+            },
+            ShowOverwritePrompt = false
+        };
+        var file = await storageProvider.SaveFilePickerAsync(options);
+        if (file == null || file?.TryGetLocalPath() is not string filePath)
+        {
+            return;
+        }
+
+        DownloadFile = filePath;
+    }
 }

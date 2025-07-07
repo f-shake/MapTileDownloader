@@ -26,10 +26,12 @@ public partial class DownloadingLevelViewModel : ObservableObject, IDownloadingL
                     return;
                 }
 
-                if (e.OldStatus <= e.NewStatus && e.OldStatus <= DownloadStatus.Downloading)
+                if (e.OldStatus < e.NewStatus && e.OldStatus <= DownloadStatus.Downloading &&
+                    e.NewStatus > DownloadStatus.Downloading)
                 {
-                    Interlocked.Increment(ref downloadedCount); 
+                    Interlocked.Increment(ref downloadedCount);
                     OnPropertyChanged(nameof(DownloadedCount));
+                    DownloadedCountIncrease?.Invoke(this, e);
                 }
             };
         }
@@ -38,4 +40,6 @@ public partial class DownloadingLevelViewModel : ObservableObject, IDownloadingL
     public int Count => Tiles.Count;
     public int Level { get; set; }
     public IList<IDownloadingTile> Tiles { get; set; }
+
+    public event EventHandler<DownloadStatusChangedEventArgs> DownloadedCountIncrease;
 }

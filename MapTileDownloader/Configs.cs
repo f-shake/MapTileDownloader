@@ -39,7 +39,7 @@ public class Configs
 
     public Coordinate[] DownloadArea { get; set; }
 
-    public string DownloadDir { get; set; }
+    public string DownloadFile { get; set; }
 
     public int MaxLevel { get; set; } = 20;
 

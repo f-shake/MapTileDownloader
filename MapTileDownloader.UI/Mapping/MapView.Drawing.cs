@@ -27,7 +27,7 @@ public partial class MapView
     {
         if (coordinates == null || coordinates.Length < 3)
         {
-            drawingLayer.Features = null;
+           drawingLayer.Features = [];
             Refresh();
             return;
         }
@@ -82,7 +82,7 @@ public partial class MapView
     private void CancelDrawing()
     {
         EndDrawing();
-        drawingLayer.Features = null;
+        drawingLayer.Features = [];
         Refresh();
         if (tcs != null)
         {
@@ -95,7 +95,7 @@ public partial class MapView
     {
         isDrawing = false;
         vertices.Clear();
-        mousePositionLayer.Features = null;
+        mousePositionLayer.Features = [];
     }
 
     private void InitializeDrawing()
@@ -192,7 +192,7 @@ public partial class MapView
     {
         if (vertices.Count < 2)
         {
-            drawingLayer.Features = null;
+            drawingLayer.Features = [];
         }
         else
         {
