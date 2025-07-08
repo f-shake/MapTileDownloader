@@ -37,6 +37,7 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private ObservableCollection<DownloadStatusChangedEventArgs> errorTiles = new();
 
+    [ObservableProperty]
     private int failedCount;
 
     [ObservableProperty]
@@ -57,9 +58,6 @@ public partial class DownloadViewModel : ViewModelBase
     private int maxLevel;
 
     [ObservableProperty]
-    private string message = "就绪";
-
-    [ObservableProperty]
     private int minLevel;
 
     [ObservableProperty]
@@ -68,12 +66,15 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private string selectionMessage;
 
+    [ObservableProperty]
     private int skipCount;
 
+    [ObservableProperty]
     private int successCount;
 
     [ObservableProperty]
     private int totalCount;
+    
     private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
 
     public string GetSanitizeFileName()
@@ -148,7 +149,6 @@ public partial class DownloadViewModel : ViewModelBase
         IsDownloading = true;
         using var downloader = new DownloadService(TileSource, DownloadFile, MaxConcurrency);
 
-        Message = "正在初始化";
         try
         {
             await downloader.InitializeAsync();
@@ -156,7 +156,6 @@ public partial class DownloadViewModel : ViewModelBase
         catch (Exception ex)
         {
             await ShowErrorAsync("初始化失败", ex);
-            Message = "初始化失败";
             IsDownloading = false;
             return;
         }
@@ -172,16 +171,13 @@ public partial class DownloadViewModel : ViewModelBase
             {
                 await downloader.DownloadTilesAsync(Levels, cancellationToken);
             }, cancellationToken);
-            Message = "下载完成";
         }
         catch (OperationCanceledException)
         {
-            Message = "下载终止";
         }
         catch (Exception ex)
         {
             await ShowErrorAsync("下载失败", ex);
-            Message = "下载失败";
         }
         finally
         {
@@ -432,8 +428,11 @@ public partial class DownloadViewModel : ViewModelBase
             {
                 SelectedLevel = Levels[maxDownloadingLevel];
             }
-            Message = $"共{TotalCount}，成功{successCount}，失败{failedCount}，跳过{skipCount}";
             OnPropertyChanged(nameof(DownloadedCount));
+            OnPropertyChanged(nameof(SkipCount));
+            OnPropertyChanged(nameof(DownloadedCount));
+            OnPropertyChanged(nameof(SuccessCount));
+            OnPropertyChanged(nameof(FailedCount));
         };
     }
     private void SaveConfigs()

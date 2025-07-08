@@ -83,6 +83,7 @@ namespace MapTileDownloader.Services
             }
 
             public MbtilesService MbtilesService { get; }
+            
             [Route(HttpVerbs.Get, "/{z}/{x}/{y}")]
             public async Task GetTileAsync(int z, int x, int y)
             {
@@ -96,7 +97,7 @@ namespace MapTileDownloader.Services
                     else
                     {
                         Response.StatusCode = 404;
-                        await Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes("Tile not found"));
+                        await Response.OutputStream.WriteAsync("Tile not found"u8.ToArray());
                     }
                     return;
                 }

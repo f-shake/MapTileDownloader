@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 namespace MapTileDownloader.UI.ViewModels;
 public partial class ServerViewModel : ViewModelBase
 {
+    //还未进行配置持久化
     [ObservableProperty]
     private bool localHostOnly = true;
 
@@ -30,6 +31,9 @@ public partial class ServerViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool route = true;
+
+    [ObservableProperty]
+    private bool isServerOn;
 
     [RelayCommand]
     private async Task PickMbtilesFileAsync()
@@ -60,6 +64,7 @@ public partial class ServerViewModel : ViewModelBase
         Message = $"http://(IP):{Port}/{{z}}/{{x}}/{{y}}";
         try
         {
+            IsServerOn = true;
             Map.LoadLocalTileMaps($"http://localhost:{port}/{{z}}/{{x}}/{{y}}", 20);
             await TileServerService.RunAsync(new TileServerService.TileServerOptions
             {
@@ -77,6 +82,7 @@ public partial class ServerViewModel : ViewModelBase
         {
             Map.LoadLocalTileMaps(null, 0);
             Message = null;
+            IsServerOn = false;
         }
     }
 }

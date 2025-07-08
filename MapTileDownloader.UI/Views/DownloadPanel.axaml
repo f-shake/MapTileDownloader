@@ -157,46 +157,61 @@
                 <ProgressBar
                     Maximum="{Binding TotalCount}"
                     Value="{Binding DownloadedCount}" />
-                <Button
-                    HorizontalAlignment="Stretch"
-                    HorizontalContentAlignment="Left"
-                    Background="Transparent">
+
+                <TextBlock HorizontalAlignment="Center">
+                    <Run Text="共" />
+                    <Run Text="{Binding TotalCount}" />
+                    <Run Text="个瓦片，已处理" />
+                    <Run Text="{Binding DownloadedCount}" />
+                    <Run Text="个" />
+                </TextBlock>
+                <Grid ColumnDefinitions="*,8,*,8,*">
+                    <TextBlock Text="{Binding SkipCount, StringFormat={}跳过：{0}}" />
                     <TextBlock
-                        Text="{Binding Message}"
-                        TextTrimming="CharacterEllipsis" />
-                    <Button.Flyout>
-                        <Flyout>
-                            <DataGrid
-                                Width="400"
-                                Height="300"
-                                IsReadOnly="True"
-                                ItemsSource="{Binding ErrorTiles}">
-                                <DataGrid.RowDetailsTemplate>
-                                    <DataTemplate DataType="mtd:DownloadStatusChangedEventArgs">
-                                        <SelectableTextBlock
-                                            Margin="8"
-                                            Text="{Binding Detail}"
-                                            TextWrapping="Wrap" />
-                                    </DataTemplate>
-                                </DataGrid.RowDetailsTemplate>
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn
-                                        Binding="{Binding Tile.TileIndex.Level}"
-                                        Header="Z" />
-                                    <DataGridTextColumn
-                                        Binding="{Binding Tile.TileIndex.Col}"
-                                        Header="X" />
-                                    <DataGridTextColumn
-                                        Binding="{Binding Tile.TileIndex.Row}"
-                                        Header="Y" />
-                                    <DataGridTextColumn
-                                        Binding="{Binding Message}"
-                                        Header="信息" />
-                                </DataGrid.Columns>
-                            </DataGrid>
-                        </Flyout>
-                    </Button.Flyout>
-                </Button>
+                        Grid.Column="2"
+                        Text="{Binding SuccessCount, StringFormat={}成功：{0}}" />
+
+                    <Button
+                        Grid.Column="4"
+                        Margin="-4"
+                        Padding="3,4"
+                        HorizontalAlignment="Left"
+                        Background="Transparent">
+                        <TextBlock Text="{Binding FailedCount, StringFormat={}失败：{0}}" />
+                        <Button.Flyout>
+                            <Flyout>
+                                <DataGrid
+                                    Width="400"
+                                    Height="300"
+                                    IsReadOnly="True"
+                                    ItemsSource="{Binding ErrorTiles}">
+                                    <DataGrid.RowDetailsTemplate>
+                                        <DataTemplate DataType="mtd:DownloadStatusChangedEventArgs">
+                                            <SelectableTextBlock
+                                                Margin="8"
+                                                Text="{Binding Detail}"
+                                                TextWrapping="Wrap" />
+                                        </DataTemplate>
+                                    </DataGrid.RowDetailsTemplate>
+                                    <DataGrid.Columns>
+                                        <DataGridTextColumn
+                                            Binding="{Binding Tile.TileIndex.Level}"
+                                            Header="Z" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Tile.TileIndex.Col}"
+                                            Header="X" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Tile.TileIndex.Row}"
+                                            Header="Y" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Message}"
+                                            Header="信息" />
+                                    </DataGrid.Columns>
+                                </DataGrid>
+                            </Flyout>
+                        </Button.Flyout>
+                    </Button>
+                </Grid>
             </StackPanel>
         </HeaderedContentControl>
         <UniformGrid

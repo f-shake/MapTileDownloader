@@ -31,11 +31,14 @@ public partial class MapView
         _ = Task.Delay(1000).ContinueWith(_ =>
         {
             refreshPending = false;
-            Dispatcher.UIThread.Post(() =>
-            {
-                Refresh();
-            });
+            Dispatcher.UIThread.Post(() => { Refresh(); });
         });
+    }
+
+    public void ClearTileGrids()
+    {
+        featuresPerLevel = null;
+        tileGridLayer.Features = [];
     }
 
     public void DisplayTileGrids(int level)

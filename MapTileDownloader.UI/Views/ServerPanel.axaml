@@ -17,6 +17,7 @@
         Margin="8"
         RowDefinitions="Auto,*,Auto">
         <StackPanel
+            IsEnabled="{Binding !IsServerOn}"
             Orientation="Vertical"
             Spacing="8">
             <c:FormItem Header="Mbtiles文件地址">

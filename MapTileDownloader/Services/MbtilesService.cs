@@ -18,6 +18,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         {
             connectionString += ";Mode=ReadOnly;Cache=Shared";
         }
+
         mbtilesConnection = new SqliteConnection(connectionString);
     }
 
@@ -50,6 +51,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                     cmd.Parameters.AddWithValue(parameterName, value);
                 }
             }
+
             return await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
         }
         finally
@@ -61,8 +63,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
     public async Task<ISet<string>> GetExistingTilesAsync()
     {
         var results = await QueryAsync(
-            "SELECT zoom_level, tile_column, tile_row FROM tiles",
-            r => $"{r.GetInt32(0)}/{r.GetInt32(1)}/{r.GetInt32(2)}")
+                "SELECT zoom_level, tile_column, tile_row FROM tiles",
+                r => $"{r.GetInt32(0)}/{r.GetInt32(1)}/{r.GetInt32(2)}")
             .ConfigureAwait(false);
 
         var existingTiles = new HashSet<string>(capacity: results.Count); // 预分配容量
@@ -77,7 +79,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public async Task<byte[]> GetTileAsync(int x, int y, int z)
     {
-        var results = await QueryAsync(
+        var result = await QuerySingleValueAsync(
             "SELECT tile_data FROM tiles WHERE zoom_level = @z AND tile_column = @x AND tile_row = @y LIMIT 1",
             r => r.GetFieldValue<byte[]>(0),
             ("@z", z),
@@ -85,27 +87,28 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             ("@y", y)
         ).ConfigureAwait(false);
 
-        return results.Count > 0 ? results[0] : null;
+        return result;
     }
 
     public async ValueTask InitializeAsync()
     {
         await mbtilesConnection.OpenAsync().ConfigureAwait(false);
-        if(ReadOnly)
+        if (ReadOnly)
         {
             await ExecuteAsync("""
 
-                    PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
-                    PRAGMA locking_mode=NORMAL;       -- 避免独占锁（默认已足够）
-                    PRAGMA temp_store=MEMORY;         -- 临时表用内存
-                    PRAGMA mmap_size=268435456;       -- 256MB 内存映射（减少I/O）
-                    PRAGMA cache_size=-64000;         -- 64MB 缓存
+                                   PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
+                                   PRAGMA locking_mode=NORMAL;       -- 避免独占锁（默认已足够）
+                                   PRAGMA temp_store=MEMORY;         -- 临时表用内存
+                                   PRAGMA mmap_size=268435456;       -- 256MB 内存映射（减少I/O）
+                                   PRAGMA cache_size=-64000;         -- 64MB 缓存
 
-                """);
+                               """);
         }
     }
 
-    public async Task InitializeMBTilesAsync(string name, string format, string url, int minLevel = 0, int maxLevel = 19)
+    public async Task InitializeMBTilesAsync(string name, string format, string url, int minLevel = 0,
+        int maxLevel = 19)
     {
         await using var cmd = mbtilesConnection.CreateCommand();
         cmd.CommandText = """
@@ -124,7 +127,6 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         await InsertOrUpdateMetadataAsync("minzoom", minLevel.ToString());
         await InsertOrUpdateMetadataAsync("maxzoom", maxLevel.ToString());
         await InsertOrUpdateMetadataAsync("bounds", "-180.0,-85.0511,180.0,85.0511");
-
     }
 
     public async Task InsertOrUpdateMetadataAsync(string name, string value)
@@ -136,10 +138,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         ).ConfigureAwait(false);
     }
 
-    public async Task<List<T>> QueryAsync<T>(string sql, Func<SqliteDataReader, T> mapper, params (string, object)[] parameters)
+    private Task<SqliteDataReader> GetReaderAsync(SqliteCommand cmd, string sql, (string, object)[] parameters)
     {
-        CheckConnectionOpen();
-        using var cmd = mbtilesConnection.CreateCommand();
         cmd.CommandText = sql;
 
         if (parameters != null)
@@ -150,8 +150,16 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             }
         }
 
+        return cmd.ExecuteReaderAsync();
+    }
+
+    private async Task<List<T>> QueryAsync<T>(string sql, Func<SqliteDataReader, T> mapper,
+        params (string, object)[] parameters)
+    {
+        CheckConnectionOpen();
+        await using var cmd = mbtilesConnection.CreateCommand();
+        await using var reader =await GetReaderAsync(cmd, sql, parameters);
         var results = new List<T>();
-        await using var reader = await cmd.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
         {
@@ -159,6 +167,15 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
 
         return results;
+    }
+
+    private async Task<T> QuerySingleValueAsync<T>(string sql, Func<SqliteDataReader, T> mapper,
+        params (string, object)[] parameters)
+    {
+        CheckConnectionOpen();
+        await using var cmd = mbtilesConnection.CreateCommand();
+        await using var reader =await GetReaderAsync(cmd, sql, parameters);
+        return await reader.ReadAsync() ? mapper(reader) : default;
     }
 
     public async Task WriteTileAsync(int x, int y, int z, byte[] data)

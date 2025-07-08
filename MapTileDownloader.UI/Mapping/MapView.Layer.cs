@@ -7,6 +7,7 @@ using Mapsui.Tiling.Layers;
 using MapTileDownloader.Models;
 using System;
 using System.Net.Http;
+using MapTileDownloader.Enums;
 using Brush = Mapsui.Styles.Brush;
 using Color = Mapsui.Styles.Color;
 using Pen = Mapsui.Styles.Pen;
@@ -15,6 +16,7 @@ namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
+    
     /// <summary>
     /// XYZ底图
     /// </summary>
@@ -105,13 +107,13 @@ public partial class MapView
         Map.Layers.Insert(0, baseLayer);
     }
 
-    public void SetEnable(int index, bool enable)
+    public void SetEnable(AppLayer index, bool enable)
     {
-        if (index < 0 || index >= Map.Layers.Count)
+        if (index < 0 || (int)index >= Map.Layers.Count)
         {
             throw new ArgumentOutOfRangeException(nameof(index), "索引超出范围");
         }
-        var layer = Map.Layers[index];
+        var layer = Map.Layers[(int)index];
         layer.Enabled = enable;
     }
 

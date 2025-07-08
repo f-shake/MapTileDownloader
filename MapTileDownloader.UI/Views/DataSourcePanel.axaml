@@ -33,7 +33,7 @@
                     Classes="Icon"
                     Command="{Binding RemoveSourceCommand}"
                     Content="{StaticResource Delete}"
-                    IsEnabled="{Binding !!SelectedDataSource}" />
+                    IsEnabled="{Binding SelectedDataSource, Converter={StaticResource NotNullConverter}}" />
             </Grid>
             <StackPanel
                 IsEnabled="{Binding !!SelectedDataSource}"

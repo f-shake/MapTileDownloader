@@ -5,6 +5,7 @@ using System;
 using System.Collections.ObjectModel;
 
 namespace MapTileDownloader.UI.ViewModels;
+
 public partial class DataSourceViewModel : ViewModelBase
 {
     [ObservableProperty]
@@ -21,7 +22,6 @@ public partial class DataSourceViewModel : ViewModelBase
             SelectedDataSource = Sources[0];
         }
     }
-    public event EventHandler SelectedSourceChanged;
 
     [RelayCommand]
     private void AddSource()
@@ -33,15 +33,14 @@ public partial class DataSourceViewModel : ViewModelBase
     [RelayCommand]
     private void CallSelectedSourceChanged()
     {
-        SelectedSourceChanged?.Invoke(this, EventArgs.Empty);
+        OnSelectedDataSourceChanged(SelectedDataSource);
     }
 
-    [RelayCommand]
     partial void OnSelectedDataSourceChanged(TileDataSource value)
     {
-        Map.LoadTileMaps(SelectedDataSource);
+        Map.LoadTileMaps(value);
     }
-    
+
     [RelayCommand]
     private void RemoveSource()
     {
