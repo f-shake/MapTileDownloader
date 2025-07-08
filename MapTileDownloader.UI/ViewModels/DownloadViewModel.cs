@@ -2,7 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using FzLib.Avalonia.Messages;
-using MapTileDownloader.Helpers;
+using MapTileDownloader.Services;
 using MapTileDownloader.UI.Messages;
 using NetTopologySuite.Geometries;
 using System;
@@ -171,7 +171,7 @@ public partial class DownloadViewModel : ViewModelBase
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
-        var downloader = new DownloadHelper(TileSource, DownloadFile, MaxConcurrency);
+        var downloader = new DownloadService(TileSource, DownloadFile, MaxConcurrency);
         try
         {
             foreach (var level in Levels)
@@ -317,7 +317,7 @@ public partial class DownloadViewModel : ViewModelBase
         maxDownloadingLevel = 0;
 
         var tileSource = TileSource;
-        var tileHelper = new TileHelper(tileSource);
+        var tileHelper = new TileService(tileSource);
 
         await TryWithLoadingAsync(Task.Run(() =>
         {

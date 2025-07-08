@@ -2,7 +2,7 @@
 using Mapsui;
 using Mapsui.Nts;
 using Mapsui.Styles;
-using MapTileDownloader.Helpers;
+using MapTileDownloader.Services;
 using MapTileDownloader.Models;
 using System;
 using System.Collections.Generic;
@@ -64,7 +64,7 @@ public partial class MapView
         }
 
         featuresPerLevel = new Dictionary<int, List<GeometryFeature>>();
-        var tileHelper = new TileHelper(tileDataSource);
+        var tileHelper = new TileService(tileDataSource);
 
         // 生成瓦片几何图形 + 标注
 

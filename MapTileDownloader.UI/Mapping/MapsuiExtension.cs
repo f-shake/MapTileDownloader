@@ -3,7 +3,8 @@ using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using MapTileDownloader.Helpers;
+using MapTileDownloader.Extensions;
+using MapTileDownloader.Services;
 
 namespace MapTileDownloader.UI.Mapping;
 

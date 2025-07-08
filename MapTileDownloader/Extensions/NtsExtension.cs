@@ -1,6 +1,6 @@
 using NetTopologySuite.Geometries;
 
-namespace MapTileDownloader.Helpers;
+namespace MapTileDownloader.Extensions;
 
 public static class NtsExtension
 {

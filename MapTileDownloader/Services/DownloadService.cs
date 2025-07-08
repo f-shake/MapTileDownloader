@@ -8,9 +8,9 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using Microsoft.Data.Sqlite;
 
-namespace MapTileDownloader.Helpers;
+namespace MapTileDownloader.Services;
 
-public class DownloadHelper
+public class DownloadService
 {
     private readonly TileDataSource tileDataSource;
     private readonly HttpClient httpClient;
@@ -18,7 +18,7 @@ public class DownloadHelper
     private readonly SemaphoreSlim semaphore;
     private readonly HashSet<string> existingTiles;
 
-    public DownloadHelper(TileDataSource tileDataSource, string mbtilesPath, int maxConcurrency = 8)
+    public DownloadService(TileDataSource tileDataSource, string mbtilesPath, int maxConcurrency = 8)
     {
         this.tileDataSource = tileDataSource ?? throw new ArgumentNullException(nameof(tileDataSource));
         this.semaphore = new SemaphoreSlim(maxConcurrency);
@@ -61,7 +61,7 @@ public class DownloadHelper
         using var cmd = mbtilesConnection.CreateCommand();
         cmd.CommandText = """
                           CREATE TABLE tiles (zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BLOB);
-                          CREATE UNIQUE INDEX tile_index ON tiles (zoom_level, tile_column, tile_row);
+                          CREATE UNI QUE INDEX tile_index ON tiles (zoom_level, tile_column, tile_row);
                           CREATE TABLE metadata (name TEXT, value TEXT);
                           CREATE UNIQUE INDEX name ON metadata (name);
                           """;

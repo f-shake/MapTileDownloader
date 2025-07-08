@@ -1,12 +1,13 @@
 using BruTile;
 using BruTile.Predefined;
+using MapTileDownloader.Extensions;
 using MapTileDownloader.Models;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Prepared;
 
-namespace MapTileDownloader.Helpers;
+namespace MapTileDownloader.Services;
 
-public class TileHelper(TileDataSource tileDataSource)
+public class TileService(TileDataSource tileDataSource)
 {
     public TileDataSource TileDataSource { get; } = tileDataSource;
 
