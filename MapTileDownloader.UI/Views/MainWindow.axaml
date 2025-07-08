@@ -12,6 +12,7 @@
     d:DesignWidth="800"
     Icon="/Assets/icon.ico"
     WindowStartupLocation="CenterScreen"
+    WindowState="Maximized"
     mc:Ignorable="d">
     <views:MainView />
 </c:ExtendedWindow>

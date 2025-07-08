@@ -37,9 +37,9 @@ public partial class DownloadingLevelViewModel : ObservableObject, IDownloadingL
         }
     }
 
+    public event EventHandler<DownloadStatusChangedEventArgs> DownloadedCountIncrease;
+
     public int Count => Tiles.Count;
     public int Level { get; set; }
     public IList<IDownloadingTile> Tiles { get; set; }
-
-    public event EventHandler<DownloadStatusChangedEventArgs> DownloadedCountIncrease;
 }

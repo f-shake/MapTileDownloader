@@ -14,7 +14,6 @@ public class TileService(TileDataSource tileDataSource)
     public GlobalSphericalMercator TileSchema { get; } =
         new GlobalSphericalMercator(YAxis.OSM, 0, tileDataSource.MaxLevel);
 
-
     public long EstimateIntersectingTileCount(Coordinate[] polygonCoordinates3857, int zoomLevel)
     {
         var geometryFactory = new GeometryFactory();

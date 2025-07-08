@@ -7,9 +7,17 @@ namespace MapTileDownloader.UI.ViewModels;
 
 public partial class DownloadingTileViewModel(TileIndex tileIndex) : ObservableObject, IDownloadingTile
 {
+    [ObservableProperty]
+    private string message;
+
+    [ObservableProperty]
+    private DownloadStatus status;
+
+    public event EventHandler<DownloadStatusChangedEventArgs> DownloadStatusChanged;
+
     public TileIndex TileIndex { get; } = tileIndex;
 
-    public void SetStatus(DownloadStatus newStatus, string newMessage)
+    public void SetStatus(DownloadStatus newStatus, string message, string detail)
     {
         if (newStatus == Status)
         {
@@ -18,14 +26,6 @@ public partial class DownloadingTileViewModel(TileIndex tileIndex) : ObservableO
 
         var oldStatus = Status;
         Status = newStatus;
-        DownloadStatusChanged?.Invoke(this, new DownloadStatusChangedEventArgs(this, oldStatus, newStatus, newMessage));
+        DownloadStatusChanged?.Invoke(this, new DownloadStatusChangedEventArgs(this, oldStatus, newStatus, message, detail));
     }
-
-    public event EventHandler<DownloadStatusChangedEventArgs> DownloadStatusChanged;
-
-    [ObservableProperty]
-    private DownloadStatus status;
-
-    [ObservableProperty]
-    private string message;
 }

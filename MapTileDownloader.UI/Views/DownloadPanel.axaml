@@ -7,6 +7,7 @@
     xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mtd="using:MapTileDownloader"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
     d:DesignHeight="600"
@@ -17,7 +18,8 @@
         <HeaderedContentControl
             x:Name="grp1"
             Classes="GroupBox"
-            Header="下载范围">
+            Header="下载范围"
+            IsEnabled="{Binding !IsDownloading}">
             <StackPanel
                 Orientation="Vertical"
                 Spacing="8">
@@ -53,14 +55,13 @@
             </StackPanel>
         </HeaderedContentControl>
 
-
-
         <!--  由于TextBox的不知什么原因，下面这个GroupBox的宽度有问题，所以强制绑定到上面  -->
         <HeaderedContentControl
             Grid.Row="2"
             Width="{Binding #grp1.Bounds.Width}"
             Classes="GroupBox"
-            Header="下载选项">
+            Header="下载选项"
+            IsEnabled="{Binding !IsDownloading}">
             <ScrollViewer Padding="0,0,8,0">
                 <StackPanel
                     Orientation="Vertical"
@@ -128,12 +129,6 @@
             <StackPanel
                 Orientation="Vertical"
                 Spacing="8">
-                <ProgressBar
-                    Maximum="{Binding TotalCount}"
-                    Value="{Binding DownloadedCount}" />
-                <TextBlock
-                    Text="{Binding Message}"
-                    TextTrimming="CharacterEllipsis" />
                 <ListBox
                     MaxHeight="200"
                     ItemsSource="{Binding Levels}"
@@ -159,6 +154,49 @@
                         </DataTemplate>
                     </ListBox.ItemTemplate>
                 </ListBox>
+                <ProgressBar
+                    Maximum="{Binding TotalCount}"
+                    Value="{Binding DownloadedCount}" />
+                <Button
+                    HorizontalAlignment="Stretch"
+                    HorizontalContentAlignment="Left"
+                    Background="Transparent">
+                    <TextBlock
+                        Text="{Binding Message}"
+                        TextTrimming="CharacterEllipsis" />
+                    <Button.Flyout>
+                        <Flyout>
+                            <DataGrid
+                                Width="400"
+                                Height="300"
+                                IsReadOnly="True"
+                                ItemsSource="{Binding ErrorTiles}">
+                                <DataGrid.RowDetailsTemplate>
+                                    <DataTemplate DataType="mtd:DownloadStatusChangedEventArgs">
+                                        <SelectableTextBlock
+                                            Margin="8"
+                                            Text="{Binding Detail}"
+                                            TextWrapping="Wrap" />
+                                    </DataTemplate>
+                                </DataGrid.RowDetailsTemplate>
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn
+                                        Binding="{Binding Tile.TileIndex.Level}"
+                                        Header="Z" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding Tile.TileIndex.Col}"
+                                        Header="X" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding Tile.TileIndex.Row}"
+                                        Header="Y" />
+                                    <DataGridTextColumn
+                                        Binding="{Binding Message}"
+                                        Header="信息" />
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Flyout>
+                    </Button.Flyout>
+                </Button>
             </StackPanel>
         </HeaderedContentControl>
         <UniformGrid

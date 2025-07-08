@@ -8,7 +8,7 @@ public interface IDownloadingTile
 
     public DownloadStatus Status { get; }
 
-    public void SetStatus(DownloadStatus newStatus, string newMessage);
+    public void SetStatus(DownloadStatus newStatus, string message, string detail);
 
     public event EventHandler<DownloadStatusChangedEventArgs> DownloadStatusChanged;
 }

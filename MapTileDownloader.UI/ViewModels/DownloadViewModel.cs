@@ -29,7 +29,18 @@ public partial class DownloadViewModel : ViewModelBase
     private Coordinate[] coordinates;
 
     [ObservableProperty]
+    private int downloadedCount;
+
+    [ObservableProperty]
     private string downloadFile;
+
+    [ObservableProperty]
+    private ObservableCollection<DownloadStatusChangedEventArgs> errorTiles = new();
+
+    private int failedCount;
+
+    [ObservableProperty]
+    private bool isDownloading;
 
     [ObservableProperty]
     private bool isSelecting = false;
@@ -40,8 +51,13 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private int maxConcurrency = 10;
 
+    private int maxDownloadingLevel;
+
     [ObservableProperty]
     private int maxLevel;
+
+    [ObservableProperty]
+    private string message = "就绪";
 
     [ObservableProperty]
     private int minLevel;
@@ -52,24 +68,12 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private string selectionMessage;
 
-    [ObservableProperty]
-    private int totalCount;
-
-    [ObservableProperty]
-    private int downloadedCount;
-
-    [ObservableProperty]
-    private string message;
+    private int skipCount;
 
     private int successCount;
 
-    private int failedCount;
-
-    private int skipCount;
-    
-    private int maxDownloadingLevel;
-
-
+    [ObservableProperty]
+    private int totalCount;
     private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
 
     public string GetSanitizeFileName()
@@ -138,52 +142,41 @@ public partial class DownloadViewModel : ViewModelBase
         Map.DisplayPolygon(null);
     }
 
-    private void RegisterDownloadEvent(DownloadingLevelViewModel level)
-    {
-        level.DownloadedCountIncrease += (s, e) =>
-        {
-            Interlocked.Increment(ref downloadedCount);
-            switch (e.NewStatus)
-            {
-                case DownloadStatus.Success:
-                    Interlocked.Increment(ref successCount);
-                    break;
-                case DownloadStatus.Skip:
-                    Interlocked.Increment(ref skipCount);
-                    break;
-                case DownloadStatus.Failed:
-                    Interlocked.Increment(ref failedCount);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-
-            maxDownloadingLevel = Math.Max(maxDownloadingLevel, e.Tile.TileIndex.Level);
-            if (SelectedLevel != Levels[maxDownloadingLevel])
-            {
-                SelectedLevel = Levels[maxDownloadingLevel];
-            }
-            Message = $"共{TotalCount}，成功{successCount}，失败{failedCount}，跳过{skipCount}";
-            OnPropertyChanged(nameof(DownloadedCount));
-        };
-    }
-
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
-        var downloader = new DownloadService(TileSource, DownloadFile, MaxConcurrency);
+        IsDownloading = true;
+        using var downloader = new DownloadService(TileSource, DownloadFile, MaxConcurrency);
+
+        Message = "正在初始化";
         try
         {
-            foreach (var level in Levels)
-            {
-                RegisterDownloadEvent(level);
-            }
+            await downloader.InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("初始化失败", ex);
+            Message = "初始化失败";
+            IsDownloading = false;
+            return;
+        }
 
-            await downloader.DownloadTilesAsync(Levels, cancellationToken);
+        foreach (var level in Levels)
+        {
+            RegisterDownloadEvent(level);
+        }
+
+        try
+        {
+            await Task.Run(async () =>
+            {
+                await downloader.DownloadTilesAsync(Levels, cancellationToken);
+            }, cancellationToken);
             Message = "下载完成";
         }
         catch (OperationCanceledException)
         {
+            Message = "下载终止";
         }
         catch (Exception ex)
         {
@@ -195,6 +188,7 @@ public partial class DownloadViewModel : ViewModelBase
             CanDownload = false;
             DownloadTilesCommand.NotifyCanExecuteChanged();
         }
+        IsDownloading = false;
     }
 
     [RelayCommand]
@@ -315,6 +309,7 @@ public partial class DownloadViewModel : ViewModelBase
         failedCount = 0;
         skipCount = 0;
         maxDownloadingLevel = 0;
+        ErrorTiles.Clear();
 
         var tileSource = TileSource;
         var tileHelper = new TileService(tileSource);
@@ -367,37 +362,6 @@ public partial class DownloadViewModel : ViewModelBase
         Map.DisplayTileGrids(value.Level);
     }
 
-    private void SaveConfigs()
-    {
-        Configs.Instance.DownloadArea = Coordinates;
-        Configs.Instance.MinLevel = MinLevel;
-        Configs.Instance.MaxLevel = MaxLevel;
-        Configs.Instance.DownloadFile = DownloadFile;
-
-        Configs.Instance.Save();
-    }
-
-    [RelayCommand(IncludeCancelCommand = true)]
-    private async Task SelectOnMapAsync(CancellationToken cancellationToken)
-    {
-        IsSelecting = true;
-        try
-        {
-            Coordinates = await Map.DrawAsync(cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("地图错误", ex);
-        }
-        finally
-        {
-            IsSelecting = false;
-        }
-    }
-
     [RelayCommand]
     private async Task OpenDownloadDirAsync()
     {
@@ -440,5 +404,66 @@ public partial class DownloadViewModel : ViewModelBase
         }
 
         DownloadFile = filePath;
+    }
+
+    private void RegisterDownloadEvent(DownloadingLevelViewModel level)
+    {
+        level.DownloadedCountIncrease += (s, e) =>
+        {
+            Interlocked.Increment(ref downloadedCount);
+            switch (e.NewStatus)
+            {
+                case DownloadStatus.Success:
+                    Interlocked.Increment(ref successCount);
+                    break;
+                case DownloadStatus.Skip:
+                    Interlocked.Increment(ref skipCount);
+                    break;
+                case DownloadStatus.Failed:
+                    Interlocked.Increment(ref failedCount);
+                    ErrorTiles.Add(e);
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            maxDownloadingLevel = Math.Max(maxDownloadingLevel, e.Tile.TileIndex.Level);
+            if (SelectedLevel != Levels[maxDownloadingLevel])
+            {
+                SelectedLevel = Levels[maxDownloadingLevel];
+            }
+            Message = $"共{TotalCount}，成功{successCount}，失败{failedCount}，跳过{skipCount}";
+            OnPropertyChanged(nameof(DownloadedCount));
+        };
+    }
+    private void SaveConfigs()
+    {
+        Configs.Instance.DownloadArea = Coordinates;
+        Configs.Instance.MinLevel = MinLevel;
+        Configs.Instance.MaxLevel = MaxLevel;
+        Configs.Instance.DownloadFile = DownloadFile;
+
+        Configs.Instance.Save();
+    }
+
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task SelectOnMapAsync(CancellationToken cancellationToken)
+    {
+        IsSelecting = true;
+        try
+        {
+            Coordinates = await Map.DrawAsync(cancellationToken);
+        }
+        catch (OperationCanceledException)
+        {
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync("地图错误", ex);
+        }
+        finally
+        {
+            IsSelecting = false;
+        }
     }
 }
