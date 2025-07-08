@@ -49,7 +49,7 @@ public class DownloadService : IAsyncDisposable, IDisposable
         {
             httpClient.DefaultRequestHeaders.Add("Origin", tileDataSource.Origin);
         }
-        mbtilesService = new MbtilesService(mbtilesPath);
+        mbtilesService = new MbtilesService(mbtilesPath, false);
     }
 
     public void Dispose()

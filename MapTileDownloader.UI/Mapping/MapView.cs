@@ -1,11 +1,12 @@
 ﻿using Mapsui;
 using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
+using MapTileDownloader.Services;
 using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader.UI.Mapping
 {
-    public partial class MapView : MapControl,IMapService
+    public partial class MapView : MapControl, IMapService
     {
         public MapView()
         {

@@ -13,6 +13,7 @@
     <PackageReference Include="BruTile" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="NetTopologySuite" />
+    <PackageReference Include="EmbedIO" />
   </ItemGroup>
 
 </Project>

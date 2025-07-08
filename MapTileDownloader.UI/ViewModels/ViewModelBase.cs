@@ -4,7 +4,7 @@ using FzLib.Avalonia.Messages;
 using MapTileDownloader.UI.Messages;
 using System;
 using System.Threading.Tasks;
-using MapTileDownloader.UI.Mapping;
+using MapTileDownloader.Services;
 
 namespace MapTileDownloader.UI.ViewModels;
 

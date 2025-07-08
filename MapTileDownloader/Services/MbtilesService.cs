@@ -5,15 +5,20 @@ namespace MapTileDownloader.Services;
 
 public class MbtilesService : IAsyncDisposable, IDisposable
 {
-    private readonly SqliteConnection mbtilesConnection; 
-    
+    private readonly SqliteConnection mbtilesConnection;
+
     private readonly SemaphoreSlim connectionLock = new(1, 1);
 
 
-    public MbtilesService(string mbtilesPath)
+    public MbtilesService(string mbtilesPath, bool readOnly)
     {
         SqlitePath = mbtilesPath;
-        mbtilesConnection = new SqliteConnection($"Data Source={mbtilesPath}");
+        var connectionString = $"Data Source={mbtilesPath}";
+        if (readOnly)
+        {
+            connectionString += ";Mode=ReadOnly;Cache=Shared";
+        }
+        mbtilesConnection = new SqliteConnection(connectionString);
     }
 
     public string SqlitePath { get; }

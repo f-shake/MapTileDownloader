@@ -25,7 +25,6 @@ public partial class MainView : UserControl
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        map.LoadTileMaps((DataContext as MainViewModel)!.DataSourceViewModel.SelectedDataSource);
         (DataContext as MainViewModel)!.Initialize();
     }
 

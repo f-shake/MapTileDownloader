@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using NetTopologySuite.Geometries;
 
-namespace MapTileDownloader.UI.Mapping;
+namespace MapTileDownloader.Services;
 
 public interface IMapService
 {
@@ -14,4 +14,6 @@ public interface IMapService
     Task LoadTileGridsAsync(TileDataSource tileDataSource, IEnumerable<IDownloadingLevel> levels);
     void DisplayTileGrids(int level);
     void LoadTileMaps(TileDataSource tileDataSource);
+    void LoadLocalTileMaps(string url, int maxLevel);
+    void SetEnable(int index, bool enable);
 }

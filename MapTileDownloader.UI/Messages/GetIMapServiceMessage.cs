@@ -1,7 +1,7 @@
 using BruTile;
 using System.Collections.Generic;
 using MapTileDownloader.Models;
-using MapTileDownloader.UI.Mapping;
+using MapTileDownloader.Services;
 
 namespace MapTileDownloader.UI.Messages;
 

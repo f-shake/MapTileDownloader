@@ -31,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\ServerPanel.axaml.cs">
+      <DependentUpon>ServerPanel.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\DownloadPanel.axaml.cs">
       <DependentUpon>DownloadPanel.axaml</DependentUpon>
     </Compile>

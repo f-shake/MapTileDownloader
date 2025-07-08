@@ -22,7 +22,9 @@
             Width="8"
             Background="Transparent" />
         <Grid>
-            <TabControl TabStripPlacement="Top">
+            <TabControl
+                SelectedIndex="{Binding SelectedTabIndex}"
+                TabStripPlacement="Top">
                 <TabControl.Styles>
                     <Style Selector="TabItem">
                         <Setter Property="MinHeight" Value="36" />
@@ -46,7 +48,11 @@
                         DataContext="{Binding DownloadViewModel}" />
                 </TabItem>
                 <TabItem Header="拼接" />
-                <TabItem Header="HTTP服务" />
+                <TabItem Header="HTTP服务">
+                    <v:ServerPanel
+                        Margin="0,8"
+                        DataContext="{Binding ServerViewModel}" />
+                </TabItem>
             </TabControl>
         </Grid>
     </Grid>

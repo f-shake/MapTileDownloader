@@ -5,6 +5,8 @@ using Mapsui.Layers;
 using Mapsui.Styles;
 using Mapsui.Tiling.Layers;
 using MapTileDownloader.Models;
+using System;
+using System.Net.Http;
 using Brush = Mapsui.Styles.Brush;
 using Color = Mapsui.Styles.Color;
 using Pen = Mapsui.Styles.Pen;
@@ -14,9 +16,19 @@ namespace MapTileDownloader.UI.Mapping;
 public partial class MapView
 {
     /// <summary>
+    /// XYZ底图
+    /// </summary>
+    private TileLayer baseLayer;
+
+    /// <summary>
     /// 绘制和范围图层
     /// </summary>
     private MemoryLayer drawingLayer;
+
+    /// <summary>
+    /// 本地服务底图
+    /// </summary>
+    private TileLayer localBaseLayer;
 
     /// <summary>
     /// 绘制时鼠标位置图层
@@ -27,11 +39,34 @@ public partial class MapView
     /// 瓦片网格图层
     /// </summary>
     private MemoryLayer tileGridLayer;
+    public void LoadLocalTileMaps(string url, int maxLevel)
+    {
+        if (Map.Layers.Count > 1)
+        {
+            Map.Layers.Remove(Map.Layers[1]);
+        }
 
-    /// <summary>
-    /// XYZ底图
-    /// </summary>
-    private TileLayer baseLayer;
+        if (url == null || string.IsNullOrEmpty(url))
+        {
+            Map.Layers.Insert(1, new MemoryLayer());
+            return;
+        }
+        var httpClient = new HttpClient();
+        var s = new HttpTileSource(new GlobalSphericalMercator(0, maxLevel), url
+     //       , tileFetcher:async url =>
+     //   {
+     //var response= await      httpClient.GetAsync(url);
+     //       if(!response.IsSuccessStatusCode)
+     //       {
+     //           return null;
+     //       }
+     //       return await response.Content.ReadAsByteArrayAsync();
+     //   }
+        );
+
+        localBaseLayer = new TileLayer(s);
+        Map.Layers.Insert(1, localBaseLayer);
+    }
 
     public void LoadTileMaps(TileDataSource tileDataSource)
     {
@@ -47,7 +82,7 @@ public partial class MapView
         }
 
         var s = new HttpTileSource(
-            new GlobalSphericalMercator(0,tileDataSource.MaxLevel),
+            new GlobalSphericalMercator(0, tileDataSource.MaxLevel),
             tileDataSource.Url,
             userAgent: string.IsNullOrWhiteSpace(tileDataSource.UserAgent) ? null : tileDataSource.UserAgent
         );
@@ -68,6 +103,16 @@ public partial class MapView
 
         baseLayer = new TileLayer(s);
         Map.Layers.Insert(0, baseLayer);
+    }
+
+    public void SetEnable(int index, bool enable)
+    {
+        if (index < 0 || index >= Map.Layers.Count)
+        {
+            throw new ArgumentOutOfRangeException(nameof(index), "索引超出范围");
+        }
+        var layer = Map.Layers[index];
+        layer.Enabled = enable;
     }
 
     private void AddDrawingLayer()
@@ -108,7 +153,19 @@ public partial class MapView
             "http://localhost/{x}/{y}/{z}"
         );
         baseLayer = new TileLayer(s);
+        baseLayer.Enabled = false;
         Map.Layers.Add(baseLayer);
+    }
+
+    private void AddPlaceholderLocalBaseLayer()
+    {
+        var s = new HttpTileSource(
+            new GlobalSphericalMercator(0, 20),
+            "http://localhost/{x}/{y}/{z}"
+        );
+        localBaseLayer = new TileLayer(s);
+        localBaseLayer.Enabled = false;
+        Map.Layers.Add(localBaseLayer);
     }
 
     private void AddTileGridLayer()
@@ -130,6 +187,7 @@ public partial class MapView
     private void InitializeLayers()
     {
         AddPlaceholderBaseLayer();
+        AddPlaceholderLocalBaseLayer();
         AddTileGridLayer();
         AddDrawingLayer();
         AddMousePositionLayer();
