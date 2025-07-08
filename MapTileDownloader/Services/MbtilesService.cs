@@ -5,14 +5,14 @@ namespace MapTileDownloader.Services;
 
 public class MbtilesService : IAsyncDisposable, IDisposable
 {
-    private readonly SqliteConnection mbtilesConnection;
-
     private readonly SemaphoreSlim connectionLock = new(1, 1);
 
+    private readonly SqliteConnection mbtilesConnection;
 
     public MbtilesService(string mbtilesPath, bool readOnly)
     {
         SqlitePath = mbtilesPath;
+        ReadOnly = readOnly;
         var connectionString = $"Data Source={mbtilesPath}";
         if (readOnly)
         {
@@ -20,6 +20,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
         mbtilesConnection = new SqliteConnection(connectionString);
     }
+
+    public bool ReadOnly { get; }
 
     public string SqlitePath { get; }
 
@@ -89,6 +91,18 @@ public class MbtilesService : IAsyncDisposable, IDisposable
     public async ValueTask InitializeAsync()
     {
         await mbtilesConnection.OpenAsync().ConfigureAwait(false);
+        if(ReadOnly)
+        {
+            await ExecuteAsync("""
+
+                    PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
+                    PRAGMA locking_mode=NORMAL;       -- 避免独占锁（默认已足够）
+                    PRAGMA temp_store=MEMORY;         -- 临时表用内存
+                    PRAGMA mmap_size=268435456;       -- 256MB 内存映射（减少I/O）
+                    PRAGMA cache_size=-64000;         -- 64MB 缓存
+
+                """);
+        }
     }
 
     public async Task InitializeMBTilesAsync(string name, string format, string url, int minLevel = 0, int maxLevel = 19)

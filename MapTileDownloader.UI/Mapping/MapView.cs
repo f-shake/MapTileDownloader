@@ -1,4 +1,5 @@
-﻿using Mapsui;
+﻿using Avalonia;
+using Mapsui;
 using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
 using MapTileDownloader.Services;
@@ -16,7 +17,9 @@ namespace MapTileDownloader.UI.Mapping
         public void ZoomToGeometry(Geometry geometry, double growFactor = 0.1)
         {
             if (geometry == null || geometry.IsEmpty)
+            {
                 return;
+            }
 
             var envelope = geometry.EnvelopeInternal;
             var extent = new MRect(envelope.MinX, envelope.MinY, envelope.MaxX, envelope.MaxY);
@@ -27,7 +30,14 @@ namespace MapTileDownloader.UI.Mapping
 
         private void InitializeMap()
         {
-            Map.BackColor = Color.Gray;
+            if (Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark)
+            {
+                Map.BackColor = Color.Black;
+            }
+            else
+            {
+                Map.BackColor = Color.White;
+            }
             InitializeLayers();
             InitializeDrawing();
             InitializeTile();

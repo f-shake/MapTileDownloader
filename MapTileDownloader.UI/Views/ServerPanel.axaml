@@ -13,12 +13,43 @@
     d:DesignWidth="300"
     x:DataType="vm:ServerViewModel"
     mc:Ignorable="d">
-    <Grid RowDefinitions="Auto,*,Auto" Margin="8">
+    <Grid
+        Margin="8"
+        RowDefinitions="Auto,*,Auto">
+        <StackPanel
+            Orientation="Vertical"
+            Spacing="8">
+            <c:FormItem Header="Mbtiles文件地址">
+                <Grid ColumnDefinitions="*,8,Auto">
+                    <TextBox Text="{Binding MbtilesPath}" />
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding PickMbtilesFileCommand}"
+                        Content="浏览.." />
+                </Grid>
+            </c:FormItem>
+            <c:FormItem Header="端口">
+                <NumericUpDown
+                    FormatString="0"
+                    Maximum="65535"
+                    Minimum="1025"
+                    Value="{Binding Port}" />
+            </c:FormItem>
+            <CheckBox
+                Content="仅允许本地连接"
+                IsChecked="{Binding LocalHostOnly}" />
+            <CheckBox
+                Content="无数据时返回占位图而非404"
+                IsChecked="{Binding ReturnEmptyPngWhenNotFound}" />
+        </StackPanel>
         <StackPanel
             Grid.Row="2"
             Orientation="Vertical"
             Spacing="8">
-
+            <TextBlock
+                HorizontalAlignment="Center"
+                FontFamily="Consola"
+                Text="{Binding Message}" />
             <Button
                 Command="{Binding StartCommand}"
                 Content="开启服务" />
