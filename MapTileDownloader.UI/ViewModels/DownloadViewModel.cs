@@ -26,13 +26,10 @@ public partial class DownloadViewModel : ViewModelBase
     private bool canDownload = false;
 
     [ObservableProperty]
-    private Coordinate[] coordinates;
+    private Coordinate[] coordinates = Configs.Instance.DownloadArea;
 
     [ObservableProperty]
     private int downloadedCount;
-
-    [ObservableProperty]
-    private string downloadFile;
 
     [ObservableProperty]
     private ObservableCollection<DownloadStatusChangedEventArgs> errorTiles = new();
@@ -55,10 +52,10 @@ public partial class DownloadViewModel : ViewModelBase
     private int maxDownloadingLevel;
 
     [ObservableProperty]
-    private int maxLevel;
+    private int maxLevel = Configs.Instance.MaxLevel;
 
     [ObservableProperty]
-    private int minLevel;
+    private int minLevel = Configs.Instance.MinLevel;
 
     [ObservableProperty]
     private DownloadingLevelViewModel selectedLevel;
@@ -74,66 +71,15 @@ public partial class DownloadViewModel : ViewModelBase
 
     [ObservableProperty]
     private int totalCount;
-    
-    private TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
-
-    public string GetSanitizeFileName()
-    {
-        if (string.IsNullOrWhiteSpace(TileSource?.Name))
-        {
-            return "未知";
-        }
-
-        var name = TileSource.Name;
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        // 替换非法字符（Windows 不允许的）
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new StringBuilder();
-
-        foreach (var c in name)
-        {
-            sanitized.Append(Array.IndexOf(invalidChars, c) >= 0 ? '_' : c);
-        }
-
-        // 去除前后空格，防止出现空文件名
-        var result = sanitized.ToString().Trim();
-
-        // 限制长度（如需符合 Windows 限制 255）
-        if (result.Length > 128)
-        {
-            result = result[..128];
-        }
-
-        return (string.IsNullOrWhiteSpace(result) ? "未知" : result) + ".mbtiles";
-    }
 
     public override void Initialize()
     {
-        Coordinates = Configs.Instance.DownloadArea;
-        MinLevel = Configs.Instance.MinLevel;
-        MaxLevel = Configs.Instance.MaxLevel;
-        DownloadFile = Configs.Instance.DownloadFile ??
-                       Path.Combine(AppContext.BaseDirectory, "tiles", GetSanitizeFileName());
         if (Coordinates != null)
         {
             Map.DisplayPolygon(Coordinates);
         }
 
         base.Initialize();
-    }
-
-    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
-    {
-        base.OnPropertyChanged(e);
-        if (IsInitialized && e.PropertyName is
-                nameof(Coordinates)
-                or nameof(MinLevel)
-                or nameof(MaxLevel)
-                or nameof(DownloadFile))
-        {
-            SaveConfigs();
-        }
     }
 
     [RelayCommand]
@@ -147,7 +93,7 @@ public partial class DownloadViewModel : ViewModelBase
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
         IsDownloading = true;
-        using var downloader = new TileDownloadService(TileSource, DownloadFile, MaxConcurrency);
+        using var downloader = new TileDownloadService(TileSource, Configs.Instance.MbtilesFile, MaxConcurrency);
 
         try
         {
@@ -346,8 +292,18 @@ public partial class DownloadViewModel : ViewModelBase
         {
             SelectionMessage = $"已选择区域（{value.Length}边形）";
         }
+        Configs.Instance.DownloadArea = Coordinates;
     }
 
+    partial void OnMaxLevelChanged(int value)
+    {
+        Configs.Instance.MaxLevel = MaxLevel;
+    }
+
+    partial void OnMinLevelChanged(int value)
+    {
+        Configs.Instance.MinLevel = MaxLevel;
+    }
     partial void OnSelectedLevelChanged(DownloadingLevelViewModel value)
     {
         if (value == null)
@@ -357,51 +313,7 @@ public partial class DownloadViewModel : ViewModelBase
 
         Map.DisplayTileGrids(value.Level);
     }
-
-    [RelayCommand]
-    private async Task OpenDownloadDirAsync()
-    {
-        if (string.IsNullOrWhiteSpace(DownloadFile))
-        {
-            return;
-        }
-
-        try
-        {
-            Process.Start(new ProcessStartInfo(Path.GetDirectoryName(DownloadFile)) { UseShellExecute = true });
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("无法打开目录", ex);
-        }
-    }
-
-    [RelayCommand]
-    private async Task PickDownloadFileAsync()
-    {
-        var storageProvider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
-        var options = new FilePickerSaveOptions
-        {
-            DefaultExtension = "mbtiles",
-            SuggestedFileName = GetSanitizeFileName(),
-            FileTypeChoices = new List<FilePickerFileType>
-            {
-                new FilePickerFileType("MB Tiles 地图瓦片数据库文件")
-                {
-                    Patterns = ["*.mbtiles"],
-                }
-            },
-            ShowOverwritePrompt = false
-        };
-        var file = await storageProvider.SaveFilePickerAsync(options);
-        if (file == null || file?.TryGetLocalPath() is not string filePath)
-        {
-            return;
-        }
-
-        DownloadFile = filePath;
-    }
-
+    
     private void RegisterDownloadEvent(DownloadingLevelViewModel level)
     {
         level.DownloadedCountIncrease += (s, e) =>
@@ -435,16 +347,7 @@ public partial class DownloadViewModel : ViewModelBase
             OnPropertyChanged(nameof(FailedCount));
         };
     }
-    private void SaveConfigs()
-    {
-        Configs.Instance.DownloadArea = Coordinates;
-        Configs.Instance.MinLevel = MinLevel;
-        Configs.Instance.MaxLevel = MaxLevel;
-        Configs.Instance.DownloadFile = DownloadFile;
-
-        Configs.Instance.Save();
-    }
-
+   
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task SelectOnMapAsync(CancellationToken cancellationToken)
     {

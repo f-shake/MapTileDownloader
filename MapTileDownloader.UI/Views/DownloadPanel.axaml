@@ -9,6 +9,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:mtd="using:MapTileDownloader"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:v="clr-namespace:MapTileDownloader.UI.Views"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
     d:DesignHeight="600"
     d:DesignWidth="300"
@@ -89,24 +90,7 @@
                             Value="{Binding MaxLevel}" />
                     </c:FormItem>
                     <c:FormItem Header="保存至">
-                        <Grid
-                            ColumnDefinitions="*,8,*"
-                            RowDefinitions="Auto,8,Auto">
-                            <TextBox
-                                Grid.ColumnSpan="3"
-                                MaxLines="5"
-                                Text="{Binding DownloadFile}"
-                                TextWrapping="Wrap" />
-                            <Button
-                                Grid.Row="2"
-                                Command="{Binding PickDownloadFileCommand}"
-                                Content="浏览.." />
-                            <Button
-                                Grid.Row="2"
-                                Grid.Column="2"
-                                Command="{Binding OpenDownloadDirCommand}"
-                                Content="打开目录" />
-                        </Grid>
+                        <v:MbtilesPicker />
                     </c:FormItem>
                     <c:FormItem Header="{Binding MaxConcurrency, StringFormat={}最大并行数量 ({0})}">
                         <Slider

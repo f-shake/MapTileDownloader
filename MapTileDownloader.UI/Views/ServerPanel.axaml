@@ -8,6 +8,7 @@
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:v="clr-namespace:MapTileDownloader.UI.Views"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
     d:DesignHeight="600"
     d:DesignWidth="300"
@@ -21,13 +22,7 @@
             Orientation="Vertical"
             Spacing="8">
             <c:FormItem Header="Mbtiles文件地址">
-                <Grid ColumnDefinitions="*,8,Auto">
-                    <TextBox Text="{Binding MbtilesPath}" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding PickMbtilesFileCommand}"
-                        Content="浏览.." />
-                </Grid>
+                <v:MbtilesPicker />
             </c:FormItem>
             <c:FormItem Header="端口">
                 <NumericUpDown

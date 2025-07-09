@@ -17,9 +17,9 @@ public partial class DataSourceViewModel : ViewModelBase
     public DataSourceViewModel()
     {
         Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
-        if (Sources.Count > 0)
+        if (Configs.Instance.SelectedTileSourcesIndex >= 0 && Configs.Instance.SelectedTileSourcesIndex < Sources.Count)
         {
-            SelectedDataSource = Sources[0];
+            SelectedDataSource = Sources[Configs.Instance.SelectedTileSourcesIndex];
         }
     }
 
@@ -39,6 +39,7 @@ public partial class DataSourceViewModel : ViewModelBase
     partial void OnSelectedDataSourceChanged(TileDataSource value)
     {
         Map.LoadTileMaps(value);
+        Configs.Instance.SelectedTileSourcesIndex = Sources.IndexOf(value);
     }
 
     [RelayCommand]

@@ -4,6 +4,7 @@ using FzLib.Avalonia.Messages;
 using MapTileDownloader.UI.Messages;
 using System;
 using System.Threading.Tasks;
+using MapTileDownloader.Models;
 using MapTileDownloader.Services;
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -14,6 +15,9 @@ public abstract partial class ViewModelBase : ObservableObject
     private bool isInitialized;
     
     protected IMapService Map => SendMessage(new GetMapServiceMessage()).MapService;
+    
+    protected TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
+
 
     public virtual void Initialize()
     {

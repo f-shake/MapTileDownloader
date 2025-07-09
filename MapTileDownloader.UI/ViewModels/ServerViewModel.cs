@@ -11,51 +11,37 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace MapTileDownloader.UI.ViewModels;
+
 public partial class ServerViewModel : ViewModelBase
 {
-    //还未进行配置持久化
     [ObservableProperty]
-    private bool localHostOnly = true;
+    private bool isServerOn;
 
     [ObservableProperty]
-    private string mbtilesPath = @"C:\Users\autod\Desktop\ESRI影像.mbtiles";
-
-    [ObservableProperty]
-    private ushort port = 8888;
+    private bool localHostOnly = Configs.Instance.ServerLocalHostOnly;
 
     [ObservableProperty]
     private string message;
 
     [ObservableProperty]
-    private bool returnEmptyPngWhenNotFound = true;
+    private ushort port = Configs.Instance.ServerPort;
 
     [ObservableProperty]
-    private bool route = true;
+    private bool returnEmptyPngWhenNotFound = Configs.Instance.ServerReturnEmptyPngWhenNotFound;
 
-    [ObservableProperty]
-    private bool isServerOn;
-
-    [RelayCommand]
-    private async Task PickMbtilesFileAsync()
+    partial void OnLocalHostOnlyChanged(bool value)
     {
-        var storageProvider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
-        var options = new FilePickerOpenOptions
-        {
-            FileTypeFilter = new List<FilePickerFileType>
-            {
-                new FilePickerFileType("MB Tiles 地图瓦片数据库文件")
-                {
-                    Patterns = ["*.mbtiles"],
-                }
-            },
-        };
-        var files = await storageProvider.OpenFilePickerAsync(options);
-        if (files == null || files.Count != 1 || files[0]?.TryGetLocalPath() is not string filePath)
-        {
-            return;
-        }
+        Configs.Instance.ServerLocalHostOnly= value;
+    }
 
-        MbtilesPath = filePath;
+    partial void OnPortChanged(ushort value)
+    {
+        Configs.Instance.ServerPort = value;
+    }
+
+    partial void OnReturnEmptyPngWhenNotFoundChanged(bool value)
+    {
+        Configs.Instance.ServerReturnEmptyPngWhenNotFound= value;
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
@@ -68,8 +54,8 @@ public partial class ServerViewModel : ViewModelBase
             Map.LoadLocalTileMaps($"http://localhost:{port}/{{z}}/{{x}}/{{y}}", 20);
             await TileServerService.RunAsync(new TileServerService.TileServerOptions
             {
-                LocalhostOnly = localHostOnly,
-                MbtilesPath = mbtilesPath,
+                LocalhostOnly = LocalHostOnly,
+                MbtilesPath = Configs.Instance.MbtilesFile,
                 ReturnEmptyPngWhenNotFound = ReturnEmptyPngWhenNotFound,
                 Port = Port
             }, cancellationToken);

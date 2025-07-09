@@ -1,0 +1,35 @@
+<UserControl
+    x:Class="MapTileDownloader.UI.Views.MbtilesPicker"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
+    xmlns:map="using:MapTileDownloader.UI.Mapping"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mtd="using:MapTileDownloader"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    x:DataType="vm:MbtilesPickerViewModel"
+    mc:Ignorable="d">
+    <Grid
+        ColumnDefinitions="*,8,*"
+        RowDefinitions="Auto,8,Auto">
+        <TextBox
+            Grid.ColumnSpan="3"
+            MaxLines="5"
+            Text="{Binding File}"
+            TextWrapping="Wrap" />
+        <Button
+            Grid.Row="2"
+            Command="{Binding PickFileCommand}"
+            Content="浏览.." />
+        <Button
+            Grid.Row="2"
+            Grid.Column="2"
+            Command="{Binding OpenDirCommand}"
+            Content="打开目录" />
+    </Grid>
+</UserControl>

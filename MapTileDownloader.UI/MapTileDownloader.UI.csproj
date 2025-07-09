@@ -44,5 +44,9 @@
       <DependentUpon>DataSourceView.axaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Views\MbtilesPicker.axaml.cs">
+      <DependentUpon>MbtilesPicker.axaml</DependentUpon>
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
 </Project>

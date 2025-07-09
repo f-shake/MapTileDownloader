@@ -39,11 +39,20 @@ public class Configs
 
     public Coordinate[] DownloadArea { get; set; }
 
-    public string DownloadFile { get; set; }
-
     public int MaxLevel { get; set; } = 20;
 
+    public string MbtilesFile { get; set; }
+
     public int MinLevel { get; set; } = 0;
+
+    public int SelectedTileSourcesIndex { get; set; } = 0;
+
+    public bool ServerLocalHostOnly { get; set; } = true;
+
+    public ushort ServerPort { get; set; } = 8888;
+
+    public bool ServerReturnEmptyPngWhenNotFound { get; set; } = true;
+
 
     public List<TileDataSource> TileSources { get; set; } = new List<TileDataSource>
     {
@@ -53,6 +62,7 @@ public class Configs
             Url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
         }
     };
+
     public void Save()
     {
         var json = JsonSerializer.Serialize(this, MapTileDownloaderJsonContext.Config.Configs);
