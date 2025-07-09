@@ -92,6 +92,11 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public async ValueTask InitializeAsync()
     {
+        if(mbtilesConnection.State==ConnectionState.Open)
+        {
+            return;
+        }
+
         await mbtilesConnection.OpenAsync().ConfigureAwait(false);
         if (ReadOnly)
         {

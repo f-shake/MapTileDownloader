@@ -14,6 +14,7 @@
     <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="NetTopologySuite" />
     <PackageReference Include="EmbedIO" />
+    <PackageReference Include="Magick.NET-Q16-AnyCPU" />
   </ItemGroup>
 
 </Project>

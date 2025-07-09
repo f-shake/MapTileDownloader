@@ -31,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\MergePanel.axaml.cs">
+      <DependentUpon>MergePanel.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\ServerPanel.axaml.cs">
       <DependentUpon>ServerPanel.axaml</DependentUpon>
     </Compile>

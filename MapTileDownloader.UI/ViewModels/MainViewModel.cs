@@ -19,6 +19,8 @@ public partial class MainViewModel : ViewModelBase
 
     public ServerViewModel ServerViewModel { get; } = new ServerViewModel();
 
+    public MergeViewModel MergeViewModel { get; } = new MergeViewModel();
+
     public override void Initialize()
     {
         DataSourceViewModel.Initialize();

@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 
 namespace MapTileDownloader.Services;
-public class DownloadService : IAsyncDisposable, IDisposable
+
+public class TileDownloadService : MbtilesBasedService
 {
     private readonly HttpClient httpClient;
-    private readonly MbtilesService mbtilesService;
     private readonly SemaphoreSlim semaphore;
     private readonly TileDataSource tileSource;
     private ConcurrentDictionary<string, byte> existingTiles;
     private bool isInitialized = false;
 
-    public DownloadService(TileDataSource tileDataSource, string mbtilesPath, int maxConcurrency = 8)
+    public TileDownloadService(TileDataSource tileDataSource, string mbtilesPath, int maxConcurrency = 8) : base(mbtilesPath, false)
     {
         tileSource = tileDataSource ?? throw new ArgumentNullException(nameof(tileDataSource));
         semaphore = new SemaphoreSlim(maxConcurrency);
@@ -49,25 +49,18 @@ public class DownloadService : IAsyncDisposable, IDisposable
         {
             httpClient.DefaultRequestHeaders.Add("Origin", tileDataSource.Origin);
         }
-        mbtilesService = new MbtilesService(mbtilesPath, false);
     }
 
-    public void Dispose()
+    public override void Dispose()
     {
-        mbtilesService?.Dispose();
         httpClient?.Dispose();
+        base.Dispose();
     }
 
-    public async ValueTask DisposeAsync()
+    public override ValueTask DisposeAsync()
     {
-        if (httpClient is not null)
-        {
-            httpClient.Dispose();
-        }
-        if (mbtilesService is not null)
-        {
-            await mbtilesService.DisposeAsync().ConfigureAwait(false);
-        }
+        httpClient?.Dispose();
+        return base.DisposeAsync();
     }
 
     public async Task DownloadTilesAsync(IEnumerable<IDownloadingLevel> levels, CancellationToken cancellationToken)

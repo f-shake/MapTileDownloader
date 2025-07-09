@@ -9,15 +9,13 @@ using System.Threading.Tasks;
 
 namespace MapTileDownloader.Services
 {   
-    public class TileServerService : IDisposable
+    public class TileServerService : MbtilesBasedService
     {
         private readonly TileServerOptions options;
 
-        private MbtilesService mbtilesService;
-
         private WebServer server;
 
-        private TileServerService(TileServerOptions options)
+        private TileServerService(TileServerOptions options):base(options.MbtilesPath,true)
         {
             if (options == null)
             {
@@ -40,15 +38,20 @@ namespace MapTileDownloader.Services
             await serverService.StartAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public void Dispose()
+        public override void Dispose()
         {
             server?.Dispose();
-            GC.SuppressFinalize(this);
+            base.Dispose();
+        }
+
+        public override ValueTask DisposeAsync()
+        {
+            server?.Dispose();
+            return base.DisposeAsync();
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
-            mbtilesService = new MbtilesService(options.MbtilesPath, true);
             await mbtilesService.InitializeAsync().ConfigureAwait(false);
             var host = options.LocalhostOnly ? "localhost" : "*";
             var url = $"http://{host}:{options.Port}/";
