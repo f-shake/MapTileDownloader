@@ -68,42 +68,44 @@ public partial class DownloadViewModel : ViewModelBase
     {
         IsDownloading = true;
         using var downloader = new TileDownloadService(TileSource, Configs.Instance.MbtilesFile, MaxConcurrency);
-
-        try
+        await TryWithTabDisabledAsync(async () =>
         {
-            await downloader.InitializeAsync();
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("初始化失败", ex);
-            IsDownloading = false;
-            return;
-        }
-
-        foreach (var level in Levels)
-        {
-            RegisterDownloadEvent(level);
-        }
-
-        try
-        {
-            await Task.Run(async () =>
+            try
             {
-                await downloader.DownloadTilesAsync(Levels, cancellationToken);
-            }, cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("下载失败", ex);
-        }
-        finally
-        {
-            CanDownload = false;
-            DownloadTilesCommand.NotifyCanExecuteChanged();
-        }
+                await downloader.InitializeAsync();
+            }
+            catch (Exception ex)
+            {
+                await ShowErrorAsync("初始化失败", ex);
+                IsDownloading = false;
+                return;
+            }
+
+            foreach (var level in Levels)
+            {
+                RegisterDownloadEvent(level);
+            }
+
+            try
+            {
+                await Task.Run(async () =>
+                {
+                    await downloader.DownloadTilesAsync(Levels, cancellationToken);
+                }, cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+            }
+            catch (Exception ex)
+            {
+                await ShowErrorAsync("下载失败", ex);
+            }
+            finally
+            {
+                CanDownload = false;
+                DownloadTilesCommand.NotifyCanExecuteChanged();
+            }
+        }, "地图选择错误");
         IsDownloading = false;
     }
 
@@ -127,7 +129,7 @@ public partial class DownloadViewModel : ViewModelBase
         var tileSource = TileSource;
         var tileHelper = new TileService(tileSource);
 
-        await TryWithLoadingAsync(Task.Run(() =>
+        await TryWithLoadingAsync(() => Task.Run(() =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
             var count = tileHelper.EstimateIntersectingTileCount(Configs.Instance.Coordinates, MaxLevel);

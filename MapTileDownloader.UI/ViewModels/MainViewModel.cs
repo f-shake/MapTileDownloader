@@ -9,10 +9,6 @@ public partial class MainViewModel : ViewModelBase
     [ObservableProperty]
     private int selectedTabIndex;
 
-    public MainViewModel()
-    {
-    }
-
     public DataSourceViewModel DataSourceViewModel { get; } = new DataSourceViewModel();
 
     public DownloadViewModel DownloadViewModel { get; } = new DownloadViewModel();
@@ -36,9 +32,9 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectedTabIndexChanged(int value)
     {
-        Map.SetEnable(AppLayer.BaseLayer,value is 0 or 1);
-        Map.SetEnable(AppLayer.LocalBaseLayer,value is 2 or 3);
+        Map.SetEnable(AppLayer.BaseLayer,value is 0 or 1 or 2);
+        Map.SetEnable(AppLayer.LocalBaseLayer,value is 3);
         Map.SetEnable(AppLayer.TileGridLayer,value is 1);
-        Map.SetEnable(AppLayer.DrawingLayer,value is 0 or 1);
+        Map.SetEnable(AppLayer.DrawingLayer,value is 0 or 1 or 2);
     }
 }

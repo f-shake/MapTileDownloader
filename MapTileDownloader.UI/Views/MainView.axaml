@@ -23,6 +23,7 @@
             Background="Transparent" />
         <Grid>
             <TabControl
+                x:Name="tab"
                 SelectedIndex="{Binding SelectedTabIndex}"
                 TabStripPlacement="Top">
                 <TabControl.Styles>
@@ -47,11 +48,11 @@
                         Margin="0,8"
                         DataContext="{Binding DownloadViewModel}" />
                 </TabItem>
-              <TabItem Header="拼接" >
-                <v:MergePanel
-                    Margin="0,8"
-                    DataContext="{Binding MergeViewModel}" />
-              </TabItem>
+                <TabItem Header="拼接">
+                    <v:MergePanel
+                        Margin="0,8"
+                        DataContext="{Binding MergeViewModel}" />
+                </TabItem>
                 <TabItem Header="HTTP服务">
                     <v:ServerPanel
                         Margin="0,8"

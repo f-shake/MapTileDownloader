@@ -13,9 +13,9 @@ public abstract partial class ViewModelBase : ObservableObject
 {
     [ObservableProperty]
     private bool isInitialized;
-    
+
     protected IMapService Map => SendMessage(new GetMapServiceMessage()).MapService;
-    
+
     protected TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
 
 
@@ -58,12 +58,14 @@ public abstract partial class ViewModelBase : ObservableObject
             Message = message
         }).Task;
     }
-    public async Task TryWithLoadingAsync(Task task, string errorTitle = "错误")
+
+
+    public async Task TryWithLoadingAsync(Func<Task> func, string errorTitle = "错误")
     {
         SendMessage(new LoadingMessage(true));
         try
         {
-            await task;
+            await func();
         }
         catch (Exception ex)
         {
@@ -72,6 +74,23 @@ public abstract partial class ViewModelBase : ObservableObject
         finally
         {
             SendMessage(new LoadingMessage(false));
+        }
+    }
+
+    public async Task TryWithTabDisabledAsync(Func<Task> func, string errorTitle = "错误")
+    {
+        SendMessage(new TabEnableMessage(false));
+        try
+        {
+            await func();
+        }
+        catch (Exception ex)
+        {
+            await ShowErrorAsync(errorTitle, ex);
+        }
+        finally
+        {
+            SendMessage(new TabEnableMessage(true));
         }
     }
 }

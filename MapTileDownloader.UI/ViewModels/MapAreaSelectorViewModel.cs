@@ -172,20 +172,10 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     private async Task SelectOnMapAsync(CancellationToken cancellationToken)
     {
         IsSelecting = true;
-        try
+        await TryWithTabDisabledAsync(async () =>
         {
             Coordinates = await Map.DrawAsync(cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("地图错误", ex);
-        }
-        finally
-        {
-            IsSelecting = false;
-        }
+        }, "地图选择错误");
+        IsSelecting = false;
     }
 }
