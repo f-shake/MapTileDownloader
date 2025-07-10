@@ -21,45 +21,11 @@
             Classes="GroupBox"
             Header="下载范围"
             IsEnabled="{Binding !IsDownloading}">
-            <StackPanel
-                Orientation="Vertical"
-                Spacing="8">
-                <Grid ColumnDefinitions="*,8,*">
-                    <Button
-                        Command="{Binding SelectOnMapCommand}"
-                        Content="在地图中选择" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding SelectOnMapCancelCommand}"
-                        Content="取消"
-                        IsVisible="{Binding IsSelecting}" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding ClearCommand}"
-                        Content="清除已选范围"
-                        IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
-                        IsVisible="{Binding !IsSelecting}" />
-                </Grid>
-                <TextBlock
-                    HorizontalAlignment="Center"
-                    Text="{Binding SelectionMessage}" />
-                <Grid ColumnDefinitions="*,8,*">
-                    <Button
-                        Command="{Binding ImportCoordinatesCommand}"
-                        Content="导入" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding ExportCoordinatesCommand}"
-                        Content="导出"
-                        IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}" />
-                </Grid>
-            </StackPanel>
+            <v:MapAreaSelector />
         </HeaderedContentControl>
 
-        <!--  由于TextBox的不知什么原因，下面这个GroupBox的宽度有问题，所以强制绑定到上面  -->
         <HeaderedContentControl
             Grid.Row="2"
-            Width="{Binding #grp1.Bounds.Width}"
             Classes="GroupBox"
             Header="下载选项"
             IsEnabled="{Binding !IsDownloading}">
@@ -201,8 +167,7 @@
         <UniformGrid
             Grid.Row="6"
             ColumnSpacing="8"
-            Columns="3"
-            IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}">
+            Columns="3">
             <Button
                 Command="{Binding InitializeCommand}"
                 Content="初始化" />

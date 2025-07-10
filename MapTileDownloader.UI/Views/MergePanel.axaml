@@ -8,16 +8,77 @@
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:v="clr-namespace:MapTileDownloader.UI.Views"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
     d:DesignHeight="600"
     d:DesignWidth="300"
     x:DataType="vm:MergeViewModel"
     mc:Ignorable="d">
-    <Grid
-        Margin="8"
-        RowDefinitions="Auto,*,Auto">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <StackPanel
+            Orientation="Vertical"
+            Spacing="8">
+            <HeaderedContentControl
+                Classes="GroupBox"
+                Header="拼接范围">
+                <StackPanel
+                    Orientation="Vertical"
+                    Spacing="8">
+                    <v:MapAreaSelector />
+                    <c:FormItem Header="级别">
+                        <Slider
+                            IsSnapToTickEnabled="True"
+                            Maximum="20"
+                            Minimum="1"
+                            TickFrequency="1"
+                            TickPlacement="BottomRight"
+                            ToolTip.Tip="{Binding Level}"
+                            Value="{Binding Level}" />
+
+                    </c:FormItem>
+                    <c:FormItem Header="范围">
+
+                        <Grid
+                            ColumnDefinitions="*,8,*,8,*"
+                            RowDefinitions="*,8,*,8,*">
+                            <Grid.Styles>
+                                <Style Selector="TextBox">
+                                    <Setter Property="TextAlignment" Value="Center" />
+                                </Style>
+                            </Grid.Styles>
+                            <Border
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                BorderBrush="{Binding $parent[UserControl].Foreground}"
+                                BorderThickness="2">
+                                <Border.Background>
+                                    <SolidColorBrush
+                                        Opacity="0.5"
+                                        Color="Gray" />
+                                </Border.Background>
+                            </Border>
+                            <TextBox
+                                Grid.Row="2"
+                                Text="{Binding MinX}" />
+                            <TextBox
+                                Grid.Column="2"
+                                Text="{Binding MinY}" />
+                            <TextBox
+                                Grid.Row="2"
+                                Grid.Column="4"
+                                Text="{Binding MaxX}" />
+                            <TextBox
+                                Grid.Row="4"
+                                Grid.Column="2"
+                                Text="{Binding MaxY}" />
+                        </Grid>
+                    </c:FormItem>
+                </StackPanel>
+            </HeaderedContentControl>
+        </StackPanel>
         <Button
-            Command="{Binding TryCommand}"
-            Content="aaa" />
+            Grid.Row="2"
+            Command="{Binding MergeCommand}"
+            Content="合并" />
     </Grid>
 </UserControl>

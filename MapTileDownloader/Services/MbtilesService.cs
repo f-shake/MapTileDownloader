@@ -28,7 +28,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public void Dispose()
     {
-        mbtilesConnection.Dispose();
+        mbtilesConnection?.Dispose();
     }
 
     public async ValueTask DisposeAsync()

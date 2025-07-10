@@ -22,6 +22,24 @@
     <Style Selector="HeaderedContentControl.GroupBox">
         <Setter Property="Template">
             <ControlTemplate>
+                <Grid RowDefinitions="Auto,*">
+
+                    <TextBlock
+                        FontWeight="Bold"
+                        Text="{TemplateBinding Header}" />
+                    <ContentPresenter
+                        Name="PART_ContentPresenter"
+                        Grid.Row="2"
+                        Padding="8,8,0,8"
+                        Content="{TemplateBinding Content}" />
+                </Grid>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+
+    <Style Selector="HeaderedContentControl.GroupBoxWithBorder">
+        <Setter Property="Template">
+            <ControlTemplate>
                 <Grid
                     ColumnDefinitions="Auto,*"
                     RowDefinitions="Auto,*">

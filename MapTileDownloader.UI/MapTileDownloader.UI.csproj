@@ -31,6 +31,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Views\MapAreaSelector.axaml.cs">
+      <DependentUpon>MapAreaSelector.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\MergePanel.axaml.cs">
       <DependentUpon>MergePanel.axaml</DependentUpon>
     </Compile>

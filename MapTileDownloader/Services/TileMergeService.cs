@@ -1,8 +1,9 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using ImageMagick;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp.Processing;
 
 namespace MapTileDownloader.Services
 {
@@ -35,38 +36,33 @@ namespace MapTileDownloader.Services
             int maxY,
             int tileSize = 256)
         {
-            await mbtilesService. InitializeAsync(); // 确保数据库连接已打开
+            await mbtilesService.InitializeAsync();
+
             int totalWidth = (maxX - minX + 1) * tileSize;
             int totalHeight = (maxY - minY + 1) * tileSize;
 
-            // 使用 MagickImageCollection 分块处理
-            using (var images = new MagickImageCollection())
+            using var resultImage = new Image<Rgba32>(totalWidth, totalHeight);
+
+            for (int x = minX; x <= maxX; x++)
             {
-                // 分块处理瓦片
-                for (int x = minX; x <= maxX; x++)
+                for (int y = minY; y <= maxY; y++)
                 {
-                    for (int y = minY; y <= maxY; y++)
-                    {
-                        int offsetX = (x - minX) * tileSize;
-                        int offsetY = (y - minY) * tileSize;
-                        await AddTileToCollectionAsync(images, z, x, y, offsetX, offsetY, tileSize);
-                    }
-                }
-                //还是占用大量内存
-                // 合并所有瓦片并保存
-                using (var result = images.Mosaic())
-                {
-                    Environment.SetEnvironmentVariable("MAGICK_TEMPORARY_PATH", tempDirectory);
-                    result.Write(outputPath);
+                    int offsetX = (x - minX) * tileSize;
+                    int offsetY = (y - minY) * tileSize;
+
+                    await AddTileToImageAsync(resultImage, z, x, y, offsetX, offsetY, tileSize);
                 }
             }
+
+            // 自动根据扩展名决定格式
+            await resultImage.SaveAsync(outputPath);
 
             if (cleanupTempFiles)
                 CleanupTempFiles();
         }
 
-        private async Task AddTileToCollectionAsync(
-            MagickImageCollection collection,
+        private async Task AddTileToImageAsync(
+            Image<Rgba32> canvas,
             int z, int x, int y,
             int offsetX, int offsetY,
             int tileSize)
@@ -75,29 +71,13 @@ namespace MapTileDownloader.Services
             if (tileData == null || tileData.Length == 0)
                 return;
 
-            string tempTilePath = Path.Combine(tempDirectory, $"tile_{x}_{y}_{z}.tmp");
-            await File.WriteAllBytesAsync(tempTilePath, tileData);
+            using var tileImage = Image.Load<Rgba32>(tileData);
+            if (tileImage.Width != tileSize || tileImage.Height != tileSize)
+            {
+                tileImage.Mutate(x => x.Resize(tileSize, tileSize));
+            }
 
-            // 注意：不再使用 using，由 MagickImageCollection 管理生命周期
-            var tileImage = new MagickImage(tempTilePath);
-            try
-            {
-                if (tileImage.Width != tileSize || tileImage.Height != tileSize)
-                    tileImage.Resize((uint)tileSize, (uint)tileSize);
-
-                tileImage.Page = new MagickGeometry(offsetX, offsetY, (uint)tileSize, (uint)tileSize);
-                collection.Add(tileImage);
-            }
-            catch
-            {
-                // 如果添加失败，手动释放资源
-                tileImage?.Dispose();
-                throw;
-            }
-            finally
-            {
-                File.Delete(tempTilePath);
-            }
+            canvas.Mutate(x => x.DrawImage(tileImage, new Point(offsetX, offsetY), 1f));
         }
 
         private void CleanupTempFiles()
@@ -106,7 +86,7 @@ namespace MapTileDownloader.Services
             {
                 Directory.Delete(tempDirectory, true);
             }
-            catch { /* 忽略清理错误 */ }
+            catch { /* 忽略异常 */ }
         }
     }
 }

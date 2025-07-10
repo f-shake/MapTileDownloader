@@ -1,0 +1,51 @@
+
+<UserControl
+    x:Class="MapTileDownloader.UI.Views.MapAreaSelector"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
+    xmlns:map="using:MapTileDownloader.UI.Mapping"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mtd="using:MapTileDownloader"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    x:DataType="vm:MapAreaSelectorViewModel"
+    mc:Ignorable="d">
+    <StackPanel
+        Orientation="Vertical"
+        Spacing="8">
+        <Grid ColumnDefinitions="*,8,*">
+            <Button
+                Command="{Binding SelectOnMapCommand}"
+                Content="在地图中选择" />
+            <Button
+                Grid.Column="2"
+                Command="{Binding SelectOnMapCancelCommand}"
+                Content="取消"
+                IsVisible="{Binding IsSelecting}" />
+            <Button
+                Grid.Column="2"
+                Command="{Binding ClearCommand}"
+                Content="清除已选范围"
+                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
+                IsVisible="{Binding !IsSelecting}" />
+        </Grid>
+        <TextBlock
+            HorizontalAlignment="Center"
+            Text="{Binding SelectionMessage}" />
+        <Grid ColumnDefinitions="*,8,*">
+            <Button
+                Command="{Binding ImportCoordinatesCommand}"
+                Content="导入" />
+            <Button
+                Grid.Column="2"
+                Command="{Binding ExportCoordinatesCommand}"
+                Content="导出"
+                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}" />
+        </Grid>
+    </StackPanel>
+</UserControl>

@@ -32,11 +32,11 @@ namespace MapTileDownloader.UI.Mapping
         {
             if (Application.Current?.ActualThemeVariant == Avalonia.Styling.ThemeVariant.Dark)
             {
-                Map.BackColor = Color.Black;
+                Map.BackColor = Color.FromArgb(0xFF, 0x22, 0x22, 0x22);
             }
             else
             {
-                Map.BackColor = Color.White;
+                Map.BackColor = Color.FromArgb(0xFF, 0xDD, 0xDD, 0xDD);
             }
             InitializeLayers();
             InitializeDrawing();

@@ -26,9 +26,6 @@ public partial class DownloadViewModel : ViewModelBase
     private bool canDownload = false;
 
     [ObservableProperty]
-    private Coordinate[] coordinates = Configs.Instance.DownloadArea;
-
-    [ObservableProperty]
     private int downloadedCount;
 
     [ObservableProperty]
@@ -39,9 +36,6 @@ public partial class DownloadViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool isDownloading;
-
-    [ObservableProperty]
-    private bool isSelecting = false;
 
     [ObservableProperty]
     private ObservableCollection<DownloadingLevelViewModel> levels;
@@ -61,9 +55,6 @@ public partial class DownloadViewModel : ViewModelBase
     private DownloadingLevelViewModel selectedLevel;
 
     [ObservableProperty]
-    private string selectionMessage;
-
-    [ObservableProperty]
     private int skipCount;
 
     [ObservableProperty]
@@ -71,23 +62,6 @@ public partial class DownloadViewModel : ViewModelBase
 
     [ObservableProperty]
     private int totalCount;
-
-    public override void Initialize()
-    {
-        if (Coordinates != null)
-        {
-            Map.DisplayPolygon(Coordinates);
-        }
-
-        base.Initialize();
-    }
-
-    [RelayCommand]
-    private void Clear()
-    {
-        Coordinates = null;
-        Map.DisplayPolygon(null);
-    }
 
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
@@ -134,117 +108,14 @@ public partial class DownloadViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task ExportCoordinatesAsync()
-    {
-        if (Coordinates is not { Length: > 0 })
-        {
-            await ShowErrorAsync("范围为空", "下载范围为空");
-            return;
-        }
-
-        var options = new FilePickerSaveOptions
-        {
-            DefaultExtension = "csv", // 默认文件扩展名
-            SuggestedFileName = "tiles.csv", // 可选：默认文件名
-            FileTypeChoices = new List<FilePickerFileType>
-            {
-                new FilePickerFileType("CSV 文件")
-                {
-                    Patterns = ["*.csv"],
-                    MimeTypes = ["text/csv"]
-                }
-            }
-        };
-        var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
-
-        var filePath = file?.TryGetLocalPath();
-        if (filePath == null)
-        {
-            return;
-        }
-
-        var content = string.Join(Environment.NewLine, ["X,Y", .. Coordinates.Select(p => $"{p.X},{p.Y}")]);
-        try
-        {
-            await File.WriteAllTextAsync(filePath, content);
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("保存失败", ex);
-        }
-    }
-
-    [RelayCommand]
-    private async Task ImportCoordinatesAsync()
-    {
-        try
-        {
-            var storageProvider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
-
-            // 2. 配置文件选择选项（仅允许CSV）
-            var options = new FilePickerOpenOptions
-            {
-                Title = "选择坐标文件",
-                AllowMultiple = false,
-                FileTypeFilter = new List<FilePickerFileType>
-                {
-                    new FilePickerFileType("CSV文件")
-                    {
-                        Patterns = ["*.csv"],
-                        MimeTypes = ["text/csv"]
-                    }
-                }
-            };
-
-            // 3. 显示文件选择对话框
-            var files = await storageProvider.OpenFilePickerAsync(options);
-            if (files.Count == 0 || files[0]?.TryGetLocalPath() is not string filePath)
-            {
-                return; // 用户取消选择
-            }
-
-            // 4. 读取文件内容
-            var csvContent = await File.ReadAllTextAsync(filePath);
-
-            // 5. 解析CSV数据（简单实现，可根据需要改用CSV解析库）
-            var lines = csvContent.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
-            var importedCoordinates = new List<Coordinate>();
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                // 跳过标题行（假设第一行是"X,Y"）
-                if (i == 0 && lines[i].Trim().Equals("X,Y", StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                var parts = lines[i].Split(',');
-                if (parts.Length == 2 &&
-                    double.TryParse(parts[0], out var x) &&
-                    double.TryParse(parts[1], out var y))
-                {
-                    importedCoordinates.Add(new Coordinate(x, y));
-                }
-            }
-
-            // 6. 验证并更新数据
-            if (importedCoordinates.Count == 0)
-            {
-                await ShowErrorAsync("导入失败", "文件中未找到有效的坐标数据");
-                return;
-            }
-
-            Coordinates = importedCoordinates.ToArray();
-            Map.DisplayPolygon(Coordinates);
-            await ShowOkAsync("导入成功", $"已导入 {importedCoordinates.Count} 个坐标点");
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("导入错误", $"发生错误: {ex.Message}");
-        }
-    }
-
-    [RelayCommand]
     private async Task InitializeAsync()
     {
+        if (Configs.Instance.Coordinates == null || Configs.Instance.Coordinates.Length < 3)
+        {
+            await ShowErrorAsync("初始化失败", "请先选择下载区域");
+            return;
+        }
+
         TotalCount = 0;
         DownloadedCount = 0;
         successCount = 0;
@@ -259,7 +130,7 @@ public partial class DownloadViewModel : ViewModelBase
         await TryWithLoadingAsync(Task.Run(() =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
-            var count = tileHelper.EstimateIntersectingTileCount(Coordinates, MaxLevel);
+            var count = tileHelper.EstimateIntersectingTileCount(Configs.Instance.Coordinates, MaxLevel);
             if (count > 1_000_000)
             {
                 throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
@@ -267,7 +138,7 @@ public partial class DownloadViewModel : ViewModelBase
 
             for (int i = MinLevel; i <= MaxLevel; i++)
             {
-                var tiles = tileHelper.GetIntersectingTiles(Coordinates, i);
+                var tiles = tileHelper.GetIntersectingTiles(Configs.Instance.Coordinates, i);
                 var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p => new DownloadingTileViewModel(p)));
                 Levels.Add(levelTile);
             }
@@ -282,19 +153,6 @@ public partial class DownloadViewModel : ViewModelBase
         DownloadTilesCommand.NotifyCanExecuteChanged();
     }
 
-    partial void OnCoordinatesChanged(Coordinate[] value)
-    {
-        if (value == null)
-        {
-            SelectionMessage = "还未选择区域";
-        }
-        else
-        {
-            SelectionMessage = $"已选择区域（{value.Length}边形）";
-        }
-        Configs.Instance.DownloadArea = Coordinates;
-    }
-
     partial void OnMaxLevelChanged(int value)
     {
         Configs.Instance.MaxLevel = MaxLevel;
@@ -304,6 +162,7 @@ public partial class DownloadViewModel : ViewModelBase
     {
         Configs.Instance.MinLevel = MaxLevel;
     }
+
     partial void OnSelectedLevelChanged(DownloadingLevelViewModel value)
     {
         if (value == null)
@@ -313,7 +172,7 @@ public partial class DownloadViewModel : ViewModelBase
 
         Map.DisplayTileGrids(value.Level);
     }
-    
+
     private void RegisterDownloadEvent(DownloadingLevelViewModel level)
     {
         level.DownloadedCountIncrease += (s, e) =>
@@ -346,26 +205,5 @@ public partial class DownloadViewModel : ViewModelBase
             OnPropertyChanged(nameof(SuccessCount));
             OnPropertyChanged(nameof(FailedCount));
         };
-    }
-   
-    [RelayCommand(IncludeCancelCommand = true)]
-    private async Task SelectOnMapAsync(CancellationToken cancellationToken)
-    {
-        IsSelecting = true;
-        try
-        {
-            Coordinates = await Map.DrawAsync(cancellationToken);
-        }
-        catch (OperationCanceledException)
-        {
-        }
-        catch (Exception ex)
-        {
-            await ShowErrorAsync("地图错误", ex);
-        }
-        finally
-        {
-            IsSelecting = false;
-        }
     }
 }

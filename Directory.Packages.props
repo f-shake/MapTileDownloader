@@ -10,7 +10,6 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="BinToss.GroupBox.Avalonia" Version="1.0.0" />
-    <PackageVersion Include="Magick.NET-Q16-AnyCPU" Version="14.6.0" />
     <PackageVersion Include="Mapsui.Avalonia" Version="4.1.9" />
     <PackageVersion Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="FzLib.Avalonia" Version="2.3.2" />
@@ -20,5 +19,6 @@
     <PackageVersion Include="NetTopologySuite" Version="2.5.0" />
     <PackageVersion Include="Serilog.Sinks.File" Version="7.0.0" />
     <PackageVersion Include="EmbedIO" Version="3.5.2" />
+    <PackageVersion Include="SixLabors.ImageSharp" Version="3.1.10" />
   </ItemGroup>
 </Project>

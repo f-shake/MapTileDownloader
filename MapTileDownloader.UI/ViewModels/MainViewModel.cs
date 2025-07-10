@@ -27,6 +27,10 @@ public partial class MainViewModel : ViewModelBase
         DownloadViewModel.Initialize();
         ServerViewModel.Initialize();
         Map.LoadTileMaps(DataSourceViewModel.SelectedDataSource);
+        if(Configs.Instance.Coordinates!= null && Configs.Instance.Coordinates.Length >=3)
+        {
+            Map.DisplayPolygon(Configs.Instance.Coordinates);
+        }
         base.Initialize();
     }
 
