@@ -25,7 +25,7 @@
                     Orientation="Vertical"
                     Spacing="8">
                     <v:MapAreaSelector />
-                    <c:FormItem Header="级别">
+                    <c:FormItem Header="{Binding Level, StringFormat={}级别 ({0})}">
                         <Slider
                             IsSnapToTickEnabled="True"
                             Maximum="20"
@@ -37,7 +37,6 @@
 
                     </c:FormItem>
                     <c:FormItem Header="范围">
-
                         <Grid
                             ColumnDefinitions="*,8,*,8,*"
                             RowDefinitions="*,8,*,8,*">
@@ -73,6 +72,15 @@
                                 Text="{Binding MaxY}" />
                         </Grid>
                     </c:FormItem>
+                    <c:FormItem Header="瓦片大小">
+                        <ComboBox SelectedItem="{Binding Size}">
+                            <sys:Int32>256</sys:Int32>
+                            <sys:Int32>512</sys:Int32>
+                        </ComboBox>
+                    </c:FormItem>
+                    <TextBlock
+                        Text="{Binding Message}"
+                        TextAlignment="Center" />
                 </StackPanel>
             </HeaderedContentControl>
         </StackPanel>

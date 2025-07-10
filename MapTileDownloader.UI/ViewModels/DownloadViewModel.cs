@@ -127,7 +127,7 @@ public partial class DownloadViewModel : ViewModelBase
         ErrorTiles.Clear();
 
         var tileSource = TileSource;
-        var tileHelper = new TileService(tileSource);
+        var tileHelper = new TileIntersectionService(tileSource);
 
         await TryWithLoadingAsync(() => Task.Run(() =>
         {

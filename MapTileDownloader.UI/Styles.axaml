@@ -19,6 +19,10 @@
         <Setter Property="Background" Value="Transparent" />
     </Style>
 
+    <Style Selector="ComboBox">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
     <Style Selector="HeaderedContentControl.GroupBox">
         <Setter Property="Template">
             <ControlTemplate>

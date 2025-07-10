@@ -22,6 +22,7 @@ public partial class MainViewModel : ViewModelBase
         DataSourceViewModel.Initialize();
         DownloadViewModel.Initialize();
         ServerViewModel.Initialize();
+        MergeViewModel.Initialize();
         Map.LoadTileMaps(DataSourceViewModel.SelectedDataSource);
         if(Configs.Instance.Coordinates!= null && Configs.Instance.Coordinates.Length >=3)
         {

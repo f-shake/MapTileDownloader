@@ -7,25 +7,19 @@ using SixLabors.ImageSharp.Processing;
 
 namespace MapTileDownloader.Services
 {
-    public class TileMergeService : MbtilesBasedService
+    public class TileMergeService(string mbtilesPath) : MbtilesBasedService(mbtilesPath, true)
     {
-        private readonly bool cleanupTempFiles;
-        private readonly string tempDirectory;
-
-        public TileMergeService(string mbtilesPath, bool cleanupTempFiles = true)
-            : base(mbtilesPath, true)
+        public (long totalPixels, long estimatedMemoryBytes) EstimateTileMergeMemory(
+            int minX, int maxX, int minY, int maxY, int tileSize = 256)
         {
-            this.cleanupTempFiles = cleanupTempFiles;
-            this.tempDirectory = Path.Combine(Path.GetTempPath(), "TileMergeTemp");
-            Directory.CreateDirectory(this.tempDirectory);
-        }
+            int tileCountX = maxX - minX + 1;
+            int tileCountY = maxY - minY + 1;
+            long totalPixels = (long)tileCountX * tileCountY * tileSize * tileSize;
+            long estimatedMemory = totalPixels * 4;
 
-        public override void Dispose()
-        {
-            base.Dispose();
-            if (cleanupTempFiles)
-                CleanupTempFiles();
+            return (totalPixels, estimatedMemory);
         }
+        
 
         public async Task MergeTilesAsync(
             string outputPath,
@@ -36,6 +30,11 @@ namespace MapTileDownloader.Services
             int maxY,
             int tileSize = 256)
         {
+            if (tileSize is not (256 or 512))
+            {
+                throw new ArgumentException("瓦片尺寸应当为256或512像素", nameof(tileSize));
+            }
+
             await mbtilesService.InitializeAsync();
 
             int totalWidth = (maxX - minX + 1) * tileSize;
@@ -54,11 +53,7 @@ namespace MapTileDownloader.Services
                 }
             }
 
-            // 自动根据扩展名决定格式
             await resultImage.SaveAsync(outputPath);
-
-            if (cleanupTempFiles)
-                CleanupTempFiles();
         }
 
         private async Task AddTileToImageAsync(
@@ -69,7 +64,9 @@ namespace MapTileDownloader.Services
         {
             byte[] tileData = await mbtilesService.GetTileAsync(x, y, z);
             if (tileData == null || tileData.Length == 0)
+            {
                 return;
+            }
 
             using var tileImage = Image.Load<Rgba32>(tileData);
             if (tileImage.Width != tileSize || tileImage.Height != tileSize)
@@ -78,15 +75,6 @@ namespace MapTileDownloader.Services
             }
 
             canvas.Mutate(x => x.DrawImage(tileImage, new Point(offsetX, offsetY), 1f));
-        }
-
-        private void CleanupTempFiles()
-        {
-            try
-            {
-                Directory.Delete(tempDirectory, true);
-            }
-            catch { /* 忽略异常 */ }
         }
     }
 }

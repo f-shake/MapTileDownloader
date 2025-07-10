@@ -7,7 +7,7 @@ using NetTopologySuite.Geometries.Prepared;
 
 namespace MapTileDownloader.Services;
 
-public class TileService(TileDataSource tileDataSource)
+public class TileIntersectionService(TileDataSource tileDataSource)
 {
     public TileDataSource TileDataSource { get; } = tileDataSource;
 
@@ -48,17 +48,16 @@ public class TileService(TileDataSource tileDataSource)
         }
     }
 
-    /// <summary>
-    /// 获取指定坐标构成的多边形在指定瓦片级别下相交的瓦片索引集合（坐标为 EPSG:3857）。
-    /// </summary>
-    /// <param name="polygonCoordinates3857">构成多边形的坐标点（首尾应相连）</param>
-    /// <param name="zoomLevel">瓦片级别</param>
-    /// <returns>相交的 TileIndex 列表</returns>
-    public List<TileIndex> GetIntersectingTiles(Coordinate[] polygonCoordinates3857, int zoomLevel)
+    public (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Coordinate[] coordinates, int zoomLevel)
     {
         var geometryFactory = new GeometryFactory();
-        var polygon3857 = geometryFactory.CreatePolygon(polygonCoordinates3857.ToClosed().ToArray());
+        var polygon3857 = geometryFactory.CreatePolygon(coordinates.ToClosed().ToArray());
 
+        return GetTileRange(polygon3857, zoomLevel);
+    }
+
+    private (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Polygon polygon3857, int zoomLevel)
+    {
         var envelope = polygon3857.EnvelopeInternal;
 
         double resolution = TileSchema.Resolutions[zoomLevel].UnitsPerPixel;
@@ -74,6 +73,18 @@ public class TileService(TileDataSource tileDataSource)
         maxRow = (int)Math.Floor((TileSchema.OriginY - envelope.MinY) / (tileSize * resolution));
         minRow = Math.Abs(minRow);
         maxRow = Math.Abs(maxRow);
+
+        return (minRow, maxRow, minCol, maxCol);
+    }
+
+    public List<TileIndex> GetIntersectingTiles(Coordinate[] polygonCoordinates3857, int zoomLevel)
+    {
+        var geometryFactory = new GeometryFactory();
+        var polygon3857 = geometryFactory.CreatePolygon(polygonCoordinates3857.ToClosed().ToArray());
+        double resolution = TileSchema.Resolutions[zoomLevel].UnitsPerPixel;
+        int tileSize = TileSchema.GetTileWidth(zoomLevel);
+
+        (int minRow, int maxRow, int minCol, int maxCol) = GetTileRange(polygon3857, zoomLevel);
 
         var preparedPolygon = PreparedGeometryFactory.Prepare(polygon3857);
         var tiles = new List<TileIndex>();

@@ -34,6 +34,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     public MapAreaSelectorViewModel()
     {
         CoordinatesChanged += (s, e) => Coordinates = Configs.Instance.Coordinates;
+        OnCoordinatesChanged(Configs.Instance.Coordinates);
     }
 
     public static event EventHandler CoordinatesChanged;
