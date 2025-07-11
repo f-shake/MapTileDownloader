@@ -3,6 +3,8 @@ using CommunityToolkit.Mvvm.Input;
 using MapTileDownloader.Models;
 using System;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
+using System.Linq;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -28,6 +30,7 @@ public partial class DataSourceViewModel : ViewModelBase
     {
         Sources.Add(new TileDataSource() { Name = "新数据源" });
         SelectedDataSource = Sources[^1];
+        SaveToConfig();
     }
 
     [RelayCommand]
@@ -39,7 +42,7 @@ public partial class DataSourceViewModel : ViewModelBase
     partial void OnSelectedDataSourceChanged(TileDataSource value)
     {
         Map.LoadTileMaps(value);
-        Configs.Instance.SelectedTileSourcesIndex = Sources.IndexOf(value);
+        SaveToConfig();
     }
 
     [RelayCommand]
@@ -49,5 +52,17 @@ public partial class DataSourceViewModel : ViewModelBase
         {
             Sources.Remove(SelectedDataSource);
         }
+        if (Sources.Count == 0)
+        {
+            Sources.Add(new TileDataSource{ Name = "新数据源" });
+            SelectedDataSource = Sources[0];
+        }
+        SaveToConfig();
+    }
+
+    private void SaveToConfig()
+    {
+        Configs.Instance.TileSources = [.. Sources];
+        Configs.Instance.SelectedTileSourcesIndex = Sources.IndexOf(SelectedDataSource);
     }
 }

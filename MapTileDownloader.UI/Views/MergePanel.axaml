@@ -25,14 +25,12 @@
                     Orientation="Vertical"
                     Spacing="8">
                     <v:MapAreaSelector />
-                    <c:FormItem Header="{Binding Level, StringFormat={}级别 ({0})}">
+                    <c:FormItem Header="级别">
                         <Slider
-                            IsSnapToTickEnabled="True"
                             Maximum="20"
                             Minimum="1"
+                            Theme="{StaticResource LabledSlider}"
                             TickFrequency="1"
-                            TickPlacement="BottomRight"
-                            ToolTip.Tip="{Binding Level}"
                             Value="{Binding Level}" />
 
                     </c:FormItem>
@@ -43,6 +41,7 @@
                             <Grid.Styles>
                                 <Style Selector="TextBox">
                                     <Setter Property="TextAlignment" Value="Center" />
+                                    <Setter Property="Padding" Value="5" />
                                 </Style>
                             </Grid.Styles>
                             <Border
@@ -74,7 +73,7 @@
                     </c:FormItem>
                 </StackPanel>
             </HeaderedContentControl>
-          
+
             <HeaderedContentControl
                 Classes="GroupBox"
                 Header="图像选项">
@@ -87,15 +86,13 @@
                             <sys:Int32>512</sys:Int32>
                         </ComboBox>
                     </c:FormItem>
-                    <c:FormItem Header="{Binding JpegQuality, StringFormat={}JPEG导出质量 ({0}%)}">
+                    <c:FormItem Header="JPEG导出质量">
                         <Slider
-                            IsSnapToTickEnabled="True"
                             Maximum="100"
-                            Minimum="10"
+                            Minimum="5"
+                            Theme="{StaticResource LabledSlider}"
                             TickFrequency="5"
-                            TickPlacement="BottomRight"
-                            ToolTip.Tip="{Binding JpegQuality}"
-                            Value="{Binding JpegQuality}" />
+                            Value="{Binding ImageQuality}" />
                     </c:FormItem>
                 </StackPanel>
             </HeaderedContentControl>

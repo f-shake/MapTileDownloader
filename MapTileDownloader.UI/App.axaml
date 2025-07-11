@@ -15,6 +15,7 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="avares://FzLib.Avalonia/Resources.axaml" />
                 <ResourceInclude Source="FontIcons.axaml" />
+                <ResourceInclude Source="Resources.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

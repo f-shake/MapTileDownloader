@@ -8,7 +8,7 @@ public class TileDataSource : SimpleNotifyPropertyChangedBase
 
     public string Host { get; set; }
 
-    public int MaxLevel { get; set; } = 20;
+    public int MaxLevel { get; set; } = 19;
 
     public string Name
     {

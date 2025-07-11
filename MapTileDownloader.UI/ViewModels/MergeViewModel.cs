@@ -16,11 +16,10 @@ namespace MapTileDownloader.UI.ViewModels;
 public partial class MergeViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private bool isOutOfMemory = false;
+    private int imageQuality = Configs.Instance.MergeImageQuality;
 
     [ObservableProperty]
-    private int jpegQuality = Configs.Instance.MergeJpgQuality;
-
+    private bool isOutOfMemory = false;
     [ObservableProperty]
     private int level = 15;
 
@@ -62,7 +61,7 @@ public partial class MergeViewModel : ViewModelBase
             or nameof(MaxX)
             or nameof(MaxY)
             or nameof(Size)
-            or nameof(JpegQuality)
+            or nameof(ImageQuality)
             or nameof(Level))
         {
             UpdateMessage();
@@ -92,6 +91,11 @@ public partial class MergeViewModel : ViewModelBase
                     Patterns = ["*.bmp"],
                     MimeTypes = ["image/bmp"]
                 },
+                new FilePickerFileType("WebP 图片文件")
+                {
+                    Patterns = ["*.webp"],
+                    MimeTypes = ["image/webp"]
+                }
             }
         };
         var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
@@ -113,7 +117,7 @@ public partial class MergeViewModel : ViewModelBase
             return;
         }
 
-        TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
+        using TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
         (long p, long m) = s.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
         if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
         {
@@ -122,13 +126,13 @@ public partial class MergeViewModel : ViewModelBase
         }
         await TryWithLoadingAsync(() => Task.Run(async () =>
         {
-            await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY, Size, JpegQuality);
+            await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY, Size, ImageQuality);
         }), "拼接失败");
     }
 
-    partial void OnJpegQualityChanged(int value)
+    partial void OnImageQualityChanged(int value)
     {
-        Configs.Instance.MergeJpgQuality = value;
+        Configs.Instance.MergeImageQuality = value;
     }
     partial void OnLevelChanged(int value)
     {
@@ -137,7 +141,7 @@ public partial class MergeViewModel : ViewModelBase
 
     private void UpdateMessage()
     {
-        var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
+        using var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
         (long p, long m) = tileServer.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
         Message = $"预计{p / 10000}万像素{Environment.NewLine}占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）";
         IsOutOfMemory = m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory;

@@ -62,13 +62,11 @@
                                 <sys:String>WebP</sys:String>
                             </ComboBox>
                         </c:FormItem>
-                        <c:FormItem Header="{Binding SelectedDataSource.MaxLevel, StringFormat={}最大级别 ({0})}">
+                        <c:FormItem Header="最大级别">
                             <Slider
-                                IsSnapToTickEnabled="True"
                                 Maximum="20"
+                                Theme="{StaticResource LabledSlider}"
                                 TickFrequency="1"
-                                TickPlacement="BottomRight"
-                                ToolTip.Tip="{Binding SelectedDataSource.MaxLevel}"
                                 Value="{Binding SelectedDataSource.MaxLevel}" />
                         </c:FormItem>
                     </StackPanel>

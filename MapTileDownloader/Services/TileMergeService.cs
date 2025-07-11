@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using System.Threading.Tasks;
 using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.Formats.Jpeg;
+using SixLabors.ImageSharp.Formats.Webp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Processing;
 
@@ -57,7 +59,14 @@ namespace MapTileDownloader.Services
             if (outputPath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
                outputPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
             {
-                await resultImage.SaveAsync(outputPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
+                await resultImage.SaveAsync(outputPath, new JpegEncoder
+                {
+                    Quality = quality
+                });
+            }
+            else if(outputPath.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+            {
+                await resultImage.SaveAsync(outputPath, new WebpEncoder
                 {
                     Quality = quality
                 });
