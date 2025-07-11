@@ -16,6 +16,12 @@ namespace MapTileDownloader.UI.ViewModels;
 public partial class MergeViewModel : ViewModelBase
 {
     [ObservableProperty]
+    private bool isOutOfMemory = false;
+
+    [ObservableProperty]
+    private int jpegQuality = Configs.Instance.MergeJpgQuality;
+
+    [ObservableProperty]
     private int level = 15;
 
     [ObservableProperty]
@@ -56,36 +62,30 @@ public partial class MergeViewModel : ViewModelBase
             or nameof(MaxX)
             or nameof(MaxY)
             or nameof(Size)
+            or nameof(JpegQuality)
             or nameof(Level))
         {
             UpdateMessage();
         }
     }
 
-    private void MapAreaSelectorViewModelOnCoordinatesChanged(object sender, EventArgs e)
+    private async Task<string> GetSaveFilePathAsync()
     {
-        UpdateRange();
-    }
-
-    [RelayCommand]
-    private async Task MergeAsync()
-    {
-        //待检查内存
         var options = new FilePickerSaveOptions
         {
-            DefaultExtension = "png",
-            SuggestedFileName = "tiles.png",
+            DefaultExtension = "jpg",
+            SuggestedFileName = "tiles.jpg",
             FileTypeChoices = new List<FilePickerFileType>
             {
-                new FilePickerFileType("PNG 图片文件")
-                {
-                    Patterns = ["*.png"],
-                    MimeTypes = ["image/png"]
-                },
                 new FilePickerFileType("JPEG 图片文件")
                 {
                     Patterns = ["*.jpg", "*.jpeg"],
                     MimeTypes = ["image/jpeg"]
+                },
+                new FilePickerFileType("PNG 图片文件")
+                {
+                    Patterns = ["*.png"],
+                    MimeTypes = ["image/png"]
                 },
                 new FilePickerFileType("BMP 图片文件")
                 {
@@ -96,16 +96,40 @@ public partial class MergeViewModel : ViewModelBase
         };
         var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
 
-        var filePath = file?.TryGetLocalPath();
-        if (filePath == null)
+        return file?.TryGetLocalPath();
+    }
+
+    private void MapAreaSelectorViewModelOnCoordinatesChanged(object sender, EventArgs e)
+    {
+        UpdateRange();
+    }
+
+    [RelayCommand]
+    private async Task MergeAsync()
+    {
+        var filePath = await GetSaveFilePathAsync();
+        if (string.IsNullOrWhiteSpace(filePath))
         {
             return;
         }
 
         TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
-        await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY);
+        (long p, long m) = s.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
+        if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
+        {
+            await ShowErrorAsync("内存不足", $"预计占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB，超过系统总内存的75%（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）");
+            return;
+        }
+        await TryWithLoadingAsync(() => Task.Run(async () =>
+        {
+            await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY, Size, JpegQuality);
+        }), "拼接失败");
     }
 
+    partial void OnJpegQualityChanged(int value)
+    {
+        Configs.Instance.MergeJpgQuality = value;
+    }
     partial void OnLevelChanged(int value)
     {
         UpdateRange();
@@ -115,7 +139,8 @@ public partial class MergeViewModel : ViewModelBase
     {
         var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
         (long p, long m) = tileServer.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
-        Message = $"预计{p / 10000}万像素，占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB";
+        Message = $"预计{p / 10000}万像素{Environment.NewLine}占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）";
+        IsOutOfMemory = m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory;
     }
 
     private void UpdateRange()

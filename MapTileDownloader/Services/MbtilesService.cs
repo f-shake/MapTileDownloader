@@ -16,7 +16,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         var connectionString = $"Data Source={mbtilesPath}";
         if (readOnly)
         {
-            connectionString += ";Mode=ReadOnly;Cache=Shared";
+            connectionString += ";Mode=ReadOnly";
         }
 
         mbtilesConnection = new SqliteConnection(connectionString);
@@ -103,7 +103,6 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             await ExecuteAsync("""
 
                                    PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
-                                   PRAGMA locking_mode=NORMAL;       -- 避免独占锁（默认已足够）
                                    PRAGMA temp_store=MEMORY;         -- 临时表用内存
                                    PRAGMA mmap_size=268435456;       -- 256MB 内存映射（减少I/O）
                                    PRAGMA cache_size=-64000;         -- 64MB 缓存
@@ -141,6 +140,25 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             ("@name", name),
             ("@value", value)
         ).ConfigureAwait(false);
+    }
+
+    public async Task WriteTileAsync(int x, int y, int z, byte[] data)
+    {
+        await ExecuteAsync(
+            "INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (@z, @x, @y, @data)",
+            ("@z", z),
+            ("@x", x),
+            ("@y", y),
+            ("@data", data)
+        ).ConfigureAwait(false);
+    }
+
+    private void CheckConnectionOpen()
+    {
+        if (mbtilesConnection.State != ConnectionState.Open)
+        {
+            throw new InvalidOperationException("MBTiles连接未打开，请先调用InitializeAsync方法。");
+        }
     }
 
     private Task<SqliteDataReader> GetReaderAsync(SqliteCommand cmd, string sql, (string, object)[] parameters)
@@ -181,24 +199,5 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         await using var cmd = mbtilesConnection.CreateCommand();
         await using var reader =await GetReaderAsync(cmd, sql, parameters);
         return await reader.ReadAsync() ? mapper(reader) : default;
-    }
-
-    public async Task WriteTileAsync(int x, int y, int z, byte[] data)
-    {
-        await ExecuteAsync(
-            "INSERT OR REPLACE INTO tiles (zoom_level, tile_column, tile_row, tile_data) VALUES (@z, @x, @y, @data)",
-            ("@z", z),
-            ("@x", x),
-            ("@y", y),
-            ("@data", data)
-        ).ConfigureAwait(false);
-    }
-
-    private void CheckConnectionOpen()
-    {
-        if (mbtilesConnection.State != ConnectionState.Open)
-        {
-            throw new InvalidOperationException("MBTiles连接未打开，请先调用InitializeAsync方法。");
-        }
     }
 }

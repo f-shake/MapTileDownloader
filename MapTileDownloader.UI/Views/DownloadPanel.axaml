@@ -170,7 +170,8 @@
             Columns="3">
             <Button
                 Command="{Binding InitializeCommand}"
-                Content="初始化" />
+                Content="初始化"
+                IsEnabled="{Binding IsDownloading, Converter={StaticResource InverseBoolConverter}}" />
             <Button
                 Command="{Binding DownloadTilesCommand}"
                 Content="开始下载"

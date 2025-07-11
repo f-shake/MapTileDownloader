@@ -41,7 +41,7 @@ public partial class DownloadViewModel : ViewModelBase
     private ObservableCollection<DownloadingLevelViewModel> levels;
 
     [ObservableProperty]
-    private int maxConcurrency = 10;
+    private int maxConcurrency = Configs.Instance.MaxDownloadConcurrency;
 
     private int maxDownloadingLevel;
 
@@ -153,6 +153,11 @@ public partial class DownloadViewModel : ViewModelBase
 
         CanDownload = true;
         DownloadTilesCommand.NotifyCanExecuteChanged();
+    }
+
+    partial void OnMaxConcurrencyChanged(int value)
+    {
+        Configs.Instance.MaxDownloadConcurrency = value;
     }
 
     partial void OnMaxLevelChanged(int value)

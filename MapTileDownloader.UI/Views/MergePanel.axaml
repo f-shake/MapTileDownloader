@@ -20,7 +20,7 @@
             Spacing="8">
             <HeaderedContentControl
                 Classes="GroupBox"
-                Header="拼接范围">
+                Header="导出范围">
                 <StackPanel
                     Orientation="Vertical"
                     Spacing="8">
@@ -72,21 +72,64 @@
                                 Text="{Binding MaxY}" />
                         </Grid>
                     </c:FormItem>
+                </StackPanel>
+            </HeaderedContentControl>
+          
+            <HeaderedContentControl
+                Classes="GroupBox"
+                Header="图像选项">
+                <StackPanel
+                    Orientation="Vertical"
+                    Spacing="8">
                     <c:FormItem Header="瓦片大小">
                         <ComboBox SelectedItem="{Binding Size}">
                             <sys:Int32>256</sys:Int32>
                             <sys:Int32>512</sys:Int32>
                         </ComboBox>
                     </c:FormItem>
-                    <TextBlock
-                        Text="{Binding Message}"
-                        TextAlignment="Center" />
+                    <c:FormItem Header="{Binding JpegQuality, StringFormat={}JPEG导出质量 ({0}%)}">
+                        <Slider
+                            IsSnapToTickEnabled="True"
+                            Maximum="100"
+                            Minimum="10"
+                            TickFrequency="5"
+                            TickPlacement="BottomRight"
+                            ToolTip.Tip="{Binding JpegQuality}"
+                            Value="{Binding JpegQuality}" />
+                    </c:FormItem>
                 </StackPanel>
             </HeaderedContentControl>
         </StackPanel>
-        <Button
+
+        <StackPanel
             Grid.Row="2"
-            Command="{Binding MergeCommand}"
-            Content="合并" />
+            Orientation="Vertical"
+            Spacing="8">
+            <TextBlock
+                Text="{Binding Message}"
+                TextAlignment="Center">
+                <TextBlock.Styles>
+                    <Style Selector="TextBlock.Red">
+                        <Setter Property="Foreground" Value="Red" />
+                    </Style>
+                </TextBlock.Styles>
+                <Interaction.Behaviors>
+                    <DataTriggerBehavior
+                        Binding="{Binding IsOutOfMemory}"
+                        Value="True">
+                        <AddClassAction ClassName="Red" />
+                    </DataTriggerBehavior>
+                    <DataTriggerBehavior
+                        Binding="{Binding IsOutOfMemory}"
+                        Value="False">
+                        <RemoveClassAction ClassName="Red" />
+                    </DataTriggerBehavior>
+                </Interaction.Behaviors>
+            </TextBlock>
+
+            <Button
+                Command="{Binding MergeCommand}"
+                Content="合并" />
+        </StackPanel>
     </Grid>
 </UserControl>

@@ -28,8 +28,10 @@ namespace MapTileDownloader.Services
             int maxX,
             int minY,
             int maxY,
-            int tileSize = 256)
+            int tileSize = 256,
+            int quality=80)
         {
+            quality = Math.Clamp(quality, 10, 100);
             if (tileSize is not (256 or 512))
             {
                 throw new ArgumentException("瓦片尺寸应当为256或512像素", nameof(tileSize));
@@ -52,8 +54,18 @@ namespace MapTileDownloader.Services
                     await AddTileToImageAsync(resultImage, z, x, y, offsetX, offsetY, tileSize);
                 }
             }
-
-            await resultImage.SaveAsync(outputPath);
+            if (outputPath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+               outputPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
+            {
+                await resultImage.SaveAsync(outputPath, new SixLabors.ImageSharp.Formats.Jpeg.JpegEncoder
+                {
+                    Quality = quality
+                });
+            }
+            else
+            {
+                await resultImage.SaveAsync(outputPath);
+            }
         }
 
         private async Task AddTileToImageAsync(

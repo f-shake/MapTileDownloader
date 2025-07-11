@@ -39,9 +39,11 @@ public class Configs
 
     public Coordinate[] Coordinates { get; set; }
 
+    public int MaxDownloadConcurrency { get; set; } = 10;
     public int MaxLevel { get; set; } = 20;
-
     public string MbtilesFile { get; set; }
+
+    public int MergeJpgQuality { get; set; } = 90;
 
     public int MinLevel { get; set; } = 0;
 
