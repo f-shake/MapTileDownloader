@@ -114,7 +114,7 @@ public partial class MapView
             return;
         }
 
-        var screenPosition = e.GetPosition(this).ToMapsui();
+        var screenPosition = e.GetPosition(this).ToScreenPosition();
         var worldPosition = Map.Navigator.Viewport.ScreenToWorld(screenPosition);
 
         if (vertices.Count > 0)
@@ -152,7 +152,7 @@ public partial class MapView
                 return;
             }
 
-            var screenPosition = e.GetPosition(this).ToMapsui();
+            var screenPosition = e.GetPosition(this).ToScreenPosition();
             var worldPosition = Map.Navigator.Viewport.ScreenToWorld(screenPosition);
 
             vertices.Add(worldPosition);

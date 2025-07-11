@@ -7,7 +7,27 @@ namespace MapTileDownloader;
 public class Configs
 {
     public const string CONFIG_FILE = "config.json";
+
     private static Configs instance;
+
+    static Configs()
+    {
+        _ = Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(async t =>
+        {
+            while (true)
+            {
+                await Task.Delay(TimeSpan.FromMinutes(1));
+                try
+                {
+                    Instance.Save();
+                }
+                catch
+                {
+
+                }
+            }
+        });
+    }
 
     public static Configs Instance
     {

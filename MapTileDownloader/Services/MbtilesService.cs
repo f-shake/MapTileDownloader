@@ -26,15 +26,31 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public string SqlitePath { get; }
 
+
     public void Dispose()
     {
-        mbtilesConnection?.Dispose();
+        try
+        {
+            mbtilesConnection?.Dispose();
+        }
+        catch
+        {
+
+        }
     }
 
     public async ValueTask DisposeAsync()
     {
-        await mbtilesConnection.DisposeAsync().ConfigureAwait(false);
+        try
+        {
+            await mbtilesConnection.DisposeAsync().ConfigureAwait(false);
+        }
+        catch
+        {
+
+        }
     }
+
 
     public async Task<int> ExecuteAsync(string sql, params (string parameterName, object value)[] parameters)
     {
