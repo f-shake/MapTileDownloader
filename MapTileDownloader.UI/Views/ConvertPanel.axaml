@@ -1,0 +1,70 @@
+<UserControl
+    x:Class="MapTileDownloader.UI.Views.ConvertPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
+    xmlns:map="using:MapTileDownloader.UI.Mapping"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:v="clr-namespace:MapTileDownloader.UI.Views"
+    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    x:DataType="vm:ConvertViewModel"
+    mc:Ignorable="d">
+    <Grid RowDefinitions="Auto,*,Auto">
+        <StackPanel
+            IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}"
+            Orientation="Vertical"
+            Spacing="8">
+            <c:FormItem Header="Mbtiles文件地址">
+                <v:MbtilesPicker />
+            </c:FormItem>
+            <c:FormItem Header="文件型瓦片根目录">
+                <Grid ColumnDefinitions="*,8,Auto">
+
+                    <TextBox
+                        AcceptsReturn="True"
+                        MaxLines="5"
+                        Text="{Binding Dir}" />
+                    <Button
+                        Grid.Column="2"
+                        Command="{Binding PickDirCommand}"
+                        Content="浏览.." />
+                </Grid>
+            </c:FormItem>
+            <c:FormItem Header="瓦片位置结构">
+                <TextBox
+                    Text="{Binding Pattern}"
+                    Watermark="{}{z}/{x}/{y}.*" />
+            </c:FormItem>
+        </StackPanel>
+        <StackPanel
+            Grid.Row="2"
+            Orientation="Vertical"
+            Spacing="8">
+            <ProgressBar
+                Height="24"
+                IsIndeterminate="{Binding IsProgressIndeterminate}"
+                Maximum="1"
+                Minimum="0"
+                ProgressTextFormat="{}{1:0}%"
+                ShowProgressText="True"
+                Value="{Binding Progress}" />
+            <Button
+                Command="{Binding ConvertToMbtilesCommand}"
+                Content="目录文件瓦片→Mbtiles数据库"
+                IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}" />
+            <Button
+                Command="{Binding ConvertToFilesCommand}"
+                Content="Mbtiles数据库→目录文件瓦片"
+                IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}" />
+            <Button
+                Command="{Binding CancelCommand}"
+                Content="取消"
+                IsEnabled="{Binding IsConverting}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -84,6 +84,10 @@ public abstract partial class ViewModelBase : ObservableObject
         {
             await func();
         }
+        catch (OperationCanceledException)
+        {
+            
+        }
         catch (Exception ex)
         {
             await ShowErrorAsync(errorTitle, ex);

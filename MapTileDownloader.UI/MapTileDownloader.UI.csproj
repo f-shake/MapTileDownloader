@@ -38,6 +38,9 @@
     <Compile Update="Views\MergePanel.axaml.cs">
       <DependentUpon>MergePanel.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\ConvertPanel.axaml.cs">
+      <DependentUpon>ConvertPanel.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\ServerPanel.axaml.cs">
       <DependentUpon>ServerPanel.axaml</DependentUpon>
     </Compile>

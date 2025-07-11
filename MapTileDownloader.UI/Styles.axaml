@@ -34,7 +34,7 @@
                     <ContentPresenter
                         Name="PART_ContentPresenter"
                         Grid.Row="2"
-                        Padding="8,8,0,8"
+                        Padding="8"
                         Content="{TemplateBinding Content}" />
                 </Grid>
             </ControlTemplate>

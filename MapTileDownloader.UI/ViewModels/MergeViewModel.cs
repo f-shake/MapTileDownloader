@@ -20,6 +20,7 @@ public partial class MergeViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool isOutOfMemory = false;
+
     [ObservableProperty]
     private int level = 15;
 
@@ -111,29 +112,33 @@ public partial class MergeViewModel : ViewModelBase
     [RelayCommand]
     private async Task MergeAsync()
     {
+        await using TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
+        (long p, long m) = s.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
+        if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
+        {
+            await ShowErrorAsync("内存不足",
+                $"预计占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB，超过系统总内存的75%（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）");
+            return;
+        }
+
         var filePath = await GetSaveFilePathAsync();
         if (string.IsNullOrWhiteSpace(filePath))
         {
             return;
         }
 
-        using TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
-        (long p, long m) = s.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
-        if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
-        {
-            await ShowErrorAsync("内存不足", $"预计占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB，超过系统总内存的75%（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）");
-            return;
-        }
-        await TryWithLoadingAsync(() => Task.Run(async () =>
-        {
-            await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY, Size, ImageQuality);
-        }), "拼接失败");
+        await TryWithLoadingAsync(
+            () => Task.Run(async () =>
+            {
+                await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY, Size, ImageQuality);
+            }), "拼接失败");
     }
 
     partial void OnImageQualityChanged(int value)
     {
         Configs.Instance.MergeImageQuality = value;
     }
+
     partial void OnLevelChanged(int value)
     {
         UpdateRange();
@@ -143,7 +148,8 @@ public partial class MergeViewModel : ViewModelBase
     {
         using var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
         (long p, long m) = tileServer.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
-        Message = $"预计{p / 10000}万像素{Environment.NewLine}占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）";
+        Message =
+            $"预计{p / 10000}万像素{Environment.NewLine}占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）";
         IsOutOfMemory = m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory;
     }
 

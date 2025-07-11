@@ -1,113 +1,142 @@
+using System.Diagnostics;
 using System.Text.Json;
 using MapTileDownloader.Models;
 using NetTopologySuite.Geometries;
 
-namespace MapTileDownloader;
-
-public class Configs
+namespace MapTileDownloader
 {
-    public const string CONFIG_FILE = "config.json";
-
-    private static Configs instance;
-
-    static Configs()
+    public class Configs
     {
-        _ = Task.Delay(TimeSpan.FromSeconds(10)).ContinueWith(async t =>
-        {
-            while (true)
-            {
-                await Task.Delay(TimeSpan.FromMinutes(1));
-                try
-                {
-                    Instance.Save();
-                }
-                catch
-                {
+        private const string CONFIG_FILE = "config.json";
+        private static readonly Lazy<Configs> lazyInstance = new Lazy<Configs>(LoadOrCreateConfig);
+        private static Timer savingTimer;
+        private static readonly object lockObj = new object();
 
-                }
-            }
-        });
-    }
-
-    public static Configs Instance
-    {
-        get
+        static Configs()
         {
-            if (instance == null)
-            {
-                if (File.Exists(CONFIG_FILE))
+            return;
+            savingTimer = new Timer(state =>
                 {
                     try
                     {
-                        instance = JsonSerializer.Deserialize(File.ReadAllText(CONFIG_FILE),
-                            MapTileDownloaderJsonContext.Config.Configs);
+                        lock (lockObj)
+                        {
+                            Instance.Save();
+                        }
                     }
-                    catch
+                    catch (Exception ex)
                     {
+                        Debug.Assert(false);
                     }
+                },
+                null,
+#if DEBUG
+                TimeSpan.FromSeconds(10),
+                TimeSpan.FromSeconds(10)
+#else
+            TimeSpan.FromMinutes(1),
+            TimeSpan.FromMinutes(10)
+#endif
+            );
+        }
+
+        public static Configs Instance => lazyInstance.Value;
+
+        private static Configs LoadOrCreateConfig()
+        {
+            try
+            {
+                if (File.Exists(CONFIG_FILE))
+                {
+                    var json = File.ReadAllText(CONFIG_FILE);
+                    return JsonSerializer.Deserialize(json, MapTileDownloaderJsonContext.Config.Configs)
+                           ?? CreateDefaultConfig();
                 }
             }
-
-            if (instance == null)
+            catch (Exception ex)
             {
-                instance = new Configs();
+                Debug.Assert(false);
             }
 
-            if (instance.TileSources == null || instance.TileSources.Count == 0)
+            return CreateDefaultConfig();
+        }
+
+        private static Configs CreateDefaultConfig()
+        {
+            return new Configs
             {
-                instance.TileSources = [
+                TileSources =
+                [
                     new TileDataSource
                     {
                         Name = "ESRI影像",
-                        Url = "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
-                        Format="JPG"
+                        Url =
+                            "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+                        Format = "JPG"
                     },
                     new TileDataSource
                     {
                         Name = "谷歌卫星",
                         Url = "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
-                        Format="JPG"
+                        Format = "JPG"
                     },
                     new TileDataSource
                     {
                         Name = "OpenStreetMap",
                         Url = "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-                        Format="PNG"
+                        Format = "PNG"
                     },
-                ];
-            }
+                ],
+                ConvertPattern = "{z}/{x}/{y}.*",
+                MaxDownloadConcurrency = 10,
+                MinLevel = 0,
+                MaxLevel = 20,
+                ServerPort = 8888,
+                MergeImageQuality = 90,
+                ServerLocalHostOnly = true,
+                ServerReturnEmptyPngWhenNotFound = true
+            };
+        }
 
-            return instance;
+        public string ConvertDir { get; set; }
+        public string ConvertPattern { get; set; }
+        public Coordinate[] Coordinates { get; set; }
+        public int MaxDownloadConcurrency { get; set; }
+        public int MaxLevel { get; set; }
+        public string MbtilesFile { get; set; }
+        public int MergeImageQuality { get; set; }
+        public int MinLevel { get; set; }
+        public int SelectedTileSourcesIndex { get; set; }
+        public bool ServerLocalHostOnly { get; set; }
+        public ushort ServerPort { get; set; }
+        public bool ServerReturnEmptyPngWhenNotFound { get; set; }
+        public List<TileDataSource> TileSources { get; set; }
+
+        public void Save()
+        {
+            lock (lockObj)
+            {
+                try
+                {
+                    Debug.WriteLine(MbtilesFile);
+                    var tempFile = Path.GetTempFileName();
+                    var json = JsonSerializer.Serialize(this, MapTileDownloaderJsonContext.Config.Configs);
+                    File.WriteAllText(tempFile, json);
+                    if (File.Exists(CONFIG_FILE))
+                    {
+                        File.Replace(tempFile, CONFIG_FILE, null);
+                    }
+                    else
+                    {
+                        File.Move(tempFile, CONFIG_FILE);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.Assert(false);
+                    throw;
+                }
+            }
         }
     }
-
-    public Coordinate[] Coordinates { get; set; }
-
-    public int MaxDownloadConcurrency { get; set; } = 10;
-
-    public int MaxLevel { get; set; } = 20;
-
-    public string MbtilesFile { get; set; }
-
-    public int MergeImageQuality { get; set; } = 90;
-
-    public int MinLevel { get; set; } = 0;
-
-    public int SelectedTileSourcesIndex { get; set; } = 0;
-
-    public bool ServerLocalHostOnly { get; set; } = true;
-
-    public ushort ServerPort { get; set; } = 8888;
-
-    public bool ServerReturnEmptyPngWhenNotFound { get; set; } = true;
-
-
-    public List<TileDataSource> TileSources { get; set; }
-
-    public void Save()
-    {
-        var json = JsonSerializer.Serialize(this, MapTileDownloaderJsonContext.Config.Configs);
-        File.WriteAllText(CONFIG_FILE, json);
-    }
 }
-

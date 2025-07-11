@@ -38,7 +38,7 @@
                         </Style>
                     </Style>
                 </TabControl.Styles>
-                <TabItem Header="数据源">
+                <TabItem Header="数据">
                     <v:DataSourcePanel
                         Margin="0,8"
                         DataContext="{Binding DataSourceViewModel}" />
@@ -53,10 +53,15 @@
                         Margin="0,8"
                         DataContext="{Binding MergeViewModel}" />
                 </TabItem>
-                <TabItem Header="HTTP服务">
+                <TabItem Header="服务">
                     <v:ServerPanel
                         Margin="0,8"
                         DataContext="{Binding ServerViewModel}" />
+                </TabItem>
+                <TabItem Header="转换">
+                    <v:ConvertPanel
+                        Margin="0,8"
+                        DataContext="{Binding ConvertViewModel}" />
                 </TabItem>
             </TabControl>
         </Grid>

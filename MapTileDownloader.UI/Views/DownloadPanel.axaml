@@ -26,6 +26,8 @@
 
         <HeaderedContentControl
             Grid.Row="2"
+            Margin="0,0,-8,0"
+            Padding="0,0,8,0"
             Classes="GroupBox"
             Header="下载选项"
             IsEnabled="{Binding !IsDownloading}">
@@ -99,7 +101,11 @@
                     </ListBox.ItemTemplate>
                 </ListBox>
                 <ProgressBar
+                    Height="24"
                     Maximum="{Binding TotalCount}"
+                    Minimum="0"
+                    ProgressTextFormat="{}{1:0}%"
+                    ShowProgressText="True"
                     Value="{Binding DownloadedCount}" />
 
                 <TextBlock HorizontalAlignment="Center">

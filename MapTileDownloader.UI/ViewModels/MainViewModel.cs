@@ -17,12 +17,15 @@ public partial class MainViewModel : ViewModelBase
 
     public MergeViewModel MergeViewModel { get; } = new MergeViewModel();
 
+    public ConvertViewModel ConvertViewModel { get; } = new ConvertViewModel();
+
     public override void Initialize()
     {
         DataSourceViewModel.Initialize();
         DownloadViewModel.Initialize();
         ServerViewModel.Initialize();
         MergeViewModel.Initialize();
+        ConvertViewModel.Initialize();
         Map.LoadTileMaps(DataSourceViewModel.SelectedDataSource);
         if(Configs.Instance.Coordinates!= null && Configs.Instance.Coordinates.Length >=3)
         {

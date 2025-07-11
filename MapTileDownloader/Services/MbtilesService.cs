@@ -11,6 +11,11 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public MbtilesService(string mbtilesPath, bool readOnly)
     {
+        if (string.IsNullOrWhiteSpace(mbtilesPath))
+        {
+            throw new ArgumentException($"“{nameof(mbtilesPath)}”不能为 null 或空白。", nameof(mbtilesPath));
+        }
+
         SqlitePath = mbtilesPath;
         ReadOnly = readOnly;
         var connectionString = $"Data Source={mbtilesPath}";
@@ -35,7 +40,6 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
         catch
         {
-
         }
     }
 
@@ -47,7 +51,6 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
         catch
         {
-
         }
     }
 
@@ -108,7 +111,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public async ValueTask InitializeAsync()
     {
-        if(mbtilesConnection.State==ConnectionState.Open)
+        if (mbtilesConnection.State == ConnectionState.Open)
         {
             return;
         }
@@ -125,7 +128,12 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
                                """);
         }
+        else
+        {
+            await ExecuteAsync("PRAGMA journal_mode=WAL;");
+        }
     }
+
 
     public async Task InitializeMBTilesAsync(string name, string format, string url, int minLevel = 0,
         int maxLevel = 19)
@@ -197,7 +205,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
     {
         CheckConnectionOpen();
         await using var cmd = mbtilesConnection.CreateCommand();
-        await using var reader =await GetReaderAsync(cmd, sql, parameters);
+        await using var reader = await GetReaderAsync(cmd, sql, parameters);
         var results = new List<T>();
 
         while (await reader.ReadAsync())
@@ -213,7 +221,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
     {
         CheckConnectionOpen();
         await using var cmd = mbtilesConnection.CreateCommand();
-        await using var reader =await GetReaderAsync(cmd, sql, parameters);
+        await using var reader = await GetReaderAsync(cmd, sql, parameters);
         return await reader.ReadAsync() ? mapper(reader) : default;
     }
 }
