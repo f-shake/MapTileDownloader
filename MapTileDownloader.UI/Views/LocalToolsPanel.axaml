@@ -15,9 +15,7 @@
     x:DataType="vm:LocalToolsViewModel"
     mc:Ignorable="d">
     <ScrollViewer>
-        <StackPanel
-            Orientation="Vertical"
-            Spacing="16">
+        <StackPanel Orientation="Vertical">
             <Expander Header="HTTP服务">
                 <StackPanel
                     Orientation="Vertical"
@@ -26,9 +24,6 @@
                         IsEnabled="{Binding !IsServerOn}"
                         Orientation="Vertical"
                         Spacing="8">
-                        <c:FormItem Header="Mbtiles文件地址">
-                            <v:MbtilesPicker />
-                        </c:FormItem>
                         <c:FormItem Header="端口">
                             <NumericUpDown
                                 FormatString="0"
@@ -50,10 +45,10 @@
                         Orientation="Vertical"
                         Spacing="8">
                         <Button
-                            Command="{Binding StartCommand}"
+                            Command="{Binding StartServerCommand}"
                             Content="开启服务" />
                         <Button
-                            Command="{Binding StartCancelCommand}"
+                            Command="{Binding StartServerCancelCommand}"
                             Content="停止服务" />
                     </StackPanel>
                 </StackPanel>
@@ -68,7 +63,7 @@
                         <StackPanel
                             Orientation="Vertical"
                             Spacing="8">
-                            <v:MapAreaSelector />
+
                             <c:FormItem Header="级别">
                                 <Slider
                                     Maximum="20"
@@ -170,19 +165,12 @@
             </Expander>
             <Expander Header="转换">
                 <StackPanel
-                    IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}"
                     Orientation="Vertical"
                     Spacing="8">
                     <HeaderedContentControl
                         Classes="GroupBox"
-                        Header="Mbtiles数据库">
-                        <c:FormItem Header="文件位置">
-                            <v:MbtilesPicker />
-                        </c:FormItem>
-                    </HeaderedContentControl>
-                    <HeaderedContentControl
-                        Classes="GroupBox"
-                        Header="文件型瓦片">
+                        Header="文件型瓦片"
+                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}">
                         <StackPanel
                             Orientation="Vertical"
                             Spacing="8">
@@ -208,7 +196,8 @@
                     </HeaderedContentControl>
                     <HeaderedContentControl
                         Classes="GroupBox"
-                        Header="选项">
+                        Header="选项"
+                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}">
                         <CheckBox
                             Content="跳过已存在的文件/数据库记录"
                             IsChecked="{Binding SkipExisted}" />

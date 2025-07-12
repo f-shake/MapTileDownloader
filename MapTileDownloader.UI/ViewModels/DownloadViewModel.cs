@@ -21,62 +21,7 @@ using System.Diagnostics;
 namespace MapTileDownloader.UI.ViewModels;
 
 public partial class DownloadViewModel : ViewModelBase
-{ [ObservableProperty]
-    private TileDataSource selectedDataSource;
-
-    [ObservableProperty]
-    private ObservableCollection<TileDataSource> sources;
-
-    public DownloadViewModel()
-    {
-        Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
-        if (Configs.Instance.SelectedTileSourcesIndex >= 0 && Configs.Instance.SelectedTileSourcesIndex < Sources.Count)
-        {
-            SelectedDataSource = Sources[Configs.Instance.SelectedTileSourcesIndex];
-        }
-    }
-
-    [RelayCommand]
-    private void AddSource()
-    {
-        Sources.Add(new TileDataSource() { Name = "新数据源" });
-        SelectedDataSource = Sources[^1];
-        SaveToConfig();
-    }
-
-    [RelayCommand]
-    private void CallSelectedSourceChanged()
-    {
-        OnSelectedDataSourceChanged(SelectedDataSource);
-    }
-
-    partial void OnSelectedDataSourceChanged(TileDataSource value)
-    {
-        Map.LoadTileMaps(value);
-        SaveToConfig();
-    }
-
-    [RelayCommand]
-    private void RemoveSource()
-    {
-        if (SelectedDataSource != null)
-        {
-            Sources.Remove(SelectedDataSource);
-        }
-        if (Sources.Count == 0)
-        {
-            Sources.Add(new TileDataSource{ Name = "新数据源" });
-            SelectedDataSource = Sources[0];
-        }
-        SaveToConfig();
-    }
-
-    private void SaveToConfig()
-    {
-        Configs.Instance.TileSources = [.. Sources];
-        Configs.Instance.SelectedTileSourcesIndex = Sources.IndexOf(SelectedDataSource);
-    }
-    
+{
     [ObservableProperty]
     private bool canDownload = false;
 
@@ -107,16 +52,45 @@ public partial class DownloadViewModel : ViewModelBase
     private int minLevel = Configs.Instance.MinLevel;
 
     [ObservableProperty]
+    private TileDataSource selectedDataSource;
+
+    [ObservableProperty]
     private DownloadingLevelViewModel selectedLevel;
 
     [ObservableProperty]
     private int skipCount;
 
     [ObservableProperty]
+    private ObservableCollection<TileDataSource> sources;
+
+    [ObservableProperty]
     private int successCount;
 
     [ObservableProperty]
     private int totalCount;
+
+    public DownloadViewModel()
+    {
+        Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
+        if (Configs.Instance.SelectedTileSourcesIndex >= 0 && Configs.Instance.SelectedTileSourcesIndex < Sources.Count)
+        {
+            SelectedDataSource = Sources[Configs.Instance.SelectedTileSourcesIndex];
+        }
+    }
+
+    [RelayCommand]
+    private void AddSource()
+    {
+        Sources.Add(new TileDataSource() { Name = "新数据源" });
+        SelectedDataSource = Sources[^1];
+        SaveToConfig();
+    }
+
+    [RelayCommand]
+    private void CallSelectedSourceChanged()
+    {
+        OnSelectedDataSourceChanged(SelectedDataSource);
+    }
 
     [RelayCommand(IncludeCancelCommand = true, CanExecute = nameof(CanDownload))]
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
@@ -224,6 +198,12 @@ public partial class DownloadViewModel : ViewModelBase
         Configs.Instance.MinLevel = MaxLevel;
     }
 
+    partial void OnSelectedDataSourceChanged(TileDataSource value)
+    {
+        Map.LoadTileMaps(value);
+        SaveToConfig();
+    }
+
     partial void OnSelectedLevelChanged(DownloadingLevelViewModel value)
     {
         if (value == null)
@@ -266,5 +246,26 @@ public partial class DownloadViewModel : ViewModelBase
             OnPropertyChanged(nameof(SuccessCount));
             OnPropertyChanged(nameof(FailedCount));
         };
+    }
+
+    [RelayCommand]
+    private void RemoveSource()
+    {
+        if (SelectedDataSource != null)
+        {
+            Sources.Remove(SelectedDataSource);
+        }
+        if (Sources.Count == 0)
+        {
+            Sources.Add(new TileDataSource{ Name = "新数据源" });
+            SelectedDataSource = Sources[0];
+        }
+        SaveToConfig();
+    }
+
+    private void SaveToConfig()
+    {
+        Configs.Instance.TileSources = [.. Sources];
+        Configs.Instance.SelectedTileSourcesIndex = Sources.IndexOf(SelectedDataSource);
     }
 }

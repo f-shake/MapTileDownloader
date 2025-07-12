@@ -2,6 +2,7 @@
     x:Class="MapTileDownloader.UI.Views.MainView"
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -12,32 +13,39 @@
     x:DataType="vm:MainViewModel"
     mc:Ignorable="d">
 
-    <Grid ColumnDefinitions="300,Auto,*">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition
+                Width="300"
+                MinWidth="300" />
+            <ColumnDefinition Width="0" />
+            <ColumnDefinition />
+        </Grid.ColumnDefinitions>
         <map:MapView
             x:Name="map"
-            Grid.Column="2"
-            Margin="-8,0,0,0" />
-        <GridSplitter
-            Grid.Column="1"
-            Width="8"
-            Background="Transparent" />
-        <Grid>
+            Grid.Column="2" />
+        <Grid RowDefinitions="Auto,8,*">
+
+            <StackPanel
+                Margin="4"
+                Spacing="8">
+                <HeaderedContentControl
+                    Classes="GroupBox"
+                    Header="Mbtiles数据库位置">
+                    <v:MbtilesPicker />
+                </HeaderedContentControl>
+                <HeaderedContentControl
+                    Classes="GroupBox"
+                    Header="感兴趣区域">
+                    <v:MapAreaSelector />
+                </HeaderedContentControl>
+            </StackPanel>
             <TabControl
                 x:Name="tab"
+                Grid.Row="2"
+                Padding="0"
                 SelectedIndex="{Binding SelectedTabIndex}"
                 TabStripPlacement="Top">
-                <!-- <TabControl.Styles> -->
-                <!--     <Style Selector="TabItem"> -->
-                <!--         <Setter Property="MinHeight" Value="36" /> -->
-                <!--         <Setter Property="FontSize" Value="14" /> -->
-                <!--         <Setter Property="Padding" Value="12,6" /> -->
-                <!--         <Style Selector="^[TabStripPlacement=Top] /template/ Border#PART_SelectedPipe, ^[TabStripPlacement=Bottom] /template/ Border#PART_SelectedPipe"> -->
-                <!--             <Setter Property="Margin" Value="0" /> -->
-                <!--             <Setter Property="HorizontalAlignment" Value="Stretch" /> -->
-                <!--             <Setter Property="VerticalAlignment" Value="Bottom" /> -->
-                <!--         </Style> -->
-                <!--     </Style> -->
-                <!-- </TabControl.Styles> -->
                 <TabItem Header="下载">
                     <v:DownloadPanel
                         Margin="0,8"
@@ -50,5 +58,10 @@
                 </TabItem>
             </TabControl>
         </Grid>
+
+        <GridSplitter
+            Grid.Column="1"
+            Width="8"
+            Background="Transparent" />
     </Grid>
 </UserControl>

@@ -84,6 +84,21 @@
 
     <Style Selector="Expander">
         <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="CornerRadius" Value="0" />
+        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}" />
+        <Setter Property="Margin" Value="0,0,0,-1" />
+        <Style Selector="^:expanded /template/ ToggleButton#ExpanderHeader">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}" />
+            <Setter Property="CornerRadius" Value="6,6,0,0" />
+        </Style>
+        <Style Selector="^:expanded /template/ Border#ExpanderContent">
+            <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundChromeMediumBrush}" />
+            <Setter Property="CornerRadius" Value="0,0,6,6" />
+        </Style>
+    </Style>
+
+    <Style Selector="ScrollViewer">
+        <Setter Property="Padding" Value="0,0,8,0" />
     </Style>
 
 </Styles>

@@ -17,13 +17,31 @@ namespace MapTileDownloader.UI.ViewModels;
 public partial class LocalToolsViewModel : ViewModelBase
 {
     [ObservableProperty]
+    private string dir = Configs.Instance.ConvertDir;
+
+    [ObservableProperty]
     private int imageQuality = Configs.Instance.MergeImageQuality;
+
+    [ObservableProperty]
+    private string information;
+
+    [ObservableProperty]
+    private bool isConverting = false;
 
     [ObservableProperty]
     private bool isOutOfMemory = false;
 
     [ObservableProperty]
+    private bool isProgressIndeterminate;
+
+    [ObservableProperty]
+    private bool isServerOn;
+
+    [ObservableProperty]
     private int level = 15;
+
+    [ObservableProperty]
+    private bool localHostOnly = Configs.Instance.ServerLocalHostOnly;
 
     [ObservableProperty]
     private int maxX;
@@ -41,7 +59,25 @@ public partial class LocalToolsViewModel : ViewModelBase
     private int minY;
 
     [ObservableProperty]
+    private string pattern = Configs.Instance.ConvertPattern;
+
+    [ObservableProperty]
+    private ushort port = Configs.Instance.ServerPort;
+
+    [ObservableProperty]
+    private double progress;
+
+    [ObservableProperty]
+    private bool returnEmptyPngWhenNotFound = Configs.Instance.ServerReturnEmptyPngWhenNotFound;
+
+    [ObservableProperty]
+    private string serverMessage;
+
+    [ObservableProperty]
     private int size = 256;
+
+    [ObservableProperty]
+    private bool skipExisted = true;
 
     public LocalToolsViewModel()
     {
@@ -67,6 +103,53 @@ public partial class LocalToolsViewModel : ViewModelBase
             or nameof(Level))
         {
             UpdateMergeMessage();
+        }
+    }
+
+    [RelayCommand]
+    private void Cancel()
+    {
+        IsConverting = false;
+        ConvertToMbtilesCommand.Cancel();
+        ConvertToFilesCommand.Cancel();
+    }
+
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task ConvertToFilesAsync(CancellationToken cancellationToken)
+    {
+        IsConverting = true;
+        await Task.Delay(1000);
+        IsConverting = false;
+    }
+
+    [RelayCommand(IncludeCancelCommand = true)]
+    private async Task ConvertToMbtilesAsync(CancellationToken cancellationToken)
+    {
+        IsProgressIndeterminate = true;
+        try
+        {
+            if (string.IsNullOrWhiteSpace(Dir))
+            {
+                await ShowErrorAsync("转换失败", "目录为空");
+                return;
+            }
+
+            IsConverting = true;
+            var convertService = new TileConvertService();
+            var p = new Progress<double>(v =>
+            {
+                IsProgressIndeterminate = false;
+                Progress = v;
+            });
+            var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+            await TryWithTabDisabledAsync(
+                () => convertService.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p,
+                    cancellationToken), "转换失败");
+        }
+        finally
+        {
+            IsConverting = false;
+            IsProgressIndeterminate = false;
         }
     }
 
@@ -135,6 +218,11 @@ public partial class LocalToolsViewModel : ViewModelBase
             }), "拼接失败");
     }
 
+    partial void OnDirChanged(string value)
+    {
+        Configs.Instance.ConvertDir = value;
+    }
+
     partial void OnImageQualityChanged(int value)
     {
         Configs.Instance.MergeImageQuality = value;
@@ -144,28 +232,15 @@ public partial class LocalToolsViewModel : ViewModelBase
     {
         UpdateRange();
     }
-    
-    [ObservableProperty]
-    private bool isServerOn;
-
-    [ObservableProperty]
-    private bool localHostOnly = Configs.Instance.ServerLocalHostOnly;
-
-    [ObservableProperty]
-    private string serverMessage;
-    
-    [ObservableProperty]
-    private string information;
-
-    [ObservableProperty]
-    private ushort port = Configs.Instance.ServerPort;
-
-    [ObservableProperty]
-    private bool returnEmptyPngWhenNotFound = Configs.Instance.ServerReturnEmptyPngWhenNotFound;
 
     partial void OnLocalHostOnlyChanged(bool value)
     {
         Configs.Instance.ServerLocalHostOnly= value;
+    }
+
+    partial void OnPatternChanged(string value)
+    {
+        Configs.Instance.ConvertPattern = value;
     }
 
     partial void OnPortChanged(ushort value)
@@ -178,8 +253,25 @@ public partial class LocalToolsViewModel : ViewModelBase
         Configs.Instance.ServerReturnEmptyPngWhenNotFound= value;
     }
 
+    [RelayCommand]
+    private async Task PickDirAsync()
+    {
+        var options = new FolderPickerOpenOptions
+        {
+            AllowMultiple = true
+        };
+        var provider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
+        var folders = await provider.OpenFolderPickerAsync(options);
+        if (folders == null)
+        {
+            return;
+        }
+
+        Dir = string.Join(Environment.NewLine, folders.Select(p => p.TryGetLocalPath()).ToArray());
+    }
+
     [RelayCommand(IncludeCancelCommand = true)]
-    private async Task StartAsync(CancellationToken cancellationToken)
+    private async Task StartServerAsync(CancellationToken cancellationToken)
     {
         ServerMessage = $"http://(IP):{Port}/{{z}}/{{x}}/{{y}}";
         try
@@ -205,98 +297,7 @@ public partial class LocalToolsViewModel : ViewModelBase
             IsServerOn = false;
         }
     }
-   [ObservableProperty]
-    private string dir = Configs.Instance.ConvertDir;
 
-    [ObservableProperty]
-    private string pattern = Configs.Instance.ConvertPattern;
-
-    [ObservableProperty]
-    private double progress;
-
-    [ObservableProperty]
-    private bool isConverting = false;
-
-    [ObservableProperty]
-    private bool isProgressIndeterminate;
-
-    [ObservableProperty]
-    private bool skipExisted = true;
-
-    [RelayCommand(IncludeCancelCommand = true)]
-    private async Task ConvertToFilesAsync(CancellationToken cancellationToken)
-    {
-        IsConverting = true;
-        IsConverting = false;
-    }
-
-    [RelayCommand(IncludeCancelCommand = true)]
-    private async Task ConvertToMbtilesAsync(CancellationToken cancellationToken)
-    {
-        IsProgressIndeterminate = true;
-        try
-        {
-            if (string.IsNullOrWhiteSpace(Dir))
-            {
-                await ShowErrorAsync("转换失败", "目录为空");
-                return;
-            }
-
-            IsConverting = true;
-            var convertService = new TileConvertService();
-            var p = new Progress<double>(v =>
-            {
-                IsProgressIndeterminate = false;
-                Progress = v;
-            });
-            var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            await TryWithTabDisabledAsync(
-                () => convertService.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p,
-                    cancellationToken), "转换失败");
-        }
-        finally
-        {
-            IsConverting = false;
-            IsProgressIndeterminate = false;
-        }
-    }
-
-
-    [RelayCommand]
-    private void Cancel()
-    {
-        IsConverting = false;
-        ConvertToMbtilesCommand.Cancel();
-        ConvertToFilesCommand.Cancel();
-    }
-
-    partial void OnDirChanged(string value)
-    {
-        Configs.Instance.ConvertDir = value;
-    }
-
-    partial void OnPatternChanged(string value)
-    {
-        Configs.Instance.ConvertPattern = value;
-    }
-
-    [RelayCommand]
-    private async Task PickDirAsync()
-    {
-        var options = new FolderPickerOpenOptions
-        {
-            AllowMultiple = true
-        };
-        var provider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
-        var folders = await provider.OpenFolderPickerAsync(options);
-        if (folders == null)
-        {
-            return;
-        }
-
-        Dir = string.Join(Environment.NewLine, folders.Select(p => p.TryGetLocalPath()).ToArray());
-    }
-    
     private void UpdateMergeMessage()
     {
         var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);

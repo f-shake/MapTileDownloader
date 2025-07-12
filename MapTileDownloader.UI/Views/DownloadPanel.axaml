@@ -17,9 +17,7 @@
     mc:Ignorable="d">
     <Grid RowDefinitions="*,16,Auto,16,Auto">
         <ScrollViewer>
-            <StackPanel
-                Orientation="Vertical"
-                Spacing="16">
+            <StackPanel Orientation="Vertical">
                 <Expander
                     Header="数据源"
                     IsEnabled="{Binding !IsDownloading}">
@@ -103,13 +101,6 @@
                             Content="刷新地图" />
                     </StackPanel>
                 </Expander>
-                <Expander
-                    x:Name="grp1"
-                    Classes="GroupBox"
-                    Header="下载范围"
-                    IsEnabled="{Binding !IsDownloading}">
-                    <v:MapAreaSelector />
-                </Expander>
 
                 <Expander
                     Header="下载选项"
@@ -136,9 +127,6 @@
                                 TickFrequency="1"
                                 Value="{Binding MaxLevel}" />
                         </c:FormItem>
-                        <c:FormItem Header="保存至">
-                            <v:MbtilesPicker />
-                        </c:FormItem>
                         <c:FormItem Header="最大并行数量">
                             <Slider
                                 Maximum="20"
@@ -154,6 +142,7 @@
         </ScrollViewer>
         <HeaderedContentControl
             Grid.Row="2"
+            Margin="8,0"
             Classes="GroupBox"
             Header="下载进度">
             <StackPanel
@@ -250,6 +239,7 @@
         </HeaderedContentControl>
         <UniformGrid
             Grid.Row="4"
+            Margin="8,0"
             ColumnSpacing="8"
             Columns="3">
             <Button

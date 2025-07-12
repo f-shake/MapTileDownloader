@@ -1,7 +1,16 @@
 <ResourceDictionary
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Thickness x:Key="ExpanderHeaderPadding">16,0,0,0</Thickness>
+    <Thickness x:Key="ExpanderHeaderBorderThickness">0,1,0,0</Thickness>
+    <Thickness x:Key="ExpanderChevronBorderThickness">0</Thickness>
+    <Thickness x:Key="ExpanderChevronMargin">20,0,8,0</Thickness>
+    <x:Double x:Key="ExpanderChevronButtonSize">32</x:Double>
 
+    <Thickness x:Key="ExpanderContentLeftBorderThickness">0</Thickness>
+    <Thickness x:Key="ExpanderContentUpBorderThickness">0</Thickness>
+    <Thickness x:Key="ExpanderContentRightBorderThickness">0</Thickness>
+    <Thickness x:Key="ExpanderContentDownBorderThickness">0</Thickness>
     <ControlTheme
         x:Key="LabledSlider"
         TargetType="Slider">
