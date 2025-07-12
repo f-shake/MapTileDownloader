@@ -9,6 +9,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     private readonly SqliteConnection mbtilesConnection;
 
+    private bool disposed = false;
+
     public MbtilesService(string mbtilesPath, bool readOnly)
     {
         if (string.IsNullOrWhiteSpace(mbtilesPath))
@@ -31,11 +33,22 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public string SqlitePath { get; }
 
-
     public void Dispose()
     {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
         try
         {
+            if (!ReadOnly && mbtilesConnection.State == ConnectionState.Open)
+            {
+                using var cmd = mbtilesConnection.CreateCommand();
+                cmd.CommandText = "PRAGMA wal_checkpoint(TRUNCATE);";
+                cmd.CommandText = "PRAGMA journal_mode=DELETE;";
+                cmd.ExecuteNonQuery();
+            }
             mbtilesConnection?.Dispose();
         }
         catch
@@ -45,15 +58,25 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     public async ValueTask DisposeAsync()
     {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
         try
         {
+            if (!ReadOnly && mbtilesConnection.State == ConnectionState.Open)
+            {
+                await ExecuteAsync("PRAGMA wal_checkpoint(TRUNCATE);");
+                await ExecuteAsync("PRAGMA journal_mode=DELETE;");
+            }
+
             await mbtilesConnection.DisposeAsync().ConfigureAwait(false);
         }
         catch
         {
         }
     }
-
 
     public async Task<int> ExecuteAsync(string sql, params (string parameterName, object value)[] parameters)
     {
@@ -130,23 +153,18 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
         else
         {
-            await ExecuteAsync("PRAGMA journal_mode=WAL;");
+            await ExecuteAsync("""
+                PRAGMA journal_mode=WAL;
+                PRAGMA wal_autocheckpoint = 8192;
+                """);
         }
+
+        await EnsureSchemaAsync();
+        await ValidateMBTilesSchemaAsync();
     }
 
-
-    public async Task InitializeMBTilesAsync(string name, string format, string url, int minLevel = 0,
-        int maxLevel = 19)
+    public async Task InitializeMetadataAsync(string name, string format, string url, int minLevel = 0, int maxLevel = 19)
     {
-        await using var cmd = mbtilesConnection.CreateCommand();
-        cmd.CommandText = """
-                          CREATE TABLE tiles (zoom_level INTEGER, tile_column INTEGER, tile_row INTEGER, tile_data BLOB);
-                          CREATE UNIQUE INDEX tile_index ON tiles (zoom_level, tile_column, tile_row);
-                          CREATE TABLE metadata (name TEXT, value TEXT);
-                          CREATE UNIQUE INDEX name ON metadata (name);
-                          """;
-        await cmd.ExecuteNonQueryAsync().ConfigureAwait(false);
-
         await InsertOrUpdateMetadataAsync("name", name ?? "Unnamed Layer");
         await InsertOrUpdateMetadataAsync("type", "baselayer");
         await InsertOrUpdateMetadataAsync("version", "1.0");
@@ -155,6 +173,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         await InsertOrUpdateMetadataAsync("minzoom", minLevel.ToString());
         await InsertOrUpdateMetadataAsync("maxzoom", maxLevel.ToString());
         await InsertOrUpdateMetadataAsync("bounds", "-180.0,-85.0511,180.0,85.0511");
+        await InsertOrUpdateMetadataAsync("scheme", "xyz");
+        await InsertOrUpdateMetadataAsync("tilejson", "2.0.0");
     }
 
     public async Task InsertOrUpdateMetadataAsync(string name, string value)
@@ -164,6 +184,60 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             ("@name", name),
             ("@value", value)
         ).ConfigureAwait(false);
+    }
+
+    public async Task ValidateMBTilesSchemaAsync()
+    {
+        var requiredTables = new[] { "tiles", "metadata" };
+        var requiredTileColumns = new[] { "zoom_level", "tile_column", "tile_row", "tile_data" };
+        var requiredMetadataColumns = new[] { "name", "value" };
+
+        // 查询表是否存在
+        await using var cmd = mbtilesConnection.CreateCommand();
+        cmd.CommandText = "SELECT name FROM sqlite_master WHERE type='table';";
+        var existingTables = new HashSet<string>();
+        await using (var reader = await cmd.ExecuteReaderAsync())
+        {
+            while (await reader.ReadAsync())
+            {
+                existingTables.Add(reader.GetString(0));
+            }
+        }
+
+        foreach (var table in requiredTables)
+        {
+            if (!existingTables.Contains(table))
+            {
+                throw new InvalidOperationException($"表{table}不存在");
+            }
+        }
+
+        // 查询 tiles 表字段
+        await ValidateTableColumnsAsync("tiles", requiredTileColumns);
+        await ValidateTableColumnsAsync("metadata", requiredMetadataColumns);
+
+        async Task ValidateTableColumnsAsync(string tableName, string[] requiredColumns)
+        {
+            await using var cmd = mbtilesConnection.CreateCommand();
+            cmd.CommandText = $"PRAGMA table_info({tableName});";
+
+            var existingColumns = new HashSet<string>();
+            await using (var reader = await cmd.ExecuteReaderAsync())
+            {
+                while (await reader.ReadAsync())
+                {
+                    existingColumns.Add(reader.GetString(1));
+                }
+            }
+
+            foreach (var column in requiredColumns)
+            {
+                if (!existingColumns.Contains(column))
+                {
+                    throw new InvalidOperationException($"表{tableName}的列{column}不存在");
+                }
+            }
+        }
     }
 
     public async Task WriteTileAsync(int x, int y, int z, byte[] data)
@@ -185,6 +259,34 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
     }
 
+    private async Task EnsureSchemaAsync()
+    {
+        await ExecuteAsync("""
+                           CREATE TABLE IF NOT EXISTS tiles (
+                               zoom_level INTEGER,
+                               tile_column INTEGER,
+                               tile_row INTEGER,
+                               tile_data BLOB
+                           );
+                           """);
+
+        await ExecuteAsync("""
+                           CREATE UNIQUE INDEX IF NOT EXISTS tile_index
+                           ON tiles (zoom_level, tile_column, tile_row);
+                           """);
+
+        await ExecuteAsync("""
+                           CREATE TABLE IF NOT EXISTS metadata (
+                               name TEXT,
+                               value TEXT
+                           );
+                           """);
+
+        await ExecuteAsync("""
+                           CREATE UNIQUE INDEX IF NOT EXISTS name
+                           ON metadata (name);
+                           """);
+    }
     private Task<SqliteDataReader> GetReaderAsync(SqliteCommand cmd, string sql, (string, object)[] parameters)
     {
         cmd.CommandText = sql;

@@ -67,7 +67,7 @@ public partial class DownloadViewModel : ViewModelBase
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
         IsDownloading = true;
-        using var downloader = new TileDownloadService(TileSource, Configs.Instance.MbtilesFile, MaxConcurrency);
+        await using var downloader = new TileDownloadService(TileSource, Configs.Instance.MbtilesFile, MaxConcurrency);
         await TryWithTabDisabledAsync(async () =>
         {
             try

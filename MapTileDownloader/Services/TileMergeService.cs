@@ -9,8 +9,10 @@ using SixLabors.ImageSharp.Processing;
 
 namespace MapTileDownloader.Services
 {
-    public class TileMergeService(string mbtilesPath) : MbtilesBasedService(mbtilesPath, true)
+    public class TileMergeService(string mbtilesPath)
     {
+        public string MbtilesPath { get; } = mbtilesPath;
+
         public (long totalPixels, long estimatedMemoryBytes) EstimateTileMergeMemory(
             int minX, int maxX, int minY, int maxY, int tileSize = 256)
         {
@@ -21,7 +23,7 @@ namespace MapTileDownloader.Services
 
             return (totalPixels, estimatedMemory);
         }
-        
+
 
         public async Task MergeTilesAsync(
             string outputPath,
@@ -31,14 +33,14 @@ namespace MapTileDownloader.Services
             int minY,
             int maxY,
             int tileSize = 256,
-            int quality=80)
+            int quality = 80)
         {
             quality = Math.Clamp(quality, 10, 100);
             if (tileSize is not (256 or 512))
             {
                 throw new ArgumentException("瓦片尺寸应当为256或512像素", nameof(tileSize));
             }
-
+            await using var mbtilesService = new MbtilesService(MbtilesPath, true);
             await mbtilesService.InitializeAsync();
 
             int totalWidth = (maxX - minX + 1) * tileSize;
@@ -53,7 +55,7 @@ namespace MapTileDownloader.Services
                     int offsetX = (x - minX) * tileSize;
                     int offsetY = (y - minY) * tileSize;
 
-                    await AddTileToImageAsync(resultImage, z, x, y, offsetX, offsetY, tileSize);
+                    await AddTileToImageAsync(mbtilesService, resultImage, z, x, y, offsetX, offsetY, tileSize);
                 }
             }
             if (outputPath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
@@ -64,7 +66,7 @@ namespace MapTileDownloader.Services
                     Quality = quality
                 });
             }
-            else if(outputPath.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
+            else if (outputPath.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
             {
                 await resultImage.SaveAsync(outputPath, new WebpEncoder
                 {
@@ -78,6 +80,7 @@ namespace MapTileDownloader.Services
         }
 
         private async Task AddTileToImageAsync(
+            MbtilesService mbtilesService,
             Image<Rgba32> canvas,
             int z, int x, int y,
             int offsetX, int offsetY,

@@ -112,7 +112,7 @@ public partial class MergeViewModel : ViewModelBase
     [RelayCommand]
     private async Task MergeAsync()
     {
-        await using TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
+        TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
         (long p, long m) = s.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
         if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
         {
@@ -146,7 +146,7 @@ public partial class MergeViewModel : ViewModelBase
 
     private void UpdateMessage()
     {
-        using var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
+        var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
         (long p, long m) = tileServer.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
         Message =
             $"预计{p / 10000}万像素{Environment.NewLine}占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）";

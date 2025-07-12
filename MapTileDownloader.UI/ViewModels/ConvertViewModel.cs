@@ -32,6 +32,9 @@ public partial class ConvertViewModel : ViewModelBase
     [ObservableProperty]
     private bool isProgressIndeterminate;
 
+    [ObservableProperty]
+    private bool skipExisted = true;
+
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task ConvertToFilesAsync(CancellationToken cancellationToken)
     {
@@ -60,7 +63,7 @@ public partial class ConvertViewModel : ViewModelBase
             });
             var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
             await TryWithTabDisabledAsync(
-                () => convertService.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, p,
+                () => convertService.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p,
                     cancellationToken), "转换失败");
         }
         finally

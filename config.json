@@ -1,0 +1,32 @@
+{
+  "ConvertPattern": "{z}/{x}/{y}.{ext}",
+  "MaxDownloadConcurrency": 10,
+  "MaxLevel": 20,
+  "MbtilesFile": "C:\\Users\\autod\\OneDrive\\开发\\MapTileDownloader\\MapTileDownloader.UI.Desktop\\bin\\Debug\\net8.0\\tiles\\ESRI影像.mbtiles",
+  "MergeImageQuality": 90,
+  "MinLevel": 0,
+  "SelectedTileSourcesIndex": 0,
+  "ServerLocalHostOnly": true,
+  "ServerPort": 8888,
+  "ServerReturnEmptyPngWhenNotFound": true,
+  "TileSources": [
+    {
+      "Format": "JPG",
+      "MaxLevel": 19,
+      "Name": "ESRI影像",
+      "Url": "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+    },
+    {
+      "Format": "JPG",
+      "MaxLevel": 19,
+      "Name": "谷歌卫星",
+      "Url": "https://mt1.google.com/vt/lyrs=s\u0026x={x}\u0026y={y}\u0026z={z}"
+    },
+    {
+      "Format": "PNG",
+      "MaxLevel": 19,
+      "Name": "OpenStreetMap",
+      "Url": "http://a.tile.openstreetmap.org/{z}/{x}/{y}.png"
+    }
+  ]
+}

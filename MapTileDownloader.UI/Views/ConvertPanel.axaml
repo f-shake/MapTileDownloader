@@ -19,27 +19,46 @@
             IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}"
             Orientation="Vertical"
             Spacing="8">
-            <c:FormItem Header="Mbtiles文件地址">
-                <v:MbtilesPicker />
-            </c:FormItem>
-            <c:FormItem Header="文件型瓦片根目录">
-                <Grid ColumnDefinitions="*,8,Auto">
+            <HeaderedContentControl
+                Classes="GroupBox"
+                Header="Mbtiles数据库">
+                <c:FormItem Header="文件位置">
+                    <v:MbtilesPicker />
+                </c:FormItem>
+            </HeaderedContentControl>
+            <HeaderedContentControl
+                Classes="GroupBox"
+                Header="文件型瓦片">
+                <StackPanel
+                    Orientation="Vertical"
+                    Spacing="8">
+                    <c:FormItem Header="目录">
+                        <Grid ColumnDefinitions="*,8,Auto">
 
-                    <TextBox
-                        AcceptsReturn="True"
-                        MaxLines="5"
-                        Text="{Binding Dir}" />
-                    <Button
-                        Grid.Column="2"
-                        Command="{Binding PickDirCommand}"
-                        Content="浏览.." />
-                </Grid>
-            </c:FormItem>
-            <c:FormItem Header="瓦片位置结构">
-                <TextBox
-                    Text="{Binding Pattern}"
-                    Watermark="{}{z}/{x}/{y}.*" />
-            </c:FormItem>
+                            <TextBox
+                                AcceptsReturn="True"
+                                MaxLines="5"
+                                Text="{Binding Dir}" />
+                            <Button
+                                Grid.Column="2"
+                                Command="{Binding PickDirCommand}"
+                                Content="浏览.." />
+                        </Grid>
+                    </c:FormItem>
+                    <c:FormItem Header="瓦片位置结构">
+                        <TextBox
+                            Text="{Binding Pattern}"
+                            Watermark="{}{z}/{x}/{y}.*" />
+                    </c:FormItem>
+                </StackPanel>
+            </HeaderedContentControl>
+            <HeaderedContentControl
+                Classes="GroupBox"
+                Header="选项">
+                <CheckBox
+                    Content="跳过已存在的文件/数据库记录"
+                    IsChecked="{Binding SkipExisted}" />
+            </HeaderedContentControl>
         </StackPanel>
         <StackPanel
             Grid.Row="2"

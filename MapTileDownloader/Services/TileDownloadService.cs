@@ -10,18 +10,21 @@ using MapTileDownloader.Models;
 
 namespace MapTileDownloader.Services;
 
-public class TileDownloadService : MbtilesBasedService
+public class TileDownloadService : IDisposable, IAsyncDisposable
 {
     private readonly HttpClient httpClient;
     private readonly SemaphoreSlim semaphore;
     private readonly TileDataSource tileSource;
+    private bool disposed = false;
     private ConcurrentDictionary<string, byte> existingTiles;
     private bool isInitialized = false;
+    private MbtilesService mbtilesService;
 
-    public TileDownloadService(TileDataSource tileDataSource, string mbtilesPath, int maxConcurrency = 8) : base(mbtilesPath, false)
+    public TileDownloadService(TileDataSource tileDataSource, string mbtilesPath, int maxConcurrency = 8)
     {
         tileSource = tileDataSource ?? throw new ArgumentNullException(nameof(tileDataSource));
         semaphore = new SemaphoreSlim(maxConcurrency);
+        mbtilesService = new MbtilesService(mbtilesPath, false);
         new FileInfo(mbtilesPath).Directory.Create();
 
         // 初始化 HttpClient
@@ -51,16 +54,26 @@ public class TileDownloadService : MbtilesBasedService
         }
     }
 
-    public override void Dispose()
+    public void Dispose()
     {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
         httpClient?.Dispose();
-        base.Dispose();
+        mbtilesService.Dispose();
     }
 
-    public override ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
+        if (disposed)
+        {
+            return;
+        }
+        disposed = true;
         httpClient?.Dispose();
-        return base.DisposeAsync();
+        await mbtilesService.DisposeAsync();
     }
 
     public async Task DownloadTilesAsync(IEnumerable<IDownloadingLevel> levels, CancellationToken cancellationToken)
@@ -134,13 +147,8 @@ public class TileDownloadService : MbtilesBasedService
 
     public async Task InitializeAsync()
     {
-        bool isNewFile = !File.Exists(mbtilesService.SqlitePath);
-
         await mbtilesService.InitializeAsync();
-        if (isNewFile)
-        {
-            await mbtilesService.InitializeMBTilesAsync(tileSource.Name, tileSource.Format, tileSource.Url, 0, tileSource.MaxLevel);
-        }
+        await mbtilesService.InitializeMetadataAsync(tileSource.Name, tileSource.Format, tileSource.Url, 0, tileSource.MaxLevel);
 
         existingTiles = new ConcurrentDictionary<string, byte>((await mbtilesService.GetExistingTilesAsync())
             .Select(p => new KeyValuePair<string, byte>(p, default)));

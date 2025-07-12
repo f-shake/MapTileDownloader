@@ -8,14 +8,16 @@ using System.Threading;
 using System.Threading.Tasks;
 
 namespace MapTileDownloader.Services
-{   
-    public class TileServerService : MbtilesBasedService
+{
+    public class TileServerService : IAsyncDisposable
     {
         private readonly TileServerOptions options;
 
+        private MbtilesService mbtilesService;
+
         private WebServer server;
 
-        private TileServerService(TileServerOptions options):base(options.MbtilesPath,true)
+        private TileServerService(TileServerOptions options)
         {
             if (options == null)
             {
@@ -28,29 +30,23 @@ namespace MapTileDownloader.Services
             }
 
             this.options = options;
+            mbtilesService = new MbtilesService(options.MbtilesPath, true);
         }
-
-        public string MbtilesPath => options.MbtilesPath;
 
         public static async Task RunAsync(TileServerOptions options, CancellationToken cancellationToken)
         {
-            using TileServerService serverService = new TileServerService(options);
-            await serverService.StartAsync(cancellationToken).ConfigureAwait(false);
+            await using TileServerService serverService = new TileServerService(options);
+            await serverService.RunAsync(cancellationToken).ConfigureAwait(false);
         }
 
-        public override void Dispose()
+
+        public ValueTask DisposeAsync()
         {
             server?.Dispose();
-            base.Dispose();
+            return mbtilesService.DisposeAsync();
         }
 
-        public override ValueTask DisposeAsync()
-        {
-            server?.Dispose();
-            return base.DisposeAsync();
-        }
-
-        public async Task StartAsync(CancellationToken cancellationToken)
+        public async Task RunAsync(CancellationToken cancellationToken)
         {
             await mbtilesService.InitializeAsync().ConfigureAwait(false);
             var host = options.LocalhostOnly ? "localhost" : "*";
@@ -86,7 +82,7 @@ namespace MapTileDownloader.Services
             }
 
             public MbtilesService MbtilesService { get; }
-            
+
             [Route(HttpVerbs.Get, "/{z}/{x}/{y}")]
             public async Task GetTileAsync(int z, int x, int y)
             {

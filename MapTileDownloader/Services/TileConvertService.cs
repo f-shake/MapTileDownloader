@@ -32,12 +32,20 @@ namespace MapTileDownloader.Services
 
 
         public async Task ConvertToMbtilesAsync(string mbtilesPath, IList<string> dirs, string pattern,
+            bool skipExisted,
             IProgress<double> progress = null,
             CancellationToken cancellation = default)
         {
             if (dirs == null || dirs.Count == 0)
             {
                 throw new ArgumentException("至少需要指定一个目录", nameof(dirs));
+            }
+            foreach (var dir in dirs)
+            {
+                if (!Directory.Exists(dir))
+                {
+                    throw new ArgumentException($"目录{dir}不存在", nameof(dirs));
+                }
             }
 
             Check(mbtilesPath, pattern);
@@ -70,39 +78,53 @@ namespace MapTileDownloader.Services
             bool newFile = !File.Exists(mbtilesPath);
             await using var serviece = new MbtilesService(mbtilesPath, false);
             await serviece.InitializeAsync();
-            if (newFile)
-            {
-                await serviece.InitializeMBTilesAsync(name, format, "local files", minZ, maxZ);
-            }
+            await serviece.InitializeMetadataAsync(name, format, "local files", minZ, maxZ);
+
+            var existingTiles =await serviece.GetExistingTilesAsync();
 
             int index = 0;
             foreach (var item in files)
             {
                 cancellation.ThrowIfCancellationRequested();
                 index++;
+                progress?.Report((double)index / files.Count);
+                if (existingTiles.Contains($"{item.Z}/{item.X}/{item.Y}"))
+                {
+                    continue;
+                }
                 await serviece.WriteTileAsync(item.X, item.Y, item.Z,
                     await File.ReadAllBytesAsync(item.File, cancellation).ConfigureAwait(false));
-                progress?.Report((double)index / files.Count);
             }
         }
 
         private bool IsMatchPattern(string pattern, string relativePath, out int z, out int x, out int y)
         {
             relativePath = relativePath.Replace('\\', '/');
-            pattern = pattern.Replace('\\', '/').Replace("{x}", "(\\d+)").Replace("{y}", "(\\d+)")
-                .Replace("{z}", "(\\d{1,2})").Replace(" * ", ".+ ");
+
+            // 使用具名捕获组替换 pattern 中的 {x}、{y}、{z}
+            pattern = pattern.Replace("\\", "/")
+                .Replace("{x}", "(?<x>\\d+)")
+                .Replace("{y}", "(?<y>\\d+)")
+                .Replace("{z}", "(?<z>\\d{1,2})")
+                .Replace(" * ", ".+");
+
             var regex = new Regex(pattern);
             var match = regex.Match(relativePath);
-            if (match.Success && match.Groups.Count == 4)
+
+            if (match.Success &&
+                match.Groups["x"].Success &&
+                match.Groups["y"].Success &&
+                match.Groups["z"].Success)
             {
-                z = int.Parse(match.Groups[1].Value);
-                x = int.Parse(match.Groups[2].Value);
-                y = int.Parse(match.Groups[3].Value);
+                x = int.Parse(match.Groups["x"].Value);
+                y = int.Parse(match.Groups["y"].Value);
+                z = int.Parse(match.Groups["z"].Value);
                 return true;
             }
 
-            z = x = y = 0;
+            x = y = z = 0;
             return false;
         }
+
     }
 }
