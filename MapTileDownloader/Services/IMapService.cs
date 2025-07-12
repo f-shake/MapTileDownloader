@@ -15,7 +15,8 @@ public interface IMapService
     Task LoadTileGridsAsync(TileDataSource tileDataSource, IEnumerable<IDownloadingLevel> levels);
     void DisplayTileGrids(int level);
     void LoadTileMaps(TileDataSource tileDataSource);
-    void LoadLocalTileMaps(string url, int maxLevel);
+    void LoadLocalTileMaps(MbtilesTileSource tileSource);
     void SetEnable(AppLayer layer, bool enable);
     void ClearTileGrids();
+    void Refresh();
 }

@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -79,16 +81,40 @@ public partial class LocalToolsViewModel : ViewModelBase
     [ObservableProperty]
     private bool skipExisted = true;
 
+    private MbtilesTileSource localTileSource;
+
     public LocalToolsViewModel()
     {
         MapAreaSelectorViewModel.CoordinatesChanged += MapAreaSelectorViewModelOnCoordinatesChanged;
     }
 
-    public override void Initialize()
+    public override async ValueTask InitializeAsync()
     {
-        base.Initialize();
         UpdateRange();
         UpdateMergeMessage();
+        await UpdateLocalTileLayer();
+        await base.InitializeAsync();
+        MbtilesPickerViewModel.FileChanged += async (s, e) => await UpdateLocalTileLayer();
+    }
+
+    private async Task UpdateLocalTileLayer()
+    {
+        if (localTileSource != null)
+        {
+            await localTileSource.DisposeAsync();
+        }
+
+        if (File.Exists(Configs.Instance.MbtilesFile))
+        {
+            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile);
+            await localTileSource.InitializeAsync();
+        }
+        else
+        {
+            localTileSource = null;
+        }
+
+        Map.LoadLocalTileMaps(localTileSource);
     }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -235,7 +261,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     partial void OnLocalHostOnlyChanged(bool value)
     {
-        Configs.Instance.ServerLocalHostOnly= value;
+        Configs.Instance.ServerLocalHostOnly = value;
     }
 
     partial void OnPatternChanged(string value)
@@ -250,7 +276,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     partial void OnReturnEmptyPngWhenNotFoundChanged(bool value)
     {
-        Configs.Instance.ServerReturnEmptyPngWhenNotFound= value;
+        Configs.Instance.ServerReturnEmptyPngWhenNotFound = value;
     }
 
     [RelayCommand]
@@ -277,7 +303,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         try
         {
             IsServerOn = true;
-            Map.LoadLocalTileMaps($"http://localhost:{port}/{{z}}/{{x}}/{{y}}", 20);
+            // Map.LoadLocalTileMaps($"http://localhost:{port}/{{z}}/{{x}}/{{y}}", 20);
             await TileServerService.RunAsync(new TileServerService.TileServerOptions
             {
                 LocalhostOnly = LocalHostOnly,
@@ -292,7 +318,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         }
         finally
         {
-            Map.LoadLocalTileMaps(null, 0);
+            // Map.LoadLocalTileMaps(null, 0);
             ServerMessage = null;
             IsServerOn = false;
         }

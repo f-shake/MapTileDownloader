@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using Avalonia.Controls;
 using Mapsui;
 using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
@@ -38,10 +39,16 @@ namespace MapTileDownloader.UI.Mapping
             {
                 Map.BackColor = Color.FromArgb(0xFF, 0xDD, 0xDD, 0xDD);
             }
+
             Map.Widgets.Clear();
             InitializeLayers();
             InitializeDrawing();
             InitializeTile();
+        }
+
+        void IMapService.Refresh()
+        {
+            Refresh();
         }
     }
 }

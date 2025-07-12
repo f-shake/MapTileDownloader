@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using System.Threading.Tasks;
+using CommunityToolkit.Mvvm.ComponentModel;
 using Mapsui;
 using MapTileDownloader.Enums;
 
@@ -13,17 +14,17 @@ public partial class MainViewModel : ViewModelBase
 
     public LocalToolsViewModel LocalToolsViewModel { get; } = new LocalToolsViewModel();
 
-    public override void Initialize()
+    public override async ValueTask InitializeAsync()
     {
-        DownloadViewModel.Initialize();
-        LocalToolsViewModel.Initialize();
+        await DownloadViewModel.InitializeAsync();
+        await LocalToolsViewModel.InitializeAsync();
         Map.LoadTileMaps(DownloadViewModel.SelectedDataSource);
         if (Configs.Instance.Coordinates != null && Configs.Instance.Coordinates.Length >= 3)
         {
             Map.DisplayPolygon(Configs.Instance.Coordinates);
         }
 
-        base.Initialize();
+        await base.InitializeAsync();
     }
 
     partial void OnSelectedTabIndexChanged(int value)
@@ -32,5 +33,6 @@ public partial class MainViewModel : ViewModelBase
         Map.SetEnable(AppLayer.LocalBaseLayer, value is 1);
         Map.SetEnable(AppLayer.TileGridLayer, value is 0);
         Map.SetEnable(AppLayer.DrawingLayer, true);
+        Map.Refresh();
     }
 }

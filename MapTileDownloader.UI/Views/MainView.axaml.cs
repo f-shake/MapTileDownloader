@@ -23,10 +23,17 @@ public partial class MainView : UserControl
         RegisterMessages();
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
+    protected override async void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
-        (DataContext as MainViewModel)!.Initialize();
+        try
+        {
+            await (DataContext as MainViewModel).InitializeAsync();
+        }
+        catch (Exception ex)
+        {
+            await (DataContext as MainViewModel).ShowErrorAsync("初始化失败", ex);
+        }
     }
 
     private void RegisterMessages()

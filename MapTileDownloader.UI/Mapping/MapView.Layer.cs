@@ -6,18 +6,21 @@ using Mapsui.Styles;
 using Mapsui.Tiling.Layers;
 using MapTileDownloader.Models;
 using System;
+using System.IO;
+using System.Net;
 using System.Net.Http;
+using BruTile;
 using MapTileDownloader.Enums;
 using Brush = Mapsui.Styles.Brush;
 using Color = Mapsui.Styles.Color;
 using Pen = Mapsui.Styles.Pen;
 using BruTile.Wms;
+using MapTileDownloader.Services;
 
 namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
-
     /// <summary>
     /// XYZ底图
     /// </summary>
@@ -42,36 +45,36 @@ public partial class MapView
     /// 瓦片网格图层
     /// </summary>
     private MemoryLayer tileGridLayer;
-    public void LoadLocalTileMaps(string url, int maxLevel)
+
+    public void LoadLocalTileMaps(MbtilesTileSource tileSource)
     {
-        if (Map.Layers.Count > 1)
+        bool isEnabled = true;
+        if (Map.Layers.Count > (int)AppLayer.LocalBaseLayer)
         {
+            isEnabled = Map.Layers.Get((int)AppLayer.LocalBaseLayer).Enabled;
             Map.Layers.Remove(Map.Layers.Get((int)AppLayer.LocalBaseLayer));
         }
 
-        if (url == null || string.IsNullOrEmpty(url))
+        if (tileSource == null)
         {
-            Map.Layers.Insert(1, new MemoryLayer());
+            Map.Layers.Insert((int)AppLayer.LocalBaseLayer, new MemoryLayer());
             return;
         }
-        var httpClient = new HttpClient();
-        var s = new HttpTileSource(new GlobalSphericalMercator(0, maxLevel), url
-        );
 
-        localBaseLayer = new TileLayer(s);
-        Map.Layers.Insert(1, localBaseLayer);
+        localBaseLayer = new TileLayer(tileSource) { Enabled = isEnabled };
+        Map.Layers.Insert((int)AppLayer.LocalBaseLayer, localBaseLayer);
     }
 
     public void LoadTileMaps(TileDataSource tileDataSource)
     {
         if (Map.Layers.Count > 0)
         {
-            Map.Layers.Remove(Map.Layers.Get(0));
+            Map.Layers.Remove(Map.Layers.Get((int)AppLayer.BaseLayer));
         }
 
         if (tileDataSource == null || string.IsNullOrEmpty(tileDataSource.Url))
         {
-            Map.Layers.Insert(0, new MemoryLayer());
+            Map.Layers.Insert((int)AppLayer.BaseLayer, new MemoryLayer());
             return;
         }
 
@@ -86,6 +89,7 @@ public partial class MapView
                     {
                         s.Headers.UserAgent.ParseAdd(tileDataSource.UserAgent);
                     }
+
                     if (!string.IsNullOrWhiteSpace(tileDataSource.Host))
                     {
                         s.Headers.Host = tileDataSource.Host;
@@ -103,7 +107,6 @@ public partial class MapView
                 }
                 catch
                 {
-
                 }
             }
         );
@@ -119,6 +122,7 @@ public partial class MapView
         {
             throw new ArgumentOutOfRangeException(nameof(index), "索引超出范围");
         }
+
         var layer = Map.Layers.Get((int)index);
         layer.Enabled = enable;
     }

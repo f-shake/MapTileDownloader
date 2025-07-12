@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using FzLib.Avalonia.Messages;
 using MapTileDownloader.UI.Messages;
 using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.Services;
@@ -16,9 +17,11 @@ public abstract partial class ViewModelBase : ObservableObject
 
     protected IMapService Map => SendMessage(new GetMapServiceMessage()).MapService;
 
-    public virtual void Initialize()
+    public virtual ValueTask InitializeAsync()
     {
+        Debug.Assert(IsInitialized == false);
         IsInitialized = true;
+        return ValueTask.CompletedTask;
     }
 
     public TMessage SendMessage<TMessage>(TMessage message) where TMessage : class

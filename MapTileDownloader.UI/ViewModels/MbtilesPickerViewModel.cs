@@ -80,5 +80,5 @@ public partial class MbtilesPickerViewModel : ViewModelBase
         FileChanged?.Invoke(this, EventArgs.Empty);
     }
 
-    private static event EventHandler FileChanged;
+    public static event EventHandler FileChanged;
 }
