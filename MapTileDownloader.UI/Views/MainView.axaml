@@ -26,42 +26,27 @@
                 x:Name="tab"
                 SelectedIndex="{Binding SelectedTabIndex}"
                 TabStripPlacement="Top">
-                <TabControl.Styles>
-                    <Style Selector="TabItem">
-                        <Setter Property="MinHeight" Value="36" />
-                        <Setter Property="FontSize" Value="14" />
-                        <Setter Property="Padding" Value="12,6" />
-                        <Style Selector="^[TabStripPlacement=Top] /template/ Border#PART_SelectedPipe, ^[TabStripPlacement=Bottom] /template/ Border#PART_SelectedPipe">
-                            <Setter Property="Margin" Value="0" />
-                            <Setter Property="HorizontalAlignment" Value="Stretch" />
-                            <Setter Property="VerticalAlignment" Value="Bottom" />
-                        </Style>
-                    </Style>
-                </TabControl.Styles>
-                <TabItem Header="数据">
-                    <v:DataSourcePanel
-                        Margin="0,8"
-                        DataContext="{Binding DataSourceViewModel}" />
-                </TabItem>
+                <!-- <TabControl.Styles> -->
+                <!--     <Style Selector="TabItem"> -->
+                <!--         <Setter Property="MinHeight" Value="36" /> -->
+                <!--         <Setter Property="FontSize" Value="14" /> -->
+                <!--         <Setter Property="Padding" Value="12,6" /> -->
+                <!--         <Style Selector="^[TabStripPlacement=Top] /template/ Border#PART_SelectedPipe, ^[TabStripPlacement=Bottom] /template/ Border#PART_SelectedPipe"> -->
+                <!--             <Setter Property="Margin" Value="0" /> -->
+                <!--             <Setter Property="HorizontalAlignment" Value="Stretch" /> -->
+                <!--             <Setter Property="VerticalAlignment" Value="Bottom" /> -->
+                <!--         </Style> -->
+                <!--     </Style> -->
+                <!-- </TabControl.Styles> -->
                 <TabItem Header="下载">
                     <v:DownloadPanel
                         Margin="0,8"
                         DataContext="{Binding DownloadViewModel}" />
                 </TabItem>
-                <TabItem Header="拼接">
-                    <v:MergePanel
+                <TabItem Header="本地工具">
+                    <v:LocalToolsPanel
                         Margin="0,8"
-                        DataContext="{Binding MergeViewModel}" />
-                </TabItem>
-                <TabItem Header="服务">
-                    <v:ServerPanel
-                        Margin="0,8"
-                        DataContext="{Binding ServerViewModel}" />
-                </TabItem>
-                <TabItem Header="转换">
-                    <v:ConvertPanel
-                        Margin="0,8"
-                        DataContext="{Binding ConvertViewModel}" />
+                        DataContext="{Binding LocalToolsViewModel}" />
                 </TabItem>
             </TabControl>
         </Grid>

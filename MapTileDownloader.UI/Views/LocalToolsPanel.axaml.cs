@@ -2,9 +2,9 @@
 
 namespace MapTileDownloader.UI.Views;
 
-public partial class DataSourcePanel : UserControl
+public partial class LocalToolsPanel : UserControl
 {
-    public DataSourcePanel()
+    public LocalToolsPanel()
     {
         InitializeComponent();
     }

@@ -55,8 +55,6 @@ public partial class MainView : UserControl
                     }
                 }
             });
-        WeakReferenceMessenger.Default.Register<GetSelectedDataSourceMessage>(this,
-            (o, m) => { m.DataSource = (DataContext as MainViewModel).DataSourceViewModel.SelectedDataSource; });
         WeakReferenceMessenger.Default.Register<LoadingMessage>(this, (o, m) =>
         {
             Dispatcher.UIThread.Invoke(() =>

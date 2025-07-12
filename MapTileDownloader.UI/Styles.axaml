@@ -82,4 +82,8 @@
         <Setter Property="FontFamily" Value="Arial, Microsoft YaHei UI" />
     </Style>
 
+    <Style Selector="Expander">
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+
 </Styles>

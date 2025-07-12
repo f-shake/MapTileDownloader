@@ -67,7 +67,7 @@ public partial class MapView
         }
 
         featuresPerLevel = new Dictionary<int, List<GeometryFeature>>();
-        var tileHelper = new TileIntersectionService(tileDataSource);
+        var tileHelper = new TileIntersectionService();
 
         // 生成瓦片几何图形 + 标注
 

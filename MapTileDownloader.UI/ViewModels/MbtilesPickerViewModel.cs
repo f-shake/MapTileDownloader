@@ -25,50 +25,11 @@ public partial class MbtilesPickerViewModel : ViewModelBase
     public MbtilesPickerViewModel()
     {
         FileChanged += (s, e) => File = Configs.Instance.MbtilesFile;
-        File = Configs.Instance.MbtilesFile ?? Path.Combine(AppContext.BaseDirectory, "tiles", GetSanitizeFileName());
+        File = Configs.Instance.MbtilesFile ?? Path.Combine(AppContext.BaseDirectory, "tiles.mbtiles");
     }
 
     [ObservableProperty]
     private string file;
-
-    private string GetSanitizeFileName()
-    {
-        string name;
-        if (!string.IsNullOrWhiteSpace(TileSource?.Name))
-        {
-            name = TileSource.Name;
-        }
-        else if(Configs.Instance.SelectedTileSourcesIndex>=0 && Configs.Instance.SelectedTileSourcesIndex<Configs.Instance.TileSources.Count)
-        {
-            name = Configs.Instance.TileSources[Configs.Instance.SelectedTileSourcesIndex].Name;
-        }
-        else
-        {
-            return "未知.mbtiles";
-        }
-
-        ArgumentException.ThrowIfNullOrWhiteSpace(name);
-
-        // 替换非法字符（Windows 不允许的）
-        var invalidChars = Path.GetInvalidFileNameChars();
-        var sanitized = new StringBuilder();
-
-        foreach (var c in name)
-        {
-            sanitized.Append(Array.IndexOf(invalidChars, c) >= 0 ? '_' : c);
-        }
-
-        // 去除前后空格，防止出现空文件名
-        var result = sanitized.ToString().Trim();
-
-        // 限制长度（如需符合 Windows 限制 255）
-        if (result.Length > 128)
-        {
-            result = result[..128];
-        }
-
-        return (string.IsNullOrWhiteSpace(result) ? "未知" : result) + ".mbtiles";
-    }
 
     [RelayCommand]
     private async Task OpenDirAsync()
@@ -95,7 +56,6 @@ public partial class MbtilesPickerViewModel : ViewModelBase
         var options = new FilePickerSaveOptions
         {
             DefaultExtension = "mbtiles",
-            SuggestedFileName = GetSanitizeFileName(),
             FileTypeChoices = new List<FilePickerFileType>
             {
                 new FilePickerFileType("MB Tiles 地图瓦片数据库文件")

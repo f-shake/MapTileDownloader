@@ -35,21 +35,11 @@
     <Compile Update="Views\MapAreaSelector.axaml.cs">
       <DependentUpon>MapAreaSelector.axaml</DependentUpon>
     </Compile>
-    <Compile Update="Views\MergePanel.axaml.cs">
+    <Compile Update="Views\LocalToolsPanel.axaml.cs">
       <DependentUpon>MergePanel.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\ConvertPanel.axaml.cs">
-      <DependentUpon>ConvertPanel.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\ServerPanel.axaml.cs">
-      <DependentUpon>ServerPanel.axaml</DependentUpon>
     </Compile>
     <Compile Update="Views\DownloadPanel.axaml.cs">
       <DependentUpon>DownloadPanel.axaml</DependentUpon>
-    </Compile>
-    <Compile Update="Views\DataSourcePanel.axaml.cs">
-      <DependentUpon>DataSourceView.axaml</DependentUpon>
-      <SubType>Code</SubType>
     </Compile>
     <Compile Update="Views\MbtilesPicker.axaml.cs">
       <DependentUpon>MbtilesPicker.axaml</DependentUpon>

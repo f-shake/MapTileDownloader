@@ -16,9 +16,6 @@ public abstract partial class ViewModelBase : ObservableObject
 
     protected IMapService Map => SendMessage(new GetMapServiceMessage()).MapService;
 
-    protected TileDataSource TileSource => SendMessage(new GetSelectedDataSourceMessage()).DataSource;
-
-
     public virtual void Initialize()
     {
         IsInitialized = true;

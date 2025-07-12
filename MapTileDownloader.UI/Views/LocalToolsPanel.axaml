@@ -1,0 +1,240 @@
+<UserControl
+    x:Class="MapTileDownloader.UI.Views.LocalToolsPanel"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
+    xmlns:map="using:MapTileDownloader.UI.Mapping"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:v="clr-namespace:MapTileDownloader.UI.Views"
+    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    x:DataType="vm:LocalToolsViewModel"
+    mc:Ignorable="d">
+    <ScrollViewer>
+        <StackPanel
+            Orientation="Vertical"
+            Spacing="16">
+            <Expander Header="HTTP服务">
+                <StackPanel
+                    Orientation="Vertical"
+                    Spacing="8">
+                    <StackPanel
+                        IsEnabled="{Binding !IsServerOn}"
+                        Orientation="Vertical"
+                        Spacing="8">
+                        <c:FormItem Header="Mbtiles文件地址">
+                            <v:MbtilesPicker />
+                        </c:FormItem>
+                        <c:FormItem Header="端口">
+                            <NumericUpDown
+                                FormatString="0"
+                                Maximum="65535"
+                                Minimum="1025"
+                                Value="{Binding Port}" />
+                        </c:FormItem>
+                        <CheckBox
+                            Content="仅允许本地连接"
+                            IsChecked="{Binding LocalHostOnly}" />
+                        <CheckBox
+                            Content="无数据时返回占位图而非404"
+                            IsChecked="{Binding ReturnEmptyPngWhenNotFound}" />
+                        <TextBlock
+                            HorizontalAlignment="Center"
+                            Text="{Binding ServerMessage}" />
+                    </StackPanel>
+                    <StackPanel
+                        Orientation="Vertical"
+                        Spacing="8">
+                        <Button
+                            Command="{Binding StartCommand}"
+                            Content="开启服务" />
+                        <Button
+                            Command="{Binding StartCancelCommand}"
+                            Content="停止服务" />
+                    </StackPanel>
+                </StackPanel>
+            </Expander>
+            <Expander Header="合并">
+                <StackPanel
+                    Orientation="Vertical"
+                    Spacing="8">
+                    <HeaderedContentControl
+                        Classes="GroupBox"
+                        Header="导出范围">
+                        <StackPanel
+                            Orientation="Vertical"
+                            Spacing="8">
+                            <v:MapAreaSelector />
+                            <c:FormItem Header="级别">
+                                <Slider
+                                    Maximum="20"
+                                    Minimum="1"
+                                    Theme="{StaticResource LabledSlider}"
+                                    TickFrequency="1"
+                                    Value="{Binding Level}" />
+
+                            </c:FormItem>
+                            <c:FormItem Header="范围">
+                                <Grid
+                                    ColumnDefinitions="*,8,*,8,*"
+                                    RowDefinitions="*,8,*,8,*">
+                                    <Grid.Styles>
+                                        <Style Selector="TextBox">
+                                            <Setter Property="TextAlignment" Value="Center" />
+                                            <Setter Property="Padding" Value="5" />
+                                        </Style>
+                                    </Grid.Styles>
+                                    <Border
+                                        Grid.Row="2"
+                                        Grid.Column="2"
+                                        BorderBrush="{Binding $parent[UserControl].Foreground}"
+                                        BorderThickness="2">
+                                        <Border.Background>
+                                            <SolidColorBrush
+                                                Opacity="0.5"
+                                                Color="Gray" />
+                                        </Border.Background>
+                                    </Border>
+                                    <TextBox
+                                        Grid.Row="2"
+                                        Text="{Binding MinX}" />
+                                    <TextBox
+                                        Grid.Column="2"
+                                        Text="{Binding MinY}" />
+                                    <TextBox
+                                        Grid.Row="2"
+                                        Grid.Column="4"
+                                        Text="{Binding MaxX}" />
+                                    <TextBox
+                                        Grid.Row="4"
+                                        Grid.Column="2"
+                                        Text="{Binding MaxY}" />
+                                </Grid>
+                            </c:FormItem>
+                        </StackPanel>
+                    </HeaderedContentControl>
+
+                    <HeaderedContentControl
+                        Classes="GroupBox"
+                        Header="图像选项">
+                        <StackPanel
+                            Orientation="Vertical"
+                            Spacing="8">
+                            <c:FormItem Header="瓦片大小">
+                                <ComboBox SelectedItem="{Binding Size}">
+                                    <sys:Int32>256</sys:Int32>
+                                    <sys:Int32>512</sys:Int32>
+                                </ComboBox>
+                            </c:FormItem>
+                            <c:FormItem Header="JPEG导出质量">
+                                <Slider
+                                    Maximum="100"
+                                    Minimum="5"
+                                    Theme="{StaticResource LabledSlider}"
+                                    TickFrequency="5"
+                                    Value="{Binding ImageQuality}" />
+                            </c:FormItem>
+                        </StackPanel>
+                    </HeaderedContentControl>
+
+                    <TextBlock
+                        Text="{Binding MergeMessage}"
+                        TextAlignment="Center">
+                        <TextBlock.Styles>
+                            <Style Selector="TextBlock.Red">
+                                <Setter Property="Foreground" Value="Red" />
+                            </Style>
+                        </TextBlock.Styles>
+                        <Interaction.Behaviors>
+                            <DataTriggerBehavior
+                                Binding="{Binding IsOutOfMemory}"
+                                Value="True">
+                                <AddClassAction ClassName="Red" />
+                            </DataTriggerBehavior>
+                            <DataTriggerBehavior
+                                Binding="{Binding IsOutOfMemory}"
+                                Value="False">
+                                <RemoveClassAction ClassName="Red" />
+                            </DataTriggerBehavior>
+                        </Interaction.Behaviors>
+                    </TextBlock>
+
+                    <Button
+                        Command="{Binding MergeCommand}"
+                        Content="合并" />
+                </StackPanel>
+            </Expander>
+            <Expander Header="转换">
+                <StackPanel
+                    IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}"
+                    Orientation="Vertical"
+                    Spacing="8">
+                    <HeaderedContentControl
+                        Classes="GroupBox"
+                        Header="Mbtiles数据库">
+                        <c:FormItem Header="文件位置">
+                            <v:MbtilesPicker />
+                        </c:FormItem>
+                    </HeaderedContentControl>
+                    <HeaderedContentControl
+                        Classes="GroupBox"
+                        Header="文件型瓦片">
+                        <StackPanel
+                            Orientation="Vertical"
+                            Spacing="8">
+                            <c:FormItem Header="目录">
+                                <Grid ColumnDefinitions="*,8,Auto">
+
+                                    <TextBox
+                                        AcceptsReturn="True"
+                                        MaxLines="5"
+                                        Text="{Binding Dir}" />
+                                    <Button
+                                        Grid.Column="2"
+                                        Command="{Binding PickDirCommand}"
+                                        Content="浏览.." />
+                                </Grid>
+                            </c:FormItem>
+                            <c:FormItem Header="瓦片位置结构">
+                                <TextBox
+                                    Text="{Binding Pattern}"
+                                    Watermark="{}{z}/{x}/{y}.*" />
+                            </c:FormItem>
+                        </StackPanel>
+                    </HeaderedContentControl>
+                    <HeaderedContentControl
+                        Classes="GroupBox"
+                        Header="选项">
+                        <CheckBox
+                            Content="跳过已存在的文件/数据库记录"
+                            IsChecked="{Binding SkipExisted}" />
+                    </HeaderedContentControl>
+                    <ProgressBar
+                        Height="24"
+                        IsIndeterminate="{Binding IsProgressIndeterminate}"
+                        Maximum="1"
+                        Minimum="0"
+                        ProgressTextFormat="{}{1:0}%"
+                        ShowProgressText="True"
+                        Value="{Binding Progress}" />
+                    <Button
+                        Command="{Binding ConvertToMbtilesCommand}"
+                        Content="目录文件瓦片→Mbtiles数据库"
+                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}" />
+                    <Button
+                        Command="{Binding ConvertToFilesCommand}"
+                        Content="Mbtiles数据库→目录文件瓦片"
+                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}" />
+                    <Button
+                        Command="{Binding CancelCommand}"
+                        Content="取消"
+                        IsEnabled="{Binding IsConverting}" />
+                </StackPanel>
+            </Expander>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

@@ -7,12 +7,9 @@ using NetTopologySuite.Geometries.Prepared;
 
 namespace MapTileDownloader.Services;
 
-public class TileIntersectionService(TileDataSource tileDataSource)
+public class TileIntersectionService
 {
-    public TileDataSource TileDataSource { get; } = tileDataSource;
-
-    public GlobalSphericalMercator TileSchema { get; } =
-        new GlobalSphericalMercator(YAxis.OSM, 0, tileDataSource.MaxLevel);
+    public GlobalSphericalMercator TileSchema { get; } = new GlobalSphericalMercator(YAxis.OSM);
 
     public long EstimateIntersectingTileCount(Coordinate[] polygonCoordinates3857, int zoomLevel)
     {

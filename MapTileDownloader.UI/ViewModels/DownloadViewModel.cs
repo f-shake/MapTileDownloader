@@ -21,7 +21,62 @@ using System.Diagnostics;
 namespace MapTileDownloader.UI.ViewModels;
 
 public partial class DownloadViewModel : ViewModelBase
-{
+{ [ObservableProperty]
+    private TileDataSource selectedDataSource;
+
+    [ObservableProperty]
+    private ObservableCollection<TileDataSource> sources;
+
+    public DownloadViewModel()
+    {
+        Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
+        if (Configs.Instance.SelectedTileSourcesIndex >= 0 && Configs.Instance.SelectedTileSourcesIndex < Sources.Count)
+        {
+            SelectedDataSource = Sources[Configs.Instance.SelectedTileSourcesIndex];
+        }
+    }
+
+    [RelayCommand]
+    private void AddSource()
+    {
+        Sources.Add(new TileDataSource() { Name = "新数据源" });
+        SelectedDataSource = Sources[^1];
+        SaveToConfig();
+    }
+
+    [RelayCommand]
+    private void CallSelectedSourceChanged()
+    {
+        OnSelectedDataSourceChanged(SelectedDataSource);
+    }
+
+    partial void OnSelectedDataSourceChanged(TileDataSource value)
+    {
+        Map.LoadTileMaps(value);
+        SaveToConfig();
+    }
+
+    [RelayCommand]
+    private void RemoveSource()
+    {
+        if (SelectedDataSource != null)
+        {
+            Sources.Remove(SelectedDataSource);
+        }
+        if (Sources.Count == 0)
+        {
+            Sources.Add(new TileDataSource{ Name = "新数据源" });
+            SelectedDataSource = Sources[0];
+        }
+        SaveToConfig();
+    }
+
+    private void SaveToConfig()
+    {
+        Configs.Instance.TileSources = [.. Sources];
+        Configs.Instance.SelectedTileSourcesIndex = Sources.IndexOf(SelectedDataSource);
+    }
+    
     [ObservableProperty]
     private bool canDownload = false;
 
@@ -67,7 +122,7 @@ public partial class DownloadViewModel : ViewModelBase
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
         IsDownloading = true;
-        await using var downloader = new TileDownloadService(TileSource, Configs.Instance.MbtilesFile, MaxConcurrency);
+        await using var downloader = new TileDownloadService(SelectedDataSource, Configs.Instance.MbtilesFile, MaxConcurrency);
         await TryWithTabDisabledAsync(async () =>
         {
             try
@@ -126,8 +181,7 @@ public partial class DownloadViewModel : ViewModelBase
         maxDownloadingLevel = 0;
         ErrorTiles.Clear();
 
-        var tileSource = TileSource;
-        var tileHelper = new TileIntersectionService(tileSource);
+        var tileHelper = new TileIntersectionService();
 
         await TryWithLoadingAsync(() => Task.Run(() =>
         {
@@ -148,7 +202,7 @@ public partial class DownloadViewModel : ViewModelBase
             TotalCount = Levels.Select(p => p.Count).Sum();
 
 
-            Map.LoadTileGridsAsync(tileSource, Levels);
+            Map.LoadTileGridsAsync(SelectedDataSource, Levels);
         }));
 
         CanDownload = true;
