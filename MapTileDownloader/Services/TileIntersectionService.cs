@@ -7,9 +7,11 @@ using NetTopologySuite.Geometries.Prepared;
 
 namespace MapTileDownloader.Services;
 
-public class TileIntersectionService
+public class TileIntersectionService(bool useTms)
 {
-    public GlobalSphericalMercator TileSchema { get; } = new GlobalSphericalMercator(YAxis.OSM);
+    public GlobalSphericalMercator TileSchema { get; } = new GlobalSphericalMercator(useTms ? YAxis.TMS : YAxis.OSM);
+
+    public bool UseTms { get; } = useTms;
 
     public long EstimateIntersectingTileCount(Coordinate[] polygonCoordinates3857, int zoomLevel)
     {
@@ -43,35 +45,6 @@ public class TileIntersectionService
                 return long.MaxValue; // 或抛出异常/返回保守估计值
             }
         }
-    }
-
-    public (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Coordinate[] coordinates, int zoomLevel)
-    {
-        var geometryFactory = new GeometryFactory();
-        var polygon3857 = geometryFactory.CreatePolygon(coordinates.ToClosed().ToArray());
-
-        return GetTileRange(polygon3857, zoomLevel);
-    }
-
-    private (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Polygon polygon3857, int zoomLevel)
-    {
-        var envelope = polygon3857.EnvelopeInternal;
-
-        double resolution = TileSchema.Resolutions[zoomLevel].UnitsPerPixel;
-        int tileSize = TileSchema.GetTileWidth(zoomLevel); // 通常是 256
-
-        int minCol = (int)Math.Floor((envelope.MinX - TileSchema.OriginX) / (tileSize * resolution));
-        int maxCol = (int)Math.Floor((envelope.MaxX - TileSchema.OriginX) / (tileSize * resolution));
-
-        int minRow = 0;
-        int maxRow = 0;
-
-        minRow = (int)Math.Floor((TileSchema.OriginY - envelope.MaxY) / (tileSize * resolution));
-        maxRow = (int)Math.Floor((TileSchema.OriginY - envelope.MinY) / (tileSize * resolution));
-        minRow = Math.Abs(minRow);
-        maxRow = Math.Abs(maxRow);
-
-        return (minRow, maxRow, minCol, maxCol);
     }
 
     public List<TileIndex> GetIntersectingTiles(Coordinate[] polygonCoordinates3857, int zoomLevel)
@@ -134,5 +107,40 @@ public class TileIntersectionService
 
         var geometryFactory = new GeometryFactory();
         return geometryFactory.CreatePolygon(coordinates);
+    }
+
+    public (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Coordinate[] coordinates, int zoomLevel)
+    {
+        var geometryFactory = new GeometryFactory();
+        var polygon3857 = geometryFactory.CreatePolygon(coordinates.ToClosed().ToArray());
+
+        return GetTileRange(polygon3857, zoomLevel);
+    }
+
+    private (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Polygon polygon3857, int zoomLevel)
+    {
+        var envelope = polygon3857.EnvelopeInternal;
+
+        double resolution = TileSchema.Resolutions[zoomLevel].UnitsPerPixel;
+        int tileSize = TileSchema.GetTileWidth(zoomLevel); // 通常是 256
+
+        int minCol = (int)Math.Floor((envelope.MinX - TileSchema.OriginX) / (tileSize * resolution));
+        int maxCol = (int)Math.Floor((envelope.MaxX - TileSchema.OriginX) / (tileSize * resolution));
+
+        int minRow = 0;
+        int maxRow = 0;
+
+        if (UseTms)
+        {
+            minRow = Math.Abs((int)Math.Floor((envelope.MinY - TileSchema.OriginY) / (tileSize * resolution)));
+            maxRow = Math.Abs((int)Math.Floor((envelope.MaxY - TileSchema.OriginY) / (tileSize * resolution)));
+        }
+        else
+        {
+            maxRow = Math.Abs((int)Math.Floor((TileSchema.OriginY - envelope.MinY) / (tileSize * resolution)));
+            minRow = Math.Abs((int)Math.Floor((TileSchema.OriginY - envelope.MaxY) / (tileSize * resolution)));
+        }
+
+        return (minRow, maxRow, minCol, maxCol);
     }
 }

@@ -26,7 +26,7 @@ public partial class MbtilesPickerViewModel : ViewModelBase
     private string file;
 
     [ObservableProperty]
-    private bool useTms = Configs.Instance.UseTms;
+    private bool useTms = Configs.Instance.MbtilesUseTms;
 
     public MbtilesPickerViewModel()
     {
@@ -43,8 +43,9 @@ public partial class MbtilesPickerViewModel : ViewModelBase
 
     partial void OnUseTmsChanged(bool value)
     {
-        Configs.Instance.UseTms = value;
+        Configs.Instance.MbtilesUseTms = value;
         FileChanged?.Invoke(this, EventArgs.Empty);
+        Map.RefreshBaseTileGrid();
     }
 
     [RelayCommand]

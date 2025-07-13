@@ -1,8 +1,9 @@
 using BruTile;
 using System;
 using BruTile.Predefined;
+using MapTileDownloader.Services;
 
-namespace MapTileDownloader.Services;
+namespace MapTileDownloader.TileSources;
 
 public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
 {
@@ -39,8 +40,7 @@ public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
         }
 
         var index = tileInfo.Index;
-        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ??
-            ImageUtility.GetEmptyTileImage(index.Col, index.Row, index.Level);
+        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ?? ImageUtility.GetEmptyTileImage(index.Level, index.Col, index.Row);
     }
 
     public ValueTask InitializeAsync()

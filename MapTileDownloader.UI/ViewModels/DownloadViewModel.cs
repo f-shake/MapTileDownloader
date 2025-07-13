@@ -156,7 +156,7 @@ public partial class DownloadViewModel : ViewModelBase
         maxDownloadingLevel = 0;
         ErrorTiles.Clear();
 
-        var tileHelper = new TileIntersectionService();
+        var tileHelper = new TileIntersectionService(false);
 
         await TryWithLoadingAsync(() => Task.Run(async () =>
         {

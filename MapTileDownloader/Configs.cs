@@ -67,7 +67,7 @@ namespace MapTileDownloader
 
         public List<TileDataSource> TileSources { get; set; }
 
-        public bool UseTms { get; set; }
+        public bool MbtilesUseTms { get; set; }
 
         public void Save()
         {

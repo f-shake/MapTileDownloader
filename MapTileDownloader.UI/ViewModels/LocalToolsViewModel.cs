@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using FzLib.Avalonia.Messages;
 using MapTileDownloader.Models;
 using MapTileDownloader.Services;
+using MapTileDownloader.TileSources;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -45,20 +46,22 @@ public partial class LocalToolsViewModel : ViewModelBase
     [ObservableProperty]
     private bool localHostOnly = Configs.Instance.ServerLocalHostOnly;
 
-    [ObservableProperty]
-    private int maxX;
+    private MbtilesTileSource localTileSource;
 
     [ObservableProperty]
-    private int maxY;
+    private int mergeMaxX;
+
+    [ObservableProperty]
+    private int mergeMaxY;
 
     [ObservableProperty]
     private string mergeMessage;
 
     [ObservableProperty]
-    private int minX;
+    private int mergeMinX;
 
     [ObservableProperty]
-    private int minY;
+    private int mergeMinY;
 
     [ObservableProperty]
     private string pattern = Configs.Instance.ConvertPattern;
@@ -80,9 +83,6 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool skipExisted = true;
-
-    private MbtilesTileSource localTileSource;
-
     public LocalToolsViewModel()
     {
         MapAreaSelectorViewModel.CoordinatesChanged += MapAreaSelectorViewModelOnCoordinatesChanged;
@@ -90,40 +90,20 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     public override async ValueTask InitializeAsync()
     {
-        UpdateRange();
+        UpdateMergeRange();
         UpdateMergeMessage();
         await UpdateLocalTileLayer();
         await base.InitializeAsync();
         MbtilesPickerViewModel.FileChanged += async (s, e) => await UpdateLocalTileLayer();
     }
 
-    private async Task UpdateLocalTileLayer()
-    {
-        if (localTileSource != null)
-        {
-            await localTileSource.DisposeAsync();
-        }
-
-        if (File.Exists(Configs.Instance.MbtilesFile))
-        {
-            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile, Configs.Instance.UseTms);
-            await localTileSource.InitializeAsync();
-        }
-        else
-        {
-            localTileSource = null;
-        }
-
-        Map.LoadLocalTileMaps(localTileSource);
-    }
-
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         base.OnPropertyChanged(e);
-        if (e.PropertyName is nameof(MinX)
-            or nameof(MinY)
-            or nameof(MaxX)
-            or nameof(MaxY)
+        if (e.PropertyName is nameof(MergeMinX)
+            or nameof(MergeMinY)
+            or nameof(MergeMaxX)
+            or nameof(MergeMaxY)
             or nameof(Size)
             or nameof(ImageQuality)
             or nameof(Level))
@@ -216,14 +196,14 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     private void MapAreaSelectorViewModelOnCoordinatesChanged(object sender, EventArgs e)
     {
-        UpdateRange();
+        UpdateMergeRange();
     }
 
     [RelayCommand]
     private async Task MergeAsync()
     {
         TileMergeService s = new TileMergeService(Configs.Instance.MbtilesFile);
-        (long p, long m) = s.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
+        (long p, long m) = s.EstimateTileMergeMemory(MergeMinX, MergeMaxX, MergeMinY, MergeMaxY, Size);
         if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
         {
             await ShowErrorAsync("内存不足",
@@ -240,7 +220,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         await TryWithLoadingAsync(
             () => Task.Run(async () =>
             {
-                await s.MergeTilesAsync(filePath, Level, MinX, MaxX, MinY, MaxY, Size, ImageQuality);
+                await s.MergeTilesAsync(filePath, Configs.Instance.MbtilesUseTms, Level, MergeMinX, MergeMaxX, MergeMinY, MergeMaxY, Size, ImageQuality);
             }), "拼接失败");
     }
 
@@ -256,7 +236,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     partial void OnLevelChanged(int value)
     {
-        UpdateRange();
+        UpdateMergeRange();
     }
 
     partial void OnLocalHostOnlyChanged(bool value)
@@ -324,27 +304,46 @@ public partial class LocalToolsViewModel : ViewModelBase
         }
     }
 
+    private async Task UpdateLocalTileLayer()
+    {
+        if (localTileSource != null)
+        {
+            await localTileSource.DisposeAsync();
+        }
+
+        if (File.Exists(Configs.Instance.MbtilesFile))
+        {
+            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile, Configs.Instance.MbtilesUseTms);
+            await localTileSource.InitializeAsync();
+        }
+        else
+        {
+            localTileSource = null;
+        }
+
+        Map.LoadLocalTileMaps(localTileSource);
+    }
     private void UpdateMergeMessage()
     {
         var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
-        (long p, long m) = tileServer.EstimateTileMergeMemory(MinX, MaxX, MinY, MaxY, Size);
+        (long p, long m) = tileServer.EstimateTileMergeMemory(MergeMinX, MergeMaxX, MergeMinY, MergeMaxY, Size);
         MergeMessage =
             $"预计{p / 10000}万像素{Environment.NewLine}占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）";
         IsOutOfMemory = m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory;
     }
 
-    private void UpdateRange()
+    private void UpdateMergeRange()
     {
         if (Configs.Instance.Coordinates == null)
         {
             return;
         }
 
-        var tileServer = new TileIntersectionService();
+        var tileServer = new TileIntersectionService(Configs.Instance.MbtilesUseTms);
         (int minRow, int maxRow, int minCol, int maxCol) = tileServer.GetTileRange(Configs.Instance.Coordinates, Level);
-        MinX = minCol;
-        MaxX = maxCol;
-        MinY = minRow;
-        MaxY = maxRow;
+        MergeMinX = minCol;
+        MergeMaxX = maxCol;
+        MergeMinY = minRow;
+        MergeMaxY = maxRow;
     }
 }

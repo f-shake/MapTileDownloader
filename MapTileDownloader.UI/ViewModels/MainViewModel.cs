@@ -29,10 +29,15 @@ public partial class MainViewModel : ViewModelBase
 
     partial void OnSelectedTabIndexChanged(int value)
     {
-        Map.SetEnable(AppLayer.BaseLayer, value is 0);
-        Map.SetEnable(AppLayer.LocalBaseLayer, value is 1);
-        Map.SetEnable(AppLayer.TileGridLayer, value is 0);
-        Map.SetEnable(AppLayer.DrawingLayer, true);
+        if (value == 0)
+        {
+
+            Map.SetEnable(AppLayer.BaseLayer);
+        }
+        else
+        {
+            Map.SetEnable(AppLayer.LocalBaseLayer);
+        }
         Map.Refresh();
     }
 }

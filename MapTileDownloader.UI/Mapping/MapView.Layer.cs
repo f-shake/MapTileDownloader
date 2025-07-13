@@ -16,6 +16,7 @@ using Color = Mapsui.Styles.Color;
 using Pen = Mapsui.Styles.Pen;
 using BruTile.Wms;
 using MapTileDownloader.Services;
+using MapTileDownloader.TileSources;
 
 namespace MapTileDownloader.UI.Mapping;
 
@@ -27,6 +28,11 @@ public partial class MapView
     private TileLayer baseLayer;
 
     /// <summary>
+    /// 本地服务底图
+    /// </summary>
+    private TileLayer baseTileGridLayer;
+
+    /// <summary>
     /// 绘制和范围图层
     /// </summary>
     private MemoryLayer drawingLayer;
@@ -35,7 +41,6 @@ public partial class MapView
     /// 本地服务底图
     /// </summary>
     private TileLayer localBaseLayer;
-
     /// <summary>
     /// 绘制时鼠标位置图层
     /// </summary>
@@ -44,7 +49,7 @@ public partial class MapView
     /// <summary>
     /// 瓦片网格图层
     /// </summary>
-    private MemoryLayer tileGridLayer;
+    private MemoryLayer overlayTileGridLayer;
 
     public void LoadLocalTileMaps(MbtilesTileSource tileSource)
     {
@@ -61,7 +66,11 @@ public partial class MapView
             return;
         }
 
-        localBaseLayer = new TileLayer(tileSource) { Enabled = isEnabled };
+        localBaseLayer = new TileLayer(tileSource)
+        {
+            Name = nameof(localBaseLayer),
+            Enabled = isEnabled
+        };
         Map.Layers.Insert((int)AppLayer.LocalBaseLayer, localBaseLayer);
     }
 
@@ -112,19 +121,46 @@ public partial class MapView
         );
 
 
-        baseLayer = new TileLayer(s);
+        baseLayer = new TileLayer(s) { Name = nameof(BaseLayer) };
         Map.Layers.Insert(0, baseLayer);
     }
 
-    public void SetEnable(AppLayer index, bool enable)
+    public void RefreshBaseTileGrid()
     {
-        if (index < 0 || (int)index >= Map.Layers.Count)
-        {
-            throw new ArgumentOutOfRangeException(nameof(index), "索引超出范围");
-        }
+        TileLayer currentLayer = baseLayer.Enabled ? baseLayer : localBaseLayer;
+        var s = new TileGridSource(currentLayer.TileSource.Schema);
+        baseTileGridLayer = new TileLayer(s);
+        Map.Layers.Remove(Map.Layers.Get((int)AppLayer.BaseTileGridLayer));
+        Map.Layers.Insert((int)AppLayer.BaseTileGridLayer, baseTileGridLayer);
+    }
 
-        var layer = Map.Layers.Get((int)index);
-        layer.Enabled = enable;
+    public void SetEnable(AppLayer index)
+    {
+        TileLayer currentLayer;
+        if (index == AppLayer.BaseLayer)
+        {
+            currentLayer = baseLayer;
+            baseLayer.Enabled = true;
+            localBaseLayer.Enabled = false;
+        }
+        else if (index == AppLayer.LocalBaseLayer)
+        {
+            currentLayer = localBaseLayer;
+            baseLayer.Enabled = false;
+            localBaseLayer.Enabled = true;
+        }
+        else
+        {
+            throw new ArgumentException($"仅支持设置底图的Enable");
+        }
+        RefreshBaseTileGrid();
+    }
+
+    private void AddBaseTileGridLayer()
+    {
+        var s = new TileGridSource(new GlobalSphericalMercator(YAxis.OSM));
+        baseTileGridLayer = new TileLayer(s) { Name = nameof(baseTileGridLayer) };
+        Map.Layers.Add(baseTileGridLayer);
     }
 
     private void AddDrawingLayer()
@@ -158,33 +194,11 @@ public partial class MapView
         Map.Layers.Add(mousePositionLayer);
     }
 
-    private void AddPlaceholderBaseLayer()
+    private void AddOverlayTileGridLayer()
     {
-        var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            "http://localhost/{x}/{y}/{z}"
-        );
-        baseLayer = new TileLayer(s);
-        baseLayer.Enabled = false;
-        Map.Layers.Add(baseLayer);
-    }
-
-    private void AddPlaceholderLocalBaseLayer()
-    {
-        var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            "http://localhost/{x}/{y}/{z}"
-        );
-        localBaseLayer = new TileLayer(s);
-        localBaseLayer.Enabled = false;
-        Map.Layers.Add(localBaseLayer);
-    }
-
-    private void AddTileGridLayer()
-    {
-        tileGridLayer = new MemoryLayer
+        overlayTileGridLayer = new MemoryLayer
         {
-            Name = nameof(tileGridLayer),
+            Name = nameof(overlayTileGridLayer),
             Style = new VectorStyle // 直接设置默认样式
             {
                 Fill = new Brush(Color.Transparent),
@@ -193,14 +207,35 @@ public partial class MapView
                 Opacity = 0.33f
             },
         };
-        Map.Layers.Add(tileGridLayer);
+        Map.Layers.Add(overlayTileGridLayer);
     }
 
+    private void AddPlaceholderBaseLayer()
+    {
+        var s = new HttpTileSource(
+            new GlobalSphericalMercator(0, 20),
+            "http://localhost/{x}/{y}/{z}"
+        );
+        baseLayer = new TileLayer(s) { Name = nameof(baseLayer) };
+        baseLayer.Enabled = false;
+        Map.Layers.Add(baseLayer);
+    }
+    private void AddPlaceholderLocalBaseLayer()
+    {
+        var s = new HttpTileSource(
+            new GlobalSphericalMercator(0, 20),
+            "http://localhost/{x}/{y}/{z}"
+        );
+        localBaseLayer = new TileLayer(s) { Name = nameof(localBaseLayer) };
+        localBaseLayer.Enabled = false;
+        Map.Layers.Add(localBaseLayer);
+    }
     private void InitializeLayers()
     {
         AddPlaceholderBaseLayer();
         AddPlaceholderLocalBaseLayer();
-        AddTileGridLayer();
+        AddBaseTileGridLayer();
+        AddOverlayTileGridLayer();
         AddDrawingLayer();
         AddMousePositionLayer();
     }

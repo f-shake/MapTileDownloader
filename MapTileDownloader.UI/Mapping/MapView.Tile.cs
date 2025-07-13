@@ -39,7 +39,7 @@ public partial class MapView
     public void ClearTileGrids()
     {
         featuresPerLevel = null;
-        tileGridLayer.Features = [];
+        overlayTileGridLayer.Features = [];
     }
 
     public void DisplayTileGrids(int level)
@@ -54,9 +54,9 @@ public partial class MapView
             throw new ArgumentException($"已加载的瓦片中不包含级别{level}", nameof(level));
         }
 
-        tileGridLayer.Features = features;
+        overlayTileGridLayer.Features = features;
 
-        tileGridLayer.MaxVisible = 5 * GetDisplayThreshold(level);
+        overlayTileGridLayer.MaxVisible = 5 * GetDisplayThreshold(level);
         Refresh();
     }
 
@@ -68,7 +68,7 @@ public partial class MapView
         }
 
         featuresPerLevel = new Dictionary<int, List<GeometryFeature>>();
-        var tileHelper = new TileIntersectionService();
+        var tileHelper = new TileIntersectionService(false);
 
         // 生成瓦片几何图形 + 标注
 

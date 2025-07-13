@@ -60,6 +60,15 @@
                     <HeaderedContentControl
                         Classes="GroupBox"
                         Header="导出范围">
+                        <HeaderedContentControl.Styles>
+                            <Style Selector="TextBox">
+                                <Setter Property="TextAlignment" Value="Center" />
+                                <Setter Property="Padding" Value="5" />
+                            </Style>
+                            <Style Selector="TextBlock">
+                                <Setter Property="VerticalAlignment" Value="Center" />
+                            </Style>
+                        </HeaderedContentControl.Styles>
                         <StackPanel
                             Orientation="Vertical"
                             Spacing="8">
@@ -71,43 +80,39 @@
                                     Theme="{StaticResource LabledSlider}"
                                     TickFrequency="1"
                                     Value="{Binding Level}" />
-
                             </c:FormItem>
-                            <c:FormItem Header="范围">
-                                <Grid
-                                    ColumnDefinitions="*,8,*,8,*"
-                                    RowDefinitions="*,8,*,8,*">
-                                    <Grid.Styles>
-                                        <Style Selector="TextBox">
-                                            <Setter Property="TextAlignment" Value="Center" />
-                                            <Setter Property="Padding" Value="5" />
-                                        </Style>
-                                    </Grid.Styles>
-                                    <Border
-                                        Grid.Row="2"
-                                        Grid.Column="2"
-                                        BorderBrush="{Binding $parent[UserControl].Foreground}"
-                                        BorderThickness="2">
-                                        <Border.Background>
-                                            <SolidColorBrush
-                                                Opacity="0.5"
-                                                Color="Gray" />
-                                        </Border.Background>
-                                    </Border>
-                                    <TextBox
-                                        Grid.Row="2"
-                                        Text="{Binding MinX}" />
-                                    <TextBox
-                                        Grid.Column="2"
-                                        Text="{Binding MinY}" />
-                                    <TextBox
-                                        Grid.Row="2"
+                            <c:FormItem Header="东西方向范围（X）">
+                                <Grid ColumnDefinitions="Auto,8,*,8,Auto,8,*,8,Auto">
+                                    <TextBlock Text="[" />
+                                    <TextBlock
                                         Grid.Column="4"
-                                        Text="{Binding MaxX}" />
+                                        Text="，" />
+                                    <TextBlock
+                                        Grid.Column="8"
+                                        Text="]" />
                                     <TextBox
-                                        Grid.Row="4"
                                         Grid.Column="2"
-                                        Text="{Binding MaxY}" />
+                                        Text="{Binding MergeMinX}" />
+                                    <TextBox
+                                        Grid.Column="6"
+                                        Text="{Binding MergeMaxX}" />
+                                </Grid>
+                            </c:FormItem>
+                            <c:FormItem Header="南北方向范围（Y）">
+                                <Grid ColumnDefinitions="Auto,8,*,8,Auto,8,*,8,Auto">
+                                    <TextBlock Text="[" />
+                                    <TextBlock
+                                        Grid.Column="4"
+                                        Text="，" />
+                                    <TextBlock
+                                        Grid.Column="8"
+                                        Text="]" />
+                                    <TextBox
+                                        Grid.Column="2"
+                                        Text="{Binding MergeMinY}" />
+                                    <TextBox
+                                        Grid.Column="6"
+                                        Text="{Binding MergeMaxY}" />
                                 </Grid>
                             </c:FormItem>
                         </StackPanel>

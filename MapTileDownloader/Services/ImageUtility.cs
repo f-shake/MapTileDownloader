@@ -46,19 +46,23 @@ namespace MapTileDownloader.Services
         private const int DefaultFontSize = 24;
         private static readonly Color DefaultBackgroundColor = Color.Transparent;
         private static readonly Color DefaultBorderColor = Color.Gray;
-        private static readonly Color DefaultTextColor = Color.Gray;
+        private static readonly Color DefaultTextColor = Color.White;
+        private static readonly Color DefaultHaloColor = Color.Black;
+        private const float DefaultHaloWidth = 5;
         private const float LineSpacing = 1.2f;
         private const int TextPadding = 20;
 
         public static byte[] GetEmptyTileImage(int z, int x, int y,
             int size = DefaultSize, int borderWidth = DefaultBorderWidth, int fontSize = DefaultFontSize,
-            Color? background = null, Color? border = null, Color? label = null)
+            Color? background = null, Color? border = null, Color? label = null,
+            Color? halo = null, float haloWidth = DefaultHaloWidth)
         {
             try
             {
                 var backgroundColor = background ?? DefaultBackgroundColor;
                 var borderColor = border ?? DefaultBorderColor;
                 var textColor = label ?? DefaultTextColor;
+                var haloColor = halo ?? DefaultHaloColor;
 
                 using var image = new Image<Rgba32>(size, size, backgroundColor);
 
@@ -69,7 +73,7 @@ namespace MapTileDownloader.Services
                 });
 
                 // 文字内容
-                string text = $"此处无瓦片\nZ={z}\nX={x}\nY={y}";
+                string text = $"Z={z}\nX={x}\nY={y}";
 
                 // 绘制文字（自动居中）
                 image.Mutate(ctx =>
@@ -86,6 +90,7 @@ namespace MapTileDownloader.Services
                         LineSpacing = LineSpacing,
                     };
 
+                    ctx.DrawText(textOptions, text, new SolidPen(haloColor, haloWidth));
                     ctx.DrawText(textOptions, text, textColor);
                 });
 

@@ -4,7 +4,8 @@ public enum AppLayer
 {
     BaseLayer=0,
     LocalBaseLayer=1,
-    TileGridLayer=2,
-    DrawingLayer=3,
-    MousePositionLayer=4
+    BaseTileGridLayer=2,
+    OverlayTileGridLayer=3,
+    DrawingLayer=4,
+    MousePositionLayer=5
 }
