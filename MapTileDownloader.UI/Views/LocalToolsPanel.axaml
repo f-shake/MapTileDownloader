@@ -53,7 +53,7 @@
                     </StackPanel>
                 </StackPanel>
             </Expander>
-            <Expander Header="合并">
+            <Expander Header="拼接">
                 <StackPanel
                     Orientation="Vertical"
                     Spacing="8">
@@ -160,7 +160,7 @@
 
                     <Button
                         Command="{Binding MergeCommand}"
-                        Content="合并" />
+                        Content="拼接为大图" />
                 </StackPanel>
             </Expander>
             <Expander Header="转换">
