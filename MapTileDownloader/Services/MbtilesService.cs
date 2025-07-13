@@ -143,7 +143,9 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         await mbtilesConnection.OpenAsync().ConfigureAwait(false);
         if (ReadOnly)
         {
-            await ExecuteAsync("""
+            try
+            {
+                await ExecuteAsync("""
 
                                    PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
                                    PRAGMA temp_store=MEMORY;         -- 临时表用内存
@@ -151,17 +153,29 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                                    PRAGMA cache_size=-64000;         -- 64MB 缓存
 
                                """);
+            }
+            catch(Exception ex)
+            {
+
+            }
         }
         else
         {
-            await ExecuteAsync("""
+            try
+            {
+                await ExecuteAsync("""
                 PRAGMA journal_mode=WAL;
                 PRAGMA wal_autocheckpoint = 8192;
                 """);
+            }
+            catch(Exception ex)
+            {
+
+            }
+            await EnsureSchemaAsync();
+            await ValidateMBTilesSchemaAsync();
         }
 
-        await EnsureSchemaAsync();
-        await ValidateMBTilesSchemaAsync();
     }
 
     public async Task InitializeMetadataAsync(string name, string format, string url, int minLevel = 0, int maxLevel = 19)

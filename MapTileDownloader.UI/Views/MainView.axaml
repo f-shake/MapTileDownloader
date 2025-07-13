@@ -46,7 +46,7 @@
                 Padding="0"
                 SelectedIndex="{Binding SelectedTabIndex}"
                 TabStripPlacement="Top">
-                <TabItem Header="下载">
+                <TabItem Header="在线地图">
                     <v:DownloadPanel
                         Margin="0,8"
                         DataContext="{Binding DownloadViewModel}" />

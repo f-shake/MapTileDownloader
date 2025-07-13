@@ -14,7 +14,9 @@
     <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="NetTopologySuite" />
     <PackageReference Include="EmbedIO" />
+    <PackageReference Include="SixLabors.Fonts" />
     <PackageReference Include="SixLabors.ImageSharp" />
+    <PackageReference Include="SixLabors.ImageSharp.Drawing" />
   </ItemGroup>
 
 </Project>
