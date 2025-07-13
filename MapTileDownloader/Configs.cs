@@ -9,9 +9,8 @@ namespace MapTileDownloader
     {
         private const string CONFIG_FILE = "config.json";
         private static readonly Lazy<Configs> lazyInstance = new Lazy<Configs>(LoadOrCreateConfig);
-        private static Timer savingTimer;
         private static readonly object lockObj = new object();
-
+        private static Timer savingTimer;
         static Configs()
         {
             return;
@@ -42,23 +41,59 @@ namespace MapTileDownloader
 
         public static Configs Instance => lazyInstance.Value;
 
-        private static Configs LoadOrCreateConfig()
+        public string ConvertDir { get; set; }
+
+        public string ConvertPattern { get; set; }
+
+        public Coordinate[] Coordinates { get; set; }
+
+        public int MaxDownloadConcurrency { get; set; }
+
+        public int MaxLevel { get; set; }
+
+        public string MbtilesFile { get; set; }
+
+        public int MergeImageQuality { get; set; }
+
+        public int MinLevel { get; set; }
+
+        public int SelectedTileSourcesIndex { get; set; }
+
+        public bool ServerLocalHostOnly { get; set; }
+
+        public ushort ServerPort { get; set; }
+
+        public bool ServerReturnEmptyPngWhenNotFound { get; set; }
+
+        public List<TileDataSource> TileSources { get; set; }
+
+        public bool UseTms { get; set; }
+
+        public void Save()
         {
-            try
+            lock (lockObj)
             {
-                if (File.Exists(CONFIG_FILE))
+                try
                 {
-                    var json = File.ReadAllText(CONFIG_FILE);
-                    return JsonSerializer.Deserialize(json, MapTileDownloaderJsonContext.Config.Configs)
-                           ?? CreateDefaultConfig();
+                    Debug.WriteLine(MbtilesFile);
+                    var tempFile = Path.GetTempFileName();
+                    var json = JsonSerializer.Serialize(this, MapTileDownloaderJsonContext.Config.Configs);
+                    File.WriteAllText(tempFile, json);
+                    if (File.Exists(CONFIG_FILE))
+                    {
+                        File.Replace(tempFile, CONFIG_FILE, null);
+                    }
+                    else
+                    {
+                        File.Move(tempFile, CONFIG_FILE);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Debug.Assert(false);
+                    throw;
                 }
             }
-            catch (Exception ex)
-            {
-                Debug.Assert(false);
-            }
-
-            return CreateDefaultConfig();
         }
 
         private static Configs CreateDefaultConfig()
@@ -98,45 +133,23 @@ namespace MapTileDownloader
             };
         }
 
-        public string ConvertDir { get; set; }
-        public string ConvertPattern { get; set; }
-        public Coordinate[] Coordinates { get; set; }
-        public int MaxDownloadConcurrency { get; set; }
-        public int MaxLevel { get; set; }
-        public string MbtilesFile { get; set; }
-        public int MergeImageQuality { get; set; }
-        public int MinLevel { get; set; }
-        public int SelectedTileSourcesIndex { get; set; }
-        public bool ServerLocalHostOnly { get; set; }
-        public ushort ServerPort { get; set; }
-        public bool ServerReturnEmptyPngWhenNotFound { get; set; }
-        public List<TileDataSource> TileSources { get; set; }
-
-        public void Save()
+        private static Configs LoadOrCreateConfig()
         {
-            lock (lockObj)
+            try
             {
-                try
+                if (File.Exists(CONFIG_FILE))
                 {
-                    Debug.WriteLine(MbtilesFile);
-                    var tempFile = Path.GetTempFileName();
-                    var json = JsonSerializer.Serialize(this, MapTileDownloaderJsonContext.Config.Configs);
-                    File.WriteAllText(tempFile, json);
-                    if (File.Exists(CONFIG_FILE))
-                    {
-                        File.Replace(tempFile, CONFIG_FILE, null);
-                    }
-                    else
-                    {
-                        File.Move(tempFile, CONFIG_FILE);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.Assert(false);
-                    throw;
+                    var json = File.ReadAllText(CONFIG_FILE);
+                    return JsonSerializer.Deserialize(json, MapTileDownloaderJsonContext.Config.Configs)
+                           ?? CreateDefaultConfig();
                 }
             }
+            catch (Exception ex)
+            {
+                Debug.Assert(false);
+            }
+
+            return CreateDefaultConfig();
         }
     }
 }

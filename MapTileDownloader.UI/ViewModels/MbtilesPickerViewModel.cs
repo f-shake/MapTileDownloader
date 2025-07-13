@@ -22,14 +22,30 @@ namespace MapTileDownloader.UI.ViewModels;
 
 public partial class MbtilesPickerViewModel : ViewModelBase
 {
+    [ObservableProperty]
+    private string file;
+
+    [ObservableProperty]
+    private bool useTms = Configs.Instance.UseTms;
+
     public MbtilesPickerViewModel()
     {
-        FileChanged += (s, e) => File = Configs.Instance.MbtilesFile;
         File = Configs.Instance.MbtilesFile ?? Path.Combine(AppContext.BaseDirectory, "tiles.mbtiles");
     }
 
-    [ObservableProperty]
-    private string file;
+    public static event EventHandler FileChanged;
+
+    partial void OnFileChanged(string value)
+    {
+        Configs.Instance.MbtilesFile = value;
+        FileChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    partial void OnUseTmsChanged(bool value)
+    {
+        Configs.Instance.UseTms = value;
+        FileChanged?.Invoke(this, EventArgs.Empty);
+    }
 
     [RelayCommand]
     private async Task OpenDirAsync()
@@ -73,12 +89,4 @@ public partial class MbtilesPickerViewModel : ViewModelBase
 
         File = filePath;
     }
-
-    partial void OnFileChanged(string value)
-    {
-        Configs.Instance.MbtilesFile = value;
-        FileChanged?.Invoke(this, EventArgs.Empty);
-    }
-
-    public static event EventHandler FileChanged;
 }

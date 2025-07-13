@@ -106,7 +106,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
         if (File.Exists(Configs.Instance.MbtilesFile))
         {
-            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile);
+            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile, Configs.Instance.UseTms);
             await localTileSource.InitializeAsync();
         }
         else

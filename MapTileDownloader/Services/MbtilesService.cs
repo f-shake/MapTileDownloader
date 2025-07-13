@@ -75,7 +75,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             await mbtilesConnection.DisposeAsync().ConfigureAwait(false);
         }
         catch
-        {
+         {
         }
     }
 

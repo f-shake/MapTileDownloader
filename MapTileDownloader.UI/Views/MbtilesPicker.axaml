@@ -10,26 +10,52 @@
     xmlns:mtd="using:MapTileDownloader"
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
-    d:DesignHeight="600"
+    d:DesignHeight="100"
     d:DesignWidth="300"
     x:DataType="vm:MbtilesPickerViewModel"
     mc:Ignorable="d">
     <Grid
-        ColumnDefinitions="*,8,*"
-        RowDefinitions="Auto,8,Auto">
+        VerticalAlignment="Center"
+        ColumnDefinitions="*,8,Auto"
+        RowDefinitions="*,8,*">
         <TextBox
-            Grid.ColumnSpan="3"
-            MaxLines="5"
+            Grid.RowSpan="5"
+            MaxLines="3"
+            MinLines="3"
             Text="{Binding File}"
             TextWrapping="Wrap" />
         <Button
-            Grid.Row="2"
+            Grid.Column="2"
+            Classes="Icon"
             Command="{Binding PickFileCommand}"
-            Content="浏览.." />
+            Content="{StaticResource OpenFile}"
+            ToolTip.Tip="浏览.." />
+
         <Button
             Grid.Row="2"
             Grid.Column="2"
-            Command="{Binding OpenDirCommand}"
-            Content="打开目录" />
+            Classes="Icon"
+            Content="{StaticResource More}">
+            <Button.Flyout>
+                <Flyout>
+                    <StackPanel Spacing="8">
+                        <c:FormItem Header="打开目录">
+                            <Button
+                                Grid.Row="2"
+                                Grid.Column="2"
+                                Classes="Icon"
+                                Command="{Binding OpenDirCommand}"
+                                Content="打开目录" />
+                        </c:FormItem>
+                        <c:FormItem Header="方案">
+                            <ToggleSwitch
+                                IsChecked="{Binding UseTms}"
+                                OffContent="OSM方案"
+                                OnContent="TMS方案" />
+                        </c:FormItem>
+                    </StackPanel>
+                </Flyout>
+            </Button.Flyout>
+        </Button>
     </Grid>
 </UserControl>

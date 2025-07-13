@@ -9,10 +9,10 @@ public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
     private readonly MbtilesService mbtilesService;
     private bool disposed = false;
     private bool initialized;
-    public MbtilesTileSource(string mbtilesFile)
+    public MbtilesTileSource(string mbtilesFile, bool useTms)
     {
         mbtilesService = new MbtilesService(mbtilesFile, true);
-        Schema = new GlobalSphericalMercator(YAxis.OSM);
+        Schema = new GlobalSphericalMercator(useTms ? YAxis.TMS : YAxis.OSM);
     }
 
     public ITileSchema Schema { get; }
@@ -39,7 +39,7 @@ public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
         }
 
         var index = tileInfo.Index;
-        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ?? 
+        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ??
             ImageUtility.GetEmptyTileImage(index.Col, index.Row, index.Level);
     }
 

@@ -18,34 +18,47 @@
     <StackPanel
         Orientation="Vertical"
         Spacing="8">
-        <Grid ColumnDefinitions="*,8,*">
+        <Grid ColumnDefinitions="*,8,Auto,8,Auto,8,Auto">
             <Button
+                x:Name="btn1"
                 Command="{Binding SelectOnMapCommand}"
                 Content="在地图中选择" />
             <Button
                 Grid.Column="2"
+                Height="{Binding #btn1.Bounds.Height}"
+                Classes="Icon"
                 Command="{Binding SelectOnMapCancelCommand}"
-                Content="取消"
-                IsVisible="{Binding IsSelecting}" />
+                Content="{StaticResource Cancel}"
+                IsVisible="{Binding IsSelecting}"
+                ToolTip.Tip="取消" />
             <Button
                 Grid.Column="2"
+                Height="{Binding #btn1.Bounds.Height}"
+                Classes="Icon"
                 Command="{Binding ClearCommand}"
-                Content="清除已选范围"
+                Content="{StaticResource ClearAllInk}"
                 IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
-                IsVisible="{Binding !IsSelecting}" />
+                IsVisible="{Binding !IsSelecting}"
+                ToolTip.Tip="清空" />
+            <Button
+                Grid.Column="4"
+                Height="{Binding #btn1.Bounds.Height}"
+                Classes="Icon"
+                Command="{Binding ImportCoordinatesCommand}"
+                Content="{StaticResource Download}"
+                ToolTip.Tip="导入" />
+            <Button
+                Grid.Column="6"
+                Height="{Binding #btn1.Bounds.Height}"
+                Classes="Icon"
+                Command="{Binding ExportCoordinatesCommand}"
+                Content="{StaticResource Upload}"
+                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
+                ToolTip.Tip="导出" />
         </Grid>
         <TextBlock
             HorizontalAlignment="Center"
             Text="{Binding SelectionMessage}" />
-        <Grid ColumnDefinitions="*,8,*">
-            <Button
-                Command="{Binding ImportCoordinatesCommand}"
-                Content="导入" />
-            <Button
-                Grid.Column="2"
-                Command="{Binding ExportCoordinatesCommand}"
-                Content="导出"
-                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}" />
-        </Grid>
+        <Grid ColumnDefinitions="*,8,*" />
     </StackPanel>
 </UserControl>
