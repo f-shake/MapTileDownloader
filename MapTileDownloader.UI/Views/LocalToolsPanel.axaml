@@ -66,7 +66,7 @@
 
                             <c:FormItem Header="级别">
                                 <Slider
-                                    Maximum="20"
+                                    Maximum="19"
                                     Minimum="1"
                                     Theme="{StaticResource LabledSlider}"
                                     TickFrequency="1"

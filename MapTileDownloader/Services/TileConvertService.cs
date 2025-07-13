@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using BruTile;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.Formats.Jpeg;
 using SixLabors.ImageSharp.Formats.Webp;
@@ -88,7 +89,8 @@ namespace MapTileDownloader.Services
                 cancellation.ThrowIfCancellationRequested();
                 index++;
                 progress?.Report((double)index / files.Count);
-                if (existingTiles.Contains($"{item.Z}/{item.X}/{item.Y}"))
+                var tileIndex=new TileIndex(item.X,item.Y, item.Z);
+                if (existingTiles.Contains(tileIndex))
                 {
                     continue;
                 }
@@ -96,6 +98,69 @@ namespace MapTileDownloader.Services
                     await File.ReadAllBytesAsync(item.File, cancellation).ConfigureAwait(false));
             }
         }
+    //    public async Task ConvertToFilesAsync(string mbtilesPath, string outputDir, string pattern,
+    //bool overwrite = false,
+    //IProgress<double> progress = null,
+    //CancellationToken cancellation = default)
+    //    {
+    //        if (string.IsNullOrEmpty(mbtilesPath))
+    //            throw new ArgumentException($"“{nameof(mbtilesPath)}”不能为 null 或空。", nameof(mbtilesPath));
+
+    //        if (string.IsNullOrEmpty(outputDir))
+    //            throw new ArgumentException($"“{nameof(outputDir)}”不能为 null 或空。", nameof(outputDir));
+
+    //        if (string.IsNullOrEmpty(pattern) || !pattern.Contains("{z}") || !pattern.Contains("{x}") || !pattern.Contains("{y}"))
+    //            throw new ArgumentException($"“{nameof(pattern)}”必须包含{{z}}、{{x}}和{{y}}占位符。", nameof(pattern));
+
+    //        if (!Directory.Exists(outputDir))
+    //            Directory.CreateDirectory(outputDir);
+
+    //        await using var service = new MbtilesService(mbtilesPath, true);
+    //        await service.InitializeAsync();
+
+    //        var tiles = await service.GetExistingTilesAsync();
+
+    //        int index = 0;
+    //        int total = tiles.Count;
+
+    //        foreach (var tile in tiles)
+    //        {
+    //            cancellation.ThrowIfCancellationRequested();
+
+    //            index++;
+    //            progress?.Report((double)index / total);
+
+    //            // tile 格式是 "z/x/y"
+    //            var parts = tile.Split('/');
+    //            if (parts.Length != 3)
+    //                continue;
+
+    //            if (!int.TryParse(parts[0], out int z) ||
+    //                !int.TryParse(parts[1], out int x) ||
+    //                !int.TryParse(parts[2], out int y))
+    //                continue;
+
+    //            var tileData = await service.GetTileAsync(x, y, z);
+    //            if (tileData == null)
+    //                continue;
+
+    //            // 根据 pattern 替换为路径
+    //            string relativePath = pattern.Replace("{z}", z.ToString())
+    //                                         .Replace("{x}", x.ToString())
+    //                                         .Replace("{y}", y.ToString());
+
+    //            string outputPath = Path.Combine(outputDir, relativePath.Replace('/', Path.DirectorySeparatorChar));
+
+    //            string outputDirPath = Path.GetDirectoryName(outputPath);
+    //            if (!Directory.Exists(outputDirPath))
+    //                Directory.CreateDirectory(outputDirPath);
+
+    //            if (!overwrite && File.Exists(outputPath))
+    //                continue;
+
+    //            await File.WriteAllBytesAsync(outputPath, tileData, cancellation);
+    //        }
+    //    }
 
         private bool IsMatchPattern(string pattern, string relativePath, out int z, out int x, out int y)
         {

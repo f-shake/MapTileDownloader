@@ -1,4 +1,5 @@
 using System.Data;
+using BruTile;
 using Microsoft.Data.Sqlite;
 
 namespace MapTileDownloader.Services;
@@ -102,14 +103,14 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         }
     }
 
-    public async Task<ISet<string>> GetExistingTilesAsync()
+    public async Task<ISet<TileIndex>> GetExistingTilesAsync()
     {
         var results = await QueryAsync(
-                "SELECT zoom_level, tile_column, tile_row FROM tiles",
-                r => $"{r.GetInt32(0)}/{r.GetInt32(1)}/{r.GetInt32(2)}")
+                "SELECT  tile_column, tile_row, zoom_level FROM tiles",
+                p=>new TileIndex(p.GetInt32(0), p.GetInt32(1), p.GetInt32(2)))
             .ConfigureAwait(false);
 
-        var existingTiles = new HashSet<string>(capacity: results.Count); // 预分配容量
+        var existingTiles = new HashSet<TileIndex>(capacity: results.Count); // 预分配容量
 
         foreach (var row in results)
         {

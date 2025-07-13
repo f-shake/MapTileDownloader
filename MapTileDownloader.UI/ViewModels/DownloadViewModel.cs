@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
+using BruTile;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -139,7 +140,7 @@ public partial class DownloadViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    private async Task InitializeAsync()
+    private async Task InitializeDownloadingAsync()
     {
         if (Configs.Instance.Coordinates == null || Configs.Instance.Coordinates.Length < 3)
         {
@@ -157,7 +158,7 @@ public partial class DownloadViewModel : ViewModelBase
 
         var tileHelper = new TileIntersectionService();
 
-        await TryWithLoadingAsync(() => Task.Run(() =>
+        await TryWithLoadingAsync(() => Task.Run(async () =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
             var count = tileHelper.EstimateIntersectingTileCount(Configs.Instance.Coordinates, MaxLevel);
@@ -165,22 +166,43 @@ public partial class DownloadViewModel : ViewModelBase
             {
                 throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
             }
-
+            ISet<TileIndex> existingTiles = null;
+            using (var mbtilesService = new MbtilesService(Configs.Instance.MbtilesFile, true))
+            {
+                await mbtilesService.InitializeAsync();
+                existingTiles = await mbtilesService.GetExistingTilesAsync();
+            }
             for (int i = MinLevel; i <= MaxLevel; i++)
             {
                 var tiles = tileHelper.GetIntersectingTiles(Configs.Instance.Coordinates, i);
-                var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p => new DownloadingTileViewModel(p)));
+                var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p =>
+                {
+                    var tile = new DownloadingTileViewModel(p);
+                    if (existingTiles.Contains(p))
+                    {
+                        tile.SetStatus(DownloadStatus.Skip, null, null);
+                    }
+                    return tile;
+                }));
                 Levels.Add(levelTile);
             }
 
             TotalCount = Levels.Select(p => p.Count).Sum();
 
 
-            Map.LoadTileGridsAsync(SelectedDataSource, Levels);
+            await Map.LoadTileGridsAsync(SelectedDataSource, Levels);
+
         }));
 
-        CanDownload = true;
-        DownloadTilesCommand.NotifyCanExecuteChanged();
+        if (Levels.All(p => p.DownloadedCount == p.Count))
+        {
+            await ShowOkAsync("无需下载", "所选范围内的指定瓦片均已下载");
+        }
+        else
+        {
+            CanDownload = true;
+            DownloadTilesCommand.NotifyCanExecuteChanged();
+        }
     }
 
     partial void OnMaxConcurrencyChanged(int value)
@@ -257,7 +279,7 @@ public partial class DownloadViewModel : ViewModelBase
         }
         if (Sources.Count == 0)
         {
-            Sources.Add(new TileDataSource{ Name = "新数据源" });
+            Sources.Add(new TileDataSource { Name = "新数据源" });
             SelectedDataSource = Sources[0];
         }
         SaveToConfig();

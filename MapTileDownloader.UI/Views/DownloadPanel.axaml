@@ -67,7 +67,7 @@
                                 </c:FormItem>
                                 <c:FormItem Header="最大级别">
                                     <Slider
-                                        Maximum="20"
+                                        Maximum="19"
                                         Theme="{StaticResource LabledSlider}"
                                         TickFrequency="1"
                                         Value="{Binding SelectedDataSource.MaxLevel}" />
@@ -121,7 +121,7 @@
                         <c:FormItem Header="最大级别">
                             <Slider
                                 x:Name="sldMax"
-                                Maximum="20"
+                                Maximum="19"
                                 Minimum="{Binding MinLevel}"
                                 Theme="{StaticResource LabledSlider}"
                                 TickFrequency="1"
@@ -243,7 +243,7 @@
             ColumnSpacing="8"
             Columns="3">
             <Button
-                Command="{Binding InitializeCommand}"
+                Command="{Binding InitializeDownloadingCommand}"
                 Content="初始化"
                 IsEnabled="{Binding IsDownloading, Converter={StaticResource InverseBoolConverter}}" />
             <Button

@@ -6,6 +6,7 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using BruTile;
 using MapTileDownloader.Models;
 
 namespace MapTileDownloader.Services;
@@ -16,7 +17,7 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
     private readonly SemaphoreSlim semaphore;
     private readonly TileDataSource tileSource;
     private bool disposed = false;
-    private ConcurrentDictionary<string, byte> existingTiles;
+    private ISet<TileIndex> existingTiles;
     private bool isInitialized = false;
     private MbtilesService mbtilesService;
 
@@ -89,13 +90,18 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
         {
             foreach (var tile in level.Tiles)
             {
+                if(tile.Status is DownloadStatus.Skip or DownloadStatus.Success or DownloadStatus.Failed)
+                {
+                    continue;
+                }
+
                 var z = tile.TileIndex.Level;
                 var x = tile.TileIndex.Col;
                 var y = tile.TileIndex.Row;
 
-                string key = $"{z}/{x}/{y}";
+                var key = new TileIndex(x, y, z);
 
-                if (existingTiles.ContainsKey(key))
+                if (existingTiles.Contains(key))
                 {
                     tile.SetStatus(DownloadStatus.Skip, "已存在", null);
                     continue;
@@ -118,7 +124,7 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
                         if (data is { Length: > 0 })
                         {
                             await mbtilesService.WriteTileAsync(tile.TileIndex.Col, tile.TileIndex.Row, tile.TileIndex.Level, data);
-                            existingTiles.TryAdd(key, default); // 添加到存在列表
+                            // existingTiles.TryAdd(key, default); // 添加到存在列表
                             tile.SetStatus(DownloadStatus.Success, "下载成功", null);
                         }
                         else
@@ -150,8 +156,7 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
         await mbtilesService.InitializeAsync();
         await mbtilesService.InitializeMetadataAsync(tileSource.Name, tileSource.Format, tileSource.Url, 0, tileSource.MaxLevel);
 
-        existingTiles = new ConcurrentDictionary<string, byte>((await mbtilesService.GetExistingTilesAsync())
-            .Select(p => new KeyValuePair<string, byte>(p, default)));
+        existingTiles = await mbtilesService.GetExistingTilesAsync();
 
         isInitialized = true;
     }

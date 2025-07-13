@@ -51,7 +51,7 @@
                         Margin="0,8"
                         DataContext="{Binding DownloadViewModel}" />
                 </TabItem>
-                <TabItem Header="本地工具">
+                <TabItem Header="本地数据">
                     <v:LocalToolsPanel
                         Margin="0,8"
                         DataContext="{Binding LocalToolsViewModel}" />

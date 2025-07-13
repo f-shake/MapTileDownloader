@@ -19,6 +19,10 @@ public partial class DownloadingLevelViewModel : ObservableObject, IDownloadingL
         Tiles = new List<IDownloadingTile>(tiles);
         foreach (var tile in Tiles)
         {
+            if(tile.Status is DownloadStatus.Skip or DownloadStatus.Failed or DownloadStatus.Success)
+            {
+                downloadedCount++;
+            }
             tile.DownloadStatusChanged += (s, e) =>
             {
                 if (e.OldStatus == e.NewStatus)

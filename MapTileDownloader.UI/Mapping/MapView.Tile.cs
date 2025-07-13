@@ -11,6 +11,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 using Color = Mapsui.Styles.Color;
+using System.Data;
 
 namespace MapTileDownloader.UI.Mapping;
 
@@ -101,38 +102,44 @@ public partial class MapView
                         MaxVisible = 0.5 * GetDisplayThreshold(level.Level),
                     });
 
-                    void SetBackground(Color color)
+                    void SetBackground(Color color, bool requestRefresh)
                     {
                         VectorStyle style = feature.Styles.OfType<VectorStyle>().First();
-
                         style.Fill = new Brush(color);
-                        RequestRefresh();
+                        if (requestRefresh)
+                        {
+                            RequestRefresh();
+                        }
                     }
 
-                    tile.DownloadStatusChanged += (s, e) =>
+                    void UpdateColor(DownloadStatus status, bool requestRefresh)
                     {
-                        switch (e.NewStatus)
+                        switch (status)
                         {
                             case DownloadStatus.Ready:
-                                SetBackground(Color.Transparent);
+                                SetBackground(Color.Transparent, requestRefresh);
                                 break;
                             case DownloadStatus.Downloading:
-                                SetBackground(Color.Orange);
+                                SetBackground(Color.Orange, requestRefresh);
                                 break;
                             case DownloadStatus.Success:
-                                SetBackground(Color.Green);
-                                break;
                             case DownloadStatus.Skip:
-                                SetBackground(Color.Yellow);
+                                SetBackground(Color.Green, requestRefresh);
                                 break;
                             case DownloadStatus.Failed:
-                                SetBackground(Color.Red);
+                                SetBackground(Color.Red, requestRefresh);
                                 break;
                             default:
                                 throw new ArgumentOutOfRangeException();
                         }
+                    }
+
+                    tile.DownloadStatusChanged += (s, e) =>
+                    {
+                        UpdateColor(e.NewStatus, true);
                     };
 
+                    UpdateColor(tile.Status, false);
                     features.Add(feature);
                 }
 
