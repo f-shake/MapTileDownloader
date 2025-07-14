@@ -16,6 +16,72 @@ namespace MapTileDownloader.Services
             InitializeDefaultFont();
         }
 
+        public static (string type, string mime) GetImageType(byte[] fileBytes)
+        {
+            if (fileBytes == null || fileBytes.Length < 4)
+            {
+                return (null, "application/octet-stream");
+            }
+
+            // JPEG
+            if (fileBytes[0] == 0xFF && fileBytes[1] == 0xD8 && fileBytes[2] == 0xFF)
+            {
+                return ("jpeg", "image/jpeg");
+            }
+
+            // PNG
+            if (fileBytes[0] == 0x89 && fileBytes[1] == 0x50 && fileBytes[2] == 0x4E && fileBytes[3] == 0x47)
+            {
+                return ("png", "image/png");
+            }
+
+            // GIF
+            if (fileBytes[0] == 0x47 && fileBytes[1] == 0x49 && fileBytes[2] == 0x46 && fileBytes[3] == 0x38)
+            {
+                return ("gif", "image/gif");
+            }
+
+            // WEBP - RIFF header followed by WEBP
+            if (fileBytes[0] == 0x52 && fileBytes[1] == 0x49 && fileBytes[2] == 0x46 && fileBytes[3] == 0x46)
+            {
+                if (fileBytes.Length >= 12 && fileBytes[8] == 0x57 && fileBytes[9] == 0x45 && fileBytes[10] == 0x42 && fileBytes[11] == 0x50)
+                {
+                    return ("webp", "image/webp");
+                }
+            }
+
+            // BMP
+            if (fileBytes[0] == 0x42 && fileBytes[1] == 0x4D)
+            {
+                return ("bmp", "image/bmp");
+            }
+
+            // ICO
+            if (fileBytes[0] == 0x00 && fileBytes[1] == 0x00 && fileBytes[2] == 0x01 && fileBytes[3] == 0x00)
+            {
+                return ("ico", "image/x-icon");
+            }
+
+            // HEIF (HEIC)
+            if (fileBytes[4] == 0x66 && fileBytes[5] == 0x74 && fileBytes[6] == 0x79 && fileBytes[7] == 0x70 &&
+                (fileBytes[8] == 0x68 && fileBytes[9] == 0x65 && fileBytes[10] == 0x69 && fileBytes[11] == 0x63 || // heic
+                 fileBytes[8] == 0x6D && fileBytes[9] == 0x69 && fileBytes[10] == 0x66 && fileBytes[11] == 0x31))   // mif1
+            {
+                return ("heif", "image/heif");
+            }
+
+            for (int i = 0; i < fileBytes.Length - 4; i++)
+            {
+                if (fileBytes[i] == '<' && fileBytes[i + 1] == 's' && fileBytes[i + 2] == 'v' && fileBytes[i + 3] == 'g')
+                {
+                    return ("svg", "image/svg+xml");
+                }
+            }
+
+            return (null, "application/octet-stream");
+        }
+
+
         private static void InitializeDefaultFont()
         {
             foreach (var fontName in FallbackFontNames)

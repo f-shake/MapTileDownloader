@@ -49,6 +49,9 @@ public partial class LocalToolsViewModel : ViewModelBase
     private MbtilesTileSource localTileSource;
 
     [ObservableProperty]
+    private MbtilesInfo mbtilesInfo;
+
+    [ObservableProperty]
     private int mergeMaxX;
 
     [ObservableProperty]
@@ -92,9 +95,14 @@ public partial class LocalToolsViewModel : ViewModelBase
     {
         UpdateMergeRange();
         UpdateMergeMessage();
-        await UpdateLocalTileLayer();
+        await UpdateLocalTileLayerAsync();
+        await UpdateMbtilesInfoAsync();
         await base.InitializeAsync();
-        MbtilesPickerViewModel.FileChanged += async (s, e) => await UpdateLocalTileLayer();
+        MbtilesPickerViewModel.FileChanged += async (s, e) =>
+        {
+            await UpdateLocalTileLayerAsync();
+            await UpdateMbtilesInfoAsync();
+        };
     }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -304,7 +312,29 @@ public partial class LocalToolsViewModel : ViewModelBase
         }
     }
 
-    private async Task UpdateLocalTileLayer()
+    [RelayCommand]
+    private async Task UpdateMbtilesInfoAsync()
+    {
+        if (File.Exists(Configs.Instance.MbtilesFile))
+        {
+            try
+            {
+                using var s = new MbtilesService(Configs.Instance.MbtilesFile, true);
+                await s.InitializeAsync();
+                MbtilesInfo = await s.GetMbtilesInfoAsync(Configs.Instance.MbtilesUseTms);
+            }
+            catch (Exception ex)
+            {
+                MbtilesInfo = null;
+            }
+        }
+        else
+        {
+            MbtilesInfo = null;
+        }
+    }
+
+    private async Task UpdateLocalTileLayerAsync()
     {
         if (localTileSource != null)
         {
@@ -323,6 +353,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
         Map.LoadLocalTileMaps(localTileSource);
     }
+
     private void UpdateMergeMessage()
     {
         var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);

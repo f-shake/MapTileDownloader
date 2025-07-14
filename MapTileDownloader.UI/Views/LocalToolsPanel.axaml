@@ -16,6 +16,48 @@
     mc:Ignorable="d">
     <ScrollViewer>
         <StackPanel Orientation="Vertical">
+            <Expander Header="基本信息">
+                <Grid RowDefinitions="Auto,8,Auto">
+                    <c:StackFormItemGroup
+                        DataContext="{Binding MbtilesInfo}"
+                        IsVisible="{Binding ., Converter={StaticResource NotNullConverter}}">
+                        <c:FormItem
+                            Content="{Binding TileCount}"
+                            Label="数量：" />
+                        <c:FormItem
+                            Content="{Binding TileSize}"
+                            Label="尺寸：" />
+                        <c:FormItem
+                            Content="{Binding Format}"
+                            Label="格式：" />
+                        <c:FormItem Label="级别：">
+                            <TextBlock>
+                                <Run Text="{Binding MinZoom}" />
+                                <Run Text="~" />
+                                <Run Text="{Binding MaxZoom}" />
+                            </TextBlock>
+                        </c:FormItem>
+                        <c:FormItem Label="经度范围：">
+                            <TextBlock>
+                                <Run Text="{Binding MinLongitude, StringFormat=F6}" />
+                                <Run Text="~" />
+                                <Run Text="{Binding MaxLongitude, StringFormat=F6}" />
+                            </TextBlock>
+                        </c:FormItem>
+                        <c:FormItem Label="纬度范围：">
+                            <TextBlock>
+                                <Run Text="{Binding MinLatitude, StringFormat=F6}" />
+                                <Run Text="~" />
+                                <Run Text="{Binding MaxLatitude, StringFormat=F6}" />
+                            </TextBlock>
+                        </c:FormItem>
+                    </c:StackFormItemGroup>
+                    <Button
+                        Grid.Row="2"
+                        Command="{Binding UpdateMbtilesInfoCommand}"
+                        Content="刷新" />
+                </Grid>
+            </Expander>
             <Expander Header="HTTP服务">
                 <StackPanel
                     Orientation="Vertical"

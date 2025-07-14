@@ -1,6 +1,11 @@
 using System.Data;
 using BruTile;
+using BruTile.Predefined;
+using MapTileDownloader.Models;
 using Microsoft.Data.Sqlite;
+using ProjNet.CoordinateSystems;
+using ProjNet.CoordinateSystems.Transformations;
+using SixLabors.ImageSharp;
 
 namespace MapTileDownloader.Services;
 
@@ -75,7 +80,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             await mbtilesConnection.DisposeAsync().ConfigureAwait(false);
         }
         catch
-         {
+        {
         }
     }
 
@@ -107,7 +112,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
     {
         var results = await QueryAsync(
                 "SELECT  tile_column, tile_row, zoom_level FROM tiles",
-                p=>new TileIndex(p.GetInt32(0), p.GetInt32(1), p.GetInt32(2)))
+                p => new TileIndex(p.GetInt32(0), p.GetInt32(1), p.GetInt32(2)))
             .ConfigureAwait(false);
 
         var existingTiles = new HashSet<TileIndex>(capacity: results.Count); // 预分配容量
@@ -154,7 +159,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
                                """);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
@@ -168,7 +173,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                 PRAGMA wal_autocheckpoint = 8192;
                 """);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
 
             }
@@ -301,6 +306,90 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                            CREATE UNIQUE INDEX IF NOT EXISTS name
                            ON metadata (name);
                            """);
+    }
+
+
+    public async Task<MbtilesInfo> GetMbtilesInfoAsync(bool useTms)
+    {
+        CheckConnectionOpen();
+
+        int count = (await QueryAsync("SELECT COUNT(1) FROM tiles",
+            r => r.GetInt32(0)).ConfigureAwait(false)).First();
+
+        // 获取所有zoom级别
+        var zoomLevels = await QueryAsync("SELECT DISTINCT zoom_level FROM tiles",
+            r => r.GetInt32(0)).ConfigureAwait(false);
+
+        int minZoom = zoomLevels.Any() ? zoomLevels.Min() : -1;
+        int maxZoom = zoomLevels.Any() ? zoomLevels.Max() : -1;
+
+        // 获取一个瓦片样本以确定格式和大小
+        string format = "未知";
+        int size = 0;
+        try
+        {
+            var sampleTile = await QuerySingleValueAsync("SELECT tile_data FROM tiles LIMIT 1",
+                r => r.GetFieldValue<byte[]>(0)).ConfigureAwait(false);
+
+            if (sampleTile != null)
+            {
+                format = ImageUtility.GetImageType(sampleTile).type ?? "未知";
+                var imageInfo = Image.Identify(sampleTile);
+                if (imageInfo.Size.Width == imageInfo.Size.Height)
+                {
+                    size = imageInfo.Size.Width;
+                }
+            }
+        }
+        catch
+        {
+            // 忽略错误，保持默认值
+        }
+
+        // 使用BruTile计算实际bounds（基于最大zoom级别）
+        Extent worldExtent = default;
+        if (maxZoom >= 0)
+        {
+            try
+            {
+                // 获取最大zoom级别的瓦片范围
+                var tileExtent = await QueryAsync(
+                    $@"SELECT MIN(tile_column), MIN(tile_row), MAX(tile_column), MAX(tile_row) 
+                   FROM tiles WHERE zoom_level = {maxZoom}",
+                    r => new
+                    {
+                        MinX = r.GetInt32(0),
+                        MinY = r.GetInt32(1),
+                        MaxX = r.GetInt32(2),
+                        MaxY = r.GetInt32(3)
+                    }).ConfigureAwait(false);
+
+                if (tileExtent.Any())
+                {
+                    var extent = tileExtent.First();
+                    var s = new TileIntersectionService(useTms);
+                    worldExtent = s.GetWorldExtent(maxZoom, extent.MinX, extent.MinY, extent.MaxX, extent.MaxY);
+                }
+            }
+            catch
+            {
+                // 如果计算失败，使用默认bounds
+            }
+        }
+
+        return new MbtilesInfo
+        {
+            Path = SqlitePath,
+            MinZoom = minZoom,
+            MaxZoom = maxZoom,
+            TileSize = size,
+            TileCount = count,
+            Format = format,
+            MinLatitude = worldExtent.MinY,
+            MaxLatitude = worldExtent.MaxY,
+            MinLongitude = worldExtent.MinX,
+            MaxLongitude = worldExtent.MaxX
+        };
     }
     private Task<SqliteDataReader> GetReaderAsync(SqliteCommand cmd, string sql, (string, object)[] parameters)
     {

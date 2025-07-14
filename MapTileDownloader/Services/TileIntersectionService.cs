@@ -4,6 +4,9 @@ using MapTileDownloader.Extensions;
 using MapTileDownloader.Models;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Prepared;
+using ProjNet.CoordinateSystems.Transformations;
+using ProjNet.CoordinateSystems;
+using System.Xml.Linq;
 
 namespace MapTileDownloader.Services;
 
@@ -115,6 +118,23 @@ public class TileIntersectionService(bool useTms)
         var polygon3857 = geometryFactory.CreatePolygon(coordinates.ToClosed().ToArray());
 
         return GetTileRange(polygon3857, zoomLevel);
+    }
+
+    public Extent GetWorldExtent(int zoomLevel, int minX, int minY, int maxX, int maxY)
+    {
+        var extent3857 = TileTransform.TileToWorld(new TileRange(minX, minY, maxX - minX + 1, maxY - minY + 1),
+            zoomLevel, TileSchema);
+        // 创建Web墨卡托坐标系
+        var webMercator = ProjectedCoordinateSystem.WebMercator;
+
+        // 创建WGS84地理坐标系
+        var wgs84 = GeographicCoordinateSystem.WGS84;
+
+        // 创建坐标转换
+        var transform = new CoordinateTransformationFactory().CreateFromCoordinateSystems(webMercator, wgs84);
+        var westSouth = transform.MathTransform.Transform(extent3857.MinX, extent3857.MinY);
+        var eastNorth = transform.MathTransform.Transform(extent3857.MaxX, extent3857.MaxY);
+        return new Extent(westSouth.x, westSouth.y, eastNorth.x, eastNorth.y);
     }
 
     private (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Polygon polygon3857, int zoomLevel)
