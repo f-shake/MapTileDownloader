@@ -6,8 +6,11 @@ using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using BruTile;
+using BruTile.Wms;
 using MapTileDownloader.Models;
+using Exception = System.Exception;
 
 namespace MapTileDownloader.Services;
 
@@ -90,7 +93,7 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
         {
             foreach (var tile in level.Tiles)
             {
-                if(tile.Status is DownloadStatus.Skip or DownloadStatus.Success or DownloadStatus.Failed)
+                if (tile.Status is DownloadStatus.Skip or DownloadStatus.Success or DownloadStatus.Failed)
                 {
                     continue;
                 }
@@ -147,21 +150,20 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
                 }, cancellationToken));
             }
         }
-
-        await Task.WhenAll(downloadTasks);
+        await Task.WhenAll(downloadTasks); 
+        await mbtilesService.UpdateMetadataAsync(tileSource.Name, $"download from {tileSource.Url}", false);
     }
 
     public async Task InitializeAsync()
     {
         await mbtilesService.InitializeAsync();
-        await mbtilesService.InitializeMetadataAsync(tileSource.Name, tileSource.Format, tileSource.Url, 0, tileSource.MaxLevel);
 
         existingTiles = await mbtilesService.GetExistingTilesAsync();
 
         isInitialized = true;
     }
 
-    private string BuildTileUrl(BruTile.TileIndex index)
+    private string BuildTileUrl(TileIndex index)
     {
         int x = index.Col;
         int y = index.Row;

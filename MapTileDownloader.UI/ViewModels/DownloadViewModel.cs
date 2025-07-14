@@ -150,9 +150,9 @@ public partial class DownloadViewModel : ViewModelBase
 
         TotalCount = 0;
         DownloadedCount = 0;
-        successCount = 0;
-        failedCount = 0;
-        skipCount = 0;
+        SuccessCount = 0;
+        FailedCount = 0;
+        SkipCount = 0;
         maxDownloadingLevel = 0;
         ErrorTiles.Clear();
 
@@ -188,8 +188,8 @@ public partial class DownloadViewModel : ViewModelBase
             }
 
             TotalCount = Levels.Select(p => p.Count).Sum();
-
-
+            DownloadedCount = Levels.Select(p => p.DownloadedCount).Sum();
+            SkipCount = Levels.Select(p => p.DownloadedCount).Sum();
             await Map.LoadTileGridsAsync(SelectedDataSource, Levels);
 
         }));

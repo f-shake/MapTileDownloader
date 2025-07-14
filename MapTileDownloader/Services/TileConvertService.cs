@@ -79,7 +79,6 @@ namespace MapTileDownloader.Services
             bool newFile = !File.Exists(mbtilesPath);
             await using var serviece = new MbtilesService(mbtilesPath, false);
             await serviece.InitializeAsync();
-            await serviece.InitializeMetadataAsync(name, format, "local files", minZ, maxZ);
 
             var existingTiles =await serviece.GetExistingTilesAsync();
 
@@ -97,6 +96,8 @@ namespace MapTileDownloader.Services
                 await serviece.WriteTileAsync(item.X, item.Y, item.Z,
                     await File.ReadAllBytesAsync(item.File, cancellation).ConfigureAwait(false));
             }
+
+            await serviece.UpdateMetadataAsync(name, "local files", Configs.Instance.MbtilesUseTms);
         }
     //    public async Task ConvertToFilesAsync(string mbtilesPath, string outputDir, string pattern,
     //bool overwrite = false,

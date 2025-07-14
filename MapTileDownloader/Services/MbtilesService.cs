@@ -183,22 +183,27 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
     }
 
-    public async Task InitializeMetadataAsync(string name, string format, string url, int minLevel = 0, int maxLevel = 19)
+    public async Task UpdateMetadataAsync(string name, string description, bool useTms)
     {
+        var mbtilesInfo = await GetMbtilesInfoAsync(useTms: false).ConfigureAwait(false);
         await InsertOrUpdateMetadataAsync("name", name ?? "Unnamed Layer");
         await InsertOrUpdateMetadataAsync("type", "baselayer");
-        await InsertOrUpdateMetadataAsync("version", "1.0");
-        await InsertOrUpdateMetadataAsync("format", format?.ToLowerInvariant() ?? "unknown");
-        await InsertOrUpdateMetadataAsync("description", $"Tiles downloaded from {url ?? "unknown"}");
-        await InsertOrUpdateMetadataAsync("minzoom", minLevel.ToString());
-        await InsertOrUpdateMetadataAsync("maxzoom", maxLevel.ToString());
+        await InsertOrUpdateMetadataAsync("version", "1.3");
+        await InsertOrUpdateMetadataAsync("format", mbtilesInfo.Format);
+        await InsertOrUpdateMetadataAsync("description", description);
+        await InsertOrUpdateMetadataAsync("minzoom", mbtilesInfo.MinZoom.ToString());
+        await InsertOrUpdateMetadataAsync("maxzoom", mbtilesInfo.MaxZoom.ToString());
         await InsertOrUpdateMetadataAsync("bounds", "-180.0,-85.0511,180.0,85.0511");
-        await InsertOrUpdateMetadataAsync("scheme", "xyz");
-        await InsertOrUpdateMetadataAsync("tilejson", "2.0.0");
+        await InsertOrUpdateMetadataAsync("bounds", $"{mbtilesInfo.MinLongitude:F6},{mbtilesInfo.MinLatitude:F6},{mbtilesInfo.MaxLongitude:F6},{mbtilesInfo.MaxLatitude:F6}");
+        await InsertOrUpdateMetadataAsync("scheme", useTms ? "tms" : "xyz");
     }
 
-    public async Task InsertOrUpdateMetadataAsync(string name, string value)
+    private async Task InsertOrUpdateMetadataAsync(string name, string value)
     {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
         await ExecuteAsync(
             "INSERT OR REPLACE INTO metadata (name, value) VALUES (@name, @value)",
             ("@name", name),
