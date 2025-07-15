@@ -40,7 +40,7 @@ public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
         }
 
         var index = tileInfo.Index;
-        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ?? ImageUtility.GetEmptyTileImage(index.Level, index.Col, index.Row);
+        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ;
     }
 
     public ValueTask InitializeAsync()

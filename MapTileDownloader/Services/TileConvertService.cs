@@ -25,9 +25,9 @@ namespace MapTileDownloader.Services
                 throw new ArgumentException($"“{nameof(pattern)}”不能为 null 或空。", nameof(pattern));
             }
 
-            if (!pattern.Contains("{z}") || !pattern.Contains("{x}") || !pattern.Contains("{y}"))
+            if (!pattern.Contains("{z}") || !pattern.Contains("{x}") || !pattern.Contains("{y}") || !pattern.Contains("{ext}"))
             {
-                throw new ArgumentException($"“{nameof(pattern)}”必须包含{{z}}、{{x}}和{{y}}占位符。", nameof(pattern));
+                throw new ArgumentException($"“{nameof(pattern)}”必须包含{{z}}、{{x}}、{{y}}和{{ext}}占位符。", nameof(pattern));
             }
         }
 
@@ -54,12 +54,19 @@ namespace MapTileDownloader.Services
             var files = new List<(string File, int Z, int X, int Y)>();
             await Task.Run(() =>
             {
+                pattern = pattern.Replace("\\", "/")
+                .Replace("{x}", "(?<x>\\d+)")
+                .Replace("{y}", "(?<y>\\d+)")
+                .Replace("{z}", "(?<z>[12]?\\d)")
+                .Replace(".", "\\.")
+                .Replace("{ext}", ".+");
+                var regex = new Regex(pattern, RegexOptions.IgnoreCase);
                 foreach (var dir in dirs)
                 {
                     foreach (var file in Directory.EnumerateFiles(dir, "*", SearchOption.AllDirectories))
                     {
                         cancellation.ThrowIfCancellationRequested();
-                        if (IsMatchPattern(pattern, Path.GetRelativePath(dir, file), out int z, out int x, out int y))
+                        if (IsMatchPattern(regex, Path.GetRelativePath(dir, file), out int z, out int x, out int y))
                         {
                             files.Add((file, z, x, y));
                         }
@@ -70,7 +77,7 @@ namespace MapTileDownloader.Services
             {
                 throw new Exception("没有找到符合条件的瓦片图像");
             }
-            
+
             var minZ = files.Min(f => f.Z);
             var maxZ = files.Max(f => f.Z);
             var name = Path.GetFileName(dirs[0]);
@@ -80,7 +87,7 @@ namespace MapTileDownloader.Services
             await using var serviece = new MbtilesService(mbtilesPath, false);
             await serviece.InitializeAsync();
 
-            var existingTiles =await serviece.GetExistingTilesAsync();
+            var existingTiles = await serviece.GetExistingTilesAsync();
 
             int index = 0;
             foreach (var item in files)
@@ -88,7 +95,7 @@ namespace MapTileDownloader.Services
                 cancellation.ThrowIfCancellationRequested();
                 index++;
                 progress?.Report((double)index / files.Count);
-                var tileIndex=new TileIndex(item.X,item.Y, item.Z);
+                var tileIndex = new TileIndex(item.X, item.Y, item.Z);
                 if (existingTiles.Contains(tileIndex))
                 {
                     continue;
@@ -99,82 +106,68 @@ namespace MapTileDownloader.Services
 
             await serviece.UpdateMetadataAsync(name, "local files", Configs.Instance.MbtilesUseTms);
         }
-    //    public async Task ConvertToFilesAsync(string mbtilesPath, string outputDir, string pattern,
-    //bool overwrite = false,
-    //IProgress<double> progress = null,
-    //CancellationToken cancellation = default)
-    //    {
-    //        if (string.IsNullOrEmpty(mbtilesPath))
-    //            throw new ArgumentException($"“{nameof(mbtilesPath)}”不能为 null 或空。", nameof(mbtilesPath));
+        public async Task ConvertToFilesAsync(string mbtilesPath, string outputDir, string pattern,
+             bool skipExisted,
+             IProgress<double> progress = null,
+             CancellationToken cancellation = default)
+        {
+            Check(mbtilesPath, pattern);
+            if (string.IsNullOrEmpty(outputDir))
+            {
+                throw new ArgumentException($"“{nameof(outputDir)}”不能为 null 或空。", nameof(outputDir));
+            }
 
-    //        if (string.IsNullOrEmpty(outputDir))
-    //            throw new ArgumentException($"“{nameof(outputDir)}”不能为 null 或空。", nameof(outputDir));
+            Directory.CreateDirectory(outputDir);
 
-    //        if (string.IsNullOrEmpty(pattern) || !pattern.Contains("{z}") || !pattern.Contains("{x}") || !pattern.Contains("{y}"))
-    //            throw new ArgumentException($"“{nameof(pattern)}”必须包含{{z}}、{{x}}和{{y}}占位符。", nameof(pattern));
+            await using var service = new MbtilesService(mbtilesPath, true);
+            await service.InitializeAsync();
 
-    //        if (!Directory.Exists(outputDir))
-    //            Directory.CreateDirectory(outputDir);
+            var tiles = await service.GetExistingTilesAsync();
+            var metadata = await service.GetMbtilesInfoAsync(false);
+            if (metadata.Format == MbtilesService.UnknownFormat)
+            {
+                throw new Exception("无法识别的瓦片图像格式，请检查mbtiles文件");
+            }
 
-    //        await using var service = new MbtilesService(mbtilesPath, true);
-    //        await service.InitializeAsync();
+            int index = 0;
+            int total = tiles.Count;
 
-    //        var tiles = await service.GetExistingTilesAsync();
+            foreach (var tile in tiles)
+            {
+                cancellation.ThrowIfCancellationRequested();
 
-    //        int index = 0;
-    //        int total = tiles.Count;
+                index++;
+                progress?.Report((double)index / total);
 
-    //        foreach (var tile in tiles)
-    //        {
-    //            cancellation.ThrowIfCancellationRequested();
+                string relativePath = pattern
+                 .Replace("{z}", tile.Level.ToString())
+                 .Replace("{x}", tile.Col.ToString())
+                 .Replace("{y}", tile.Row.ToString())
+                 .Replace("{ext}", metadata.Format);
 
-    //            index++;
-    //            progress?.Report((double)index / total);
+                string outputPath = Path.Combine(outputDir, relativePath.Replace('/', Path.DirectorySeparatorChar));
 
-    //            // tile 格式是 "z/x/y"
-    //            var parts = tile.Split('/');
-    //            if (parts.Length != 3)
-    //                continue;
+                string outputDirPath = Path.GetDirectoryName(outputPath);
+                Directory.CreateDirectory(outputDirPath);
 
-    //            if (!int.TryParse(parts[0], out int z) ||
-    //                !int.TryParse(parts[1], out int x) ||
-    //                !int.TryParse(parts[2], out int y))
-    //                continue;
+                if (skipExisted && File.Exists(outputPath))
+                {
+                    continue;
+                }
 
-    //            var tileData = await service.GetTileAsync(x, y, z);
-    //            if (tileData == null)
-    //                continue;
+                var tileData = await service.GetTileAsync(tile.Col, tile.Row, tile.Level);
+                if (tileData == null)
+                {
+                    continue;
+                }            
 
-    //            // 根据 pattern 替换为路径
-    //            string relativePath = pattern.Replace("{z}", z.ToString())
-    //                                         .Replace("{x}", x.ToString())
-    //                                         .Replace("{y}", y.ToString());
+                await File.WriteAllBytesAsync(outputPath, tileData, cancellation);
+            }
+        }
 
-    //            string outputPath = Path.Combine(outputDir, relativePath.Replace('/', Path.DirectorySeparatorChar));
-
-    //            string outputDirPath = Path.GetDirectoryName(outputPath);
-    //            if (!Directory.Exists(outputDirPath))
-    //                Directory.CreateDirectory(outputDirPath);
-
-    //            if (!overwrite && File.Exists(outputPath))
-    //                continue;
-
-    //            await File.WriteAllBytesAsync(outputPath, tileData, cancellation);
-    //        }
-    //    }
-
-        private bool IsMatchPattern(string pattern, string relativePath, out int z, out int x, out int y)
+        private bool IsMatchPattern(Regex regex, string relativePath, out int z, out int x, out int y)
         {
             relativePath = relativePath.Replace('\\', '/');
-
-            // 使用具名捕获组替换 pattern 中的 {x}、{y}、{z}
-            pattern = pattern.Replace("\\", "/")
-                .Replace("{x}", "(?<x>\\d+)")
-                .Replace("{y}", "(?<y>\\d+)")
-                .Replace("{z}", "(?<z>\\d{1,2})")
-                .Replace(" * ", ".+");
-
-            var regex = new Regex(pattern);
             var match = regex.Match(relativePath);
 
             if (match.Success &&

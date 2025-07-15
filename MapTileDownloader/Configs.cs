@@ -122,7 +122,7 @@ namespace MapTileDownloader
                         Format = "PNG"
                     },
                 ],
-                ConvertPattern = "{z}/{x}/{y}.*",
+                ConvertPattern = "{z}/{x}/{y}.{ext}",
                 MaxDownloadConcurrency = 10,
                 MinLevel = 0,
                 MaxLevel = 20,

@@ -32,11 +32,10 @@ public partial class LocalToolsViewModel : ViewModelBase
     private bool isConverting = false;
 
     [ObservableProperty]
-    private bool isOutOfMemory = false;
+    private bool isConvertingProgressIndeterminate;
 
     [ObservableProperty]
-    private bool isProgressIndeterminate;
-
+    private bool isOutOfMemory = false;
     [ObservableProperty]
     private bool isServerOn;
 
@@ -128,43 +127,61 @@ public partial class LocalToolsViewModel : ViewModelBase
         ConvertToFilesCommand.Cancel();
     }
 
+    private async Task ConvertAsync(Func<TileConvertService, Progress<double>, Task> convertAction)
+    {
+        IsConvertingProgressIndeterminate = true;
+        IsConverting = true;
+        await TryWithTabDisabledAsync(async () =>
+        {
+
+            var convertService = new TileConvertService();
+            var p = new Progress<double>(v =>
+            {
+                IsConvertingProgressIndeterminate = false;
+                Progress = v;
+            });
+            await convertAction(convertService, p);
+        });
+        IsConverting = false;
+        IsConvertingProgressIndeterminate = false;
+    }
+
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task ConvertToFilesAsync(CancellationToken cancellationToken)
     {
-        IsConverting = true;
-        await Task.Delay(1000);
-        IsConverting = false;
+        var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        if (dirs.Length > 1)
+        {
+            await ShowErrorAsync("转换失败", "请只选择一个目录进行转换");
+            return;
+        }
+        await ConvertAsync(async (s, p) =>
+        {
+            await s.ConvertToFilesAsync(Configs.Instance.MbtilesFile, dirs[0], Pattern, SkipExisted, p, cancellationToken);
+        });
     }
 
     [RelayCommand(IncludeCancelCommand = true)]
     private async Task ConvertToMbtilesAsync(CancellationToken cancellationToken)
     {
-        IsProgressIndeterminate = true;
-        try
+        var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
+        if (dirs.Length > 1)
         {
-            if (string.IsNullOrWhiteSpace(Dir))
+            await ShowErrorAsync("转换失败", "请只选择一个目录进行转换");
+            return;
+        }
+        foreach (var dir in dirs)
+        {
+            if (!Directory.Exists(dir))
             {
-                await ShowErrorAsync("转换失败", "目录为空");
+                await ShowErrorAsync("转换失败", $"目录{dir}不存在");
                 return;
             }
-
-            IsConverting = true;
-            var convertService = new TileConvertService();
-            var p = new Progress<double>(v =>
-            {
-                IsProgressIndeterminate = false;
-                Progress = v;
-            });
-            var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
-            await TryWithTabDisabledAsync(
-                () => convertService.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p,
-                    cancellationToken), "转换失败");
         }
-        finally
+        await ConvertAsync(async (s, p) =>
         {
-            IsConverting = false;
-            IsProgressIndeterminate = false;
-        }
+            await s.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p, cancellationToken);
+        });
     }
 
     private async Task<string> GetSaveFilePathAsync()
@@ -312,6 +329,26 @@ public partial class LocalToolsViewModel : ViewModelBase
         }
     }
 
+    private async Task UpdateLocalTileLayerAsync()
+    {
+        if (localTileSource != null)
+        {
+            await localTileSource.DisposeAsync();
+        }
+
+        if (File.Exists(Configs.Instance.MbtilesFile))
+        {
+            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile, Configs.Instance.MbtilesUseTms);
+            await localTileSource.InitializeAsync();
+        }
+        else
+        {
+            localTileSource = null;
+        }
+
+        Map.LoadLocalTileMaps(localTileSource);
+    }
+
     [RelayCommand]
     private async Task UpdateMbtilesInfoAsync()
     {
@@ -333,27 +370,6 @@ public partial class LocalToolsViewModel : ViewModelBase
             MbtilesInfo = null;
         }
     }
-
-    private async Task UpdateLocalTileLayerAsync()
-    {
-        if (localTileSource != null)
-        {
-            await localTileSource.DisposeAsync();
-        }
-
-        if (File.Exists(Configs.Instance.MbtilesFile))
-        {
-            localTileSource = new MbtilesTileSource(Configs.Instance.MbtilesFile, Configs.Instance.MbtilesUseTms);
-            await localTileSource.InitializeAsync();
-        }
-        else
-        {
-            localTileSource = null;
-        }
-
-        Map.LoadLocalTileMaps(localTileSource);
-    }
-
     private void UpdateMergeMessage()
     {
         var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);

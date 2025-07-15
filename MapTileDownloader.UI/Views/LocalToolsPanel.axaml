@@ -237,7 +237,7 @@
                             <c:FormItem Header="瓦片位置结构">
                                 <TextBox
                                     Text="{Binding Pattern}"
-                                    Watermark="{}{z}/{x}/{y}.*" />
+                                    Watermark="{}{z}/{x}/{y}.{ext}" />
                             </c:FormItem>
                         </StackPanel>
                     </HeaderedContentControl>
@@ -251,7 +251,7 @@
                     </HeaderedContentControl>
                     <ProgressBar
                         Height="24"
-                        IsIndeterminate="{Binding IsProgressIndeterminate}"
+                        IsIndeterminate="{Binding IsConvertingProgressIndeterminate}"
                         Maximum="1"
                         Minimum="0"
                         ProgressTextFormat="{}{1:0}%"

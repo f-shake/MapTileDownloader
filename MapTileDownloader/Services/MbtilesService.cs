@@ -11,6 +11,8 @@ namespace MapTileDownloader.Services;
 
 public class MbtilesService : IAsyncDisposable, IDisposable
 {
+    public const string UnknownFormat = "未知";
+
     private readonly SemaphoreSlim connectionLock = new(1, 1);
 
     private readonly SqliteConnection mbtilesConnection;
@@ -329,7 +331,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         int maxZoom = zoomLevels.Any() ? zoomLevels.Max() : -1;
 
         // 获取一个瓦片样本以确定格式和大小
-        string format = "未知";
+        string format = UnknownFormat;
         int size = 0;
         try
         {
@@ -338,7 +340,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
 
             if (sampleTile != null)
             {
-                format = ImageUtility.GetImageType(sampleTile).type ?? "未知";
+                format = ImageUtility.GetImageType(sampleTile).type ?? UnknownFormat;
                 var imageInfo = Image.Identify(sampleTile);
                 if (imageInfo.Size.Width == imageInfo.Size.Height)
                 {

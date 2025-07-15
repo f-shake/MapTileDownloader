@@ -26,7 +26,7 @@ namespace MapTileDownloader.Services
             // JPEG
             if (fileBytes[0] == 0xFF && fileBytes[1] == 0xD8 && fileBytes[2] == 0xFF)
             {
-                return ("jpeg", "image/jpeg");
+                return ("jpg", "image/jpeg");
             }
 
             // PNG
