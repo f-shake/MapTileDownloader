@@ -25,6 +25,10 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         {
             throw new ArgumentException($"“{nameof(mbtilesPath)}”不能为 null 或空白。", nameof(mbtilesPath));
         }
+        if(readOnly && !File.Exists(mbtilesPath))
+        {
+            throw new FileNotFoundException($"数据库{mbtilesPath}不存在");
+        }
 
         SqlitePath = mbtilesPath;
         ReadOnly = readOnly;

@@ -1,1 +1,0 @@
-﻿dotnet publish MapTileDownloader.UI.Desktop  --runtime win-x64 -c Release -o Publish/win-x64

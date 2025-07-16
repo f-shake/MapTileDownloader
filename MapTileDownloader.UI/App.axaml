@@ -8,6 +8,7 @@
     <Application.Styles>
         <FluentTheme />
         <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml" />
+        <StyleInclude Source="avares://FzLib.Avalonia/Styles/Styles.axaml" />
         <StyleInclude Source="Styles.axaml" />
     </Application.Styles>
     <Application.Resources>

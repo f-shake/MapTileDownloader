@@ -36,6 +36,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool isOutOfMemory = false;
+
     [ObservableProperty]
     private bool isServerOn;
 
@@ -94,14 +95,18 @@ public partial class LocalToolsViewModel : ViewModelBase
     {
         UpdateMergeRange();
         UpdateMergeMessage();
-        await UpdateLocalTileLayerAsync();
-        await UpdateMbtilesInfoAsync();
+        await UpdateLocalTileAsync();
         await base.InitializeAsync();
         MbtilesPickerViewModel.FileChanged += async (s, e) =>
         {
-            await UpdateLocalTileLayerAsync();
-            await UpdateMbtilesInfoAsync();
+            await UpdateLocalTileAsync();
         };
+    }
+
+    public async Task UpdateLocalTileAsync()
+    {
+        await UpdateLocalTileLayerAsync();
+        await UpdateMbtilesInfoAsync();
     }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)

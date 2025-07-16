@@ -45,10 +45,5 @@ namespace MapTileDownloader.UI.Mapping
             InitializeDrawing();
             InitializeTile();
         }
-
-        void IMapService.Refresh()
-        {
-            Refresh();
-        }
     }
 }

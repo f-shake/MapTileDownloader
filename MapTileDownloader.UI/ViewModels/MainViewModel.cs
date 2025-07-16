@@ -27,7 +27,7 @@ public partial class MainViewModel : ViewModelBase
         await base.InitializeAsync();
     }
 
-    partial void OnSelectedTabIndexChanged(int value)
+    async partial void OnSelectedTabIndexChanged(int value)
     {
         if (value == 0)
         {
@@ -36,8 +36,8 @@ public partial class MainViewModel : ViewModelBase
         }
         else
         {
+            await LocalToolsViewModel.UpdateLocalTileAsync();
             Map.SetEnable(AppLayer.LocalBaseLayer);
         }
-        Map.Refresh();
     }
 }

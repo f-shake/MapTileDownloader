@@ -7,7 +7,7 @@
   
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishAot>true</PublishAot>
-    <TrimMode>partial</TrimMode>
+    <!--<TrimMode>partial</TrimMode>-->
   </PropertyGroup>
   
   <ItemGroup>

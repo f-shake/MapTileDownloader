@@ -19,6 +19,5 @@ public interface IMapService
     void LoadLocalTileMaps(MbtilesTileSource tileSource);
     void SetEnable(AppLayer layer);
     void ClearTileGrids();
-    void Refresh();
     void RefreshBaseTileGrid();
 }

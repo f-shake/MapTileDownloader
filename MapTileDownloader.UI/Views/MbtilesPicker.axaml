@@ -16,14 +16,8 @@
     mc:Ignorable="d">
     <Grid
         VerticalAlignment="Center"
-        ColumnDefinitions="*,8,Auto"
-        RowDefinitions="*,8,*">
-        <TextBox
-            Grid.RowSpan="5"
-            MaxLines="3"
-            MinLines="3"
-            Text="{Binding File}"
-            TextWrapping="Wrap" />
+        ColumnDefinitions="*,8,Auto,8,Auto">
+        <TextBox Text="{Binding File}" />
         <Button
             Grid.Column="2"
             Classes="Icon"
@@ -32,8 +26,7 @@
             ToolTip.Tip="浏览.." />
 
         <Button
-            Grid.Row="2"
-            Grid.Column="2"
+            Grid.Column="4"
             Classes="Icon"
             Content="{StaticResource More}">
             <Button.Flyout>

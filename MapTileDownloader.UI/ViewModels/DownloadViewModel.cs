@@ -157,7 +157,7 @@ public partial class DownloadViewModel : ViewModelBase
         ErrorTiles.Clear();
 
         var tileHelper = new TileIntersectionService(false);
-
+        bool succeed = false;
         await TryWithLoadingAsync(() => Task.Run(async () =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
@@ -167,7 +167,7 @@ public partial class DownloadViewModel : ViewModelBase
                 throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
             }
             ISet<TileIndex> existingTiles = null;
-            using (var mbtilesService = new MbtilesService(Configs.Instance.MbtilesFile, true))
+            using (var mbtilesService = new MbtilesService(Configs.Instance.MbtilesFile, false))
             {
                 await mbtilesService.InitializeAsync();
                 existingTiles = await mbtilesService.GetExistingTilesAsync();
@@ -191,17 +191,20 @@ public partial class DownloadViewModel : ViewModelBase
             DownloadedCount = Levels.Select(p => p.DownloadedCount).Sum();
             SkipCount = Levels.Select(p => p.DownloadedCount).Sum();
             await Map.LoadTileGridsAsync(SelectedDataSource, Levels);
-
+            succeed = true;
         }));
 
-        if (Levels.All(p => p.DownloadedCount == p.Count))
+        if (succeed)
         {
-            await ShowOkAsync("无需下载", "所选范围内的指定瓦片均已下载");
-        }
-        else
-        {
-            CanDownload = true;
-            DownloadTilesCommand.NotifyCanExecuteChanged();
+            if (Levels.All(p => p.DownloadedCount == p.Count))
+            {
+                await ShowOkAsync("无需下载", "所选范围内的指定瓦片均已下载");
+            }
+            else
+            {
+                CanDownload = true;
+                DownloadTilesCommand.NotifyCanExecuteChanged();
+            }
         }
     }
 

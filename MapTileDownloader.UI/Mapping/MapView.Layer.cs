@@ -154,6 +154,7 @@ public partial class MapView
             throw new ArgumentException($"仅支持设置底图的Enable");
         }
         RefreshBaseTileGrid();
+        Refresh();
     }
 
     private void AddBaseTileGridLayer()
