@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Serilog;
 
-namespace MapTileDownloader.UI.Desktop;
+namespace MapTileDownloader.UI;
 
 class Program
 {

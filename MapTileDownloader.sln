@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTileDownloader", "MapTil
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTileDownloader.UI", "MapTileDownloader.UI\MapTileDownloader.UI.csproj", "{AF1DD1C4-D9A7-412F-812F-3D8BD4D315ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MapTileDownloader.UI.Desktop", "MapTileDownloader.UI.Desktop\MapTileDownloader.UI.Desktop.csproj", "{A2A830E2-35BC-411A-AD65-D2174EBF58C0}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "#", "#", "{9FA3D6BD-1EC1-3BA5-80CB-CE02773A58D5}"
 	ProjectSection(SolutionItems) = preProject
 		build_linux.ps1 = build_linux.ps1
@@ -31,10 +29,6 @@ Global
 		{AF1DD1C4-D9A7-412F-812F-3D8BD4D315ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF1DD1C4-D9A7-412F-812F-3D8BD4D315ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF1DD1C4-D9A7-412F-812F-3D8BD4D315ED}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A2A830E2-35BC-411A-AD65-D2174EBF58C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A2A830E2-35BC-411A-AD65-D2174EBF58C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A2A830E2-35BC-411A-AD65-D2174EBF58C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A2A830E2-35BC-411A-AD65-D2174EBF58C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
