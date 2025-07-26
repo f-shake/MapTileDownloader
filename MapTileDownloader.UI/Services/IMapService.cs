@@ -6,7 +6,7 @@ using MapTileDownloader.Models;
 using MapTileDownloader.TileSources;
 using NetTopologySuite.Geometries;
 
-namespace MapTileDownloader.Services;
+namespace MapTileDownloader.UI.Services;
 
 public interface IMapService
 {

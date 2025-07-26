@@ -12,7 +12,7 @@
     <Thickness x:Key="ExpanderContentRightBorderThickness">0</Thickness>
     <Thickness x:Key="ExpanderContentDownBorderThickness">0</Thickness>
     <ControlTheme
-        x:Key="LabledSlider"
+        x:Key="LabelSlider"
         TargetType="Slider">
         <Setter Property="Background" Value="{DynamicResource SliderTrackFill}" />
         <Setter Property="BorderThickness" Value="{DynamicResource SliderBorderThemeThickness}" />

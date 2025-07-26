@@ -7,12 +7,13 @@ using MapTileDownloader.Models;
 using MapTileDownloader.Services;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Services;
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
 public abstract partial class ViewModelBase(IMapService mapService, 
-    IMainViewControl mainView,
+    IMainViewService mainView,
     IDialogService dialog,
     IStorageProviderService storage) 
     : ObservableObject
@@ -24,7 +25,7 @@ public abstract partial class ViewModelBase(IMapService mapService,
     
     public IStorageProviderService Storage { get; } = storage;
 
-    public IMainViewControl MainView { get; } = mainView;
+    public IMainViewService MainView { get; } = mainView;
 
     public IMapService Map { get; } = mapService;
 

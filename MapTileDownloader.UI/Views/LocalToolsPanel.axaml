@@ -120,7 +120,7 @@
                                 <Slider
                                     Maximum="19"
                                     Minimum="1"
-                                    Theme="{StaticResource LabledSlider}"
+                                    Theme="{StaticResource LabelSlider}"
                                     TickFrequency="1"
                                     Value="{Binding Level}" />
                             </c:FormItem>
@@ -177,7 +177,7 @@
                                 <Slider
                                     Maximum="100"
                                     Minimum="5"
-                                    Theme="{StaticResource LabledSlider}"
+                                    Theme="{StaticResource LabelSlider}"
                                     TickFrequency="5"
                                     Value="{Binding ImageQuality}" />
                             </c:FormItem>

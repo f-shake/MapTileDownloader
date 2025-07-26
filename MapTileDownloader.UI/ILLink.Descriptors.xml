@@ -1,0 +1,8 @@
+<linker>
+    <assembly fullname="FzLib.Avalonia">
+        <type fullname="FzLib.Avalonia.CheckBoxDialog" preserve="all" />
+        <type fullname="FzLib.Avalonia.InputDialog" preserve="all" />
+        <type fullname="FzLib.Avalonia.MessageDialog" preserve="all" />
+        <type fullname="FzLib.Avalonia.SelectItemDialog" preserve="all" />
+    </assembly>
+</linker>

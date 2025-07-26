@@ -18,6 +18,7 @@ using System.Diagnostics;
 using BruTile;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Services;
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -71,7 +72,7 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private int totalCount;
 
-    public DownloadViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,
+    public DownloadViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,
         IStorageProviderService storage)
         : base(mapService, mainView, dialog, storage)
     {

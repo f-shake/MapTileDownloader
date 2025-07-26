@@ -69,7 +69,7 @@
                                 <c:FormItem Header="最大级别">
                                     <Slider
                                         Maximum="19"
-                                        Theme="{StaticResource LabledSlider}"
+                                        Theme="{StaticResource LabelSlider}"
                                         TickFrequency="1"
                                         Value="{Binding SelectedDataSource.MaxLevel}" />
                                 </c:FormItem>
@@ -115,7 +115,7 @@
                                 x:Name="sldMin"
                                 Maximum="{Binding MaxLevel}"
                                 Minimum="0"
-                                Theme="{StaticResource LabledSlider}"
+                                Theme="{StaticResource LabelSlider}"
                                 TickFrequency="1"
                                 Value="{Binding MinLevel}" />
                         </c:FormItem>
@@ -124,7 +124,7 @@
                                 x:Name="sldMax"
                                 Maximum="19"
                                 Minimum="{Binding MinLevel}"
-                                Theme="{StaticResource LabledSlider}"
+                                Theme="{StaticResource LabelSlider}"
                                 TickFrequency="1"
                                 Value="{Binding MaxLevel}" />
                         </c:FormItem>
@@ -132,7 +132,7 @@
                             <Slider
                                 Maximum="20"
                                 Minimum="1"
-                                Theme="{StaticResource LabledSlider}"
+                                Theme="{StaticResource LabelSlider}"
                                 TickFrequency="1"
                                 Value="{Binding MaxConcurrency}" />
                         </c:FormItem>

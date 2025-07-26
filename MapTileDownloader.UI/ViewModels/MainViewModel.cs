@@ -5,13 +5,14 @@ using FzLib.Avalonia.Services;
 using Mapsui;
 using MapTileDownloader.Enums;
 using MapTileDownloader.Services;
+using MapTileDownloader.UI.Services;
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
 public partial class MainViewModel(
     IMapService mapService,
-    IMainViewControl mainView,
+    IMainViewService mainView,
     IDialogService dialog,
     IStorageProviderService storage,
     DownloadViewModel downloadViewModel,

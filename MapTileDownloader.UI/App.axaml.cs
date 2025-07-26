@@ -12,6 +12,7 @@ using MapTileDownloader.UI.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
+using MapTileDownloader.UI.Services;
 
 namespace MapTileDownloader.UI;
 
@@ -42,8 +43,8 @@ public partial class App : Application
         builder.Services.AddTransient<MbtilesPicker>();
         builder.Services.AddSingleton<MapView>();
 
-        builder.Services.AddSingleton<IMapService, MapView>(s => s.GetRequiredService<MapView>());
-        builder.Services.AddSingleton<IMainViewControl, MainViewControl>();
+        builder.Services.AddSingleton<IMapService>(s => s.GetRequiredService<MapView>());
+        builder.Services.AddSingleton<IMainViewService, MainViewService>();
 
 
         var host = builder.Build();

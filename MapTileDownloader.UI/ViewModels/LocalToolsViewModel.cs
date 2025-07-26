@@ -16,6 +16,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Services;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -88,7 +89,7 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool skipExisted = true;
-    public LocalToolsViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,IStorageProviderService storage) 
+    public LocalToolsViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,IStorageProviderService storage) 
         : base(mapService, mainView, dialog, storage)
     {
         MapAreaSelectorViewModel.CoordinatesChanged += MapAreaSelectorViewModelOnCoordinatesChanged;

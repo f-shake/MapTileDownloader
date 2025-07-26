@@ -17,6 +17,7 @@ using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Services;
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -32,7 +33,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     [ObservableProperty]
     private string selectionMessage;
 
-    public MapAreaSelectorViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,
+    public MapAreaSelectorViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,
         IStorageProviderService storage)
         : base(mapService, mainView, dialog, storage)
     {

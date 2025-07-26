@@ -5,32 +5,18 @@ using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using FzLib.Avalonia.Dialogs;
 using MapTileDownloader.UI.ViewModels;
-using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading;
+using MapTileDownloader.UI.Services;
 
 namespace MapTileDownloader.UI.Views;
 
-public class MainViewControl : IMainViewControl
-{
-    public void SetLoadingVisible(bool isVisible)
-    {
-         App.Services.GetRequiredService<MainView>().SetLoadingVisible(isVisible);
-    }
-
-    public void SetTabSelectable(bool isEnabled)
-    {
-        App.Services.GetRequiredService<MainView>().SetTabSelectable(isEnabled);
-    }
-}
-
 public partial class MainView : UserControl
 {
-    private CancellationTokenSource loadingToken = null;
-
-    public MainView(IDialogService dialog,MainViewModel vm)
+    public MainView(IDialogService dialog,MainViewModel vm,IMainViewService mainViewService)
     {
+        mainViewService.Attach(this);
         DataContext = vm;
         InitializeComponent();
         Dialog = dialog;
