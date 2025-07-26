@@ -1,10 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FzLib.Avalonia.Messages;
 using MapTileDownloader.Services;
-using MapTileDownloader.UI.Messages;
-using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -17,6 +14,9 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
+using MapTileDownloader.UI.Views;
+using FzLib.Avalonia.Dialogs;
+using FzLib.Avalonia.Services;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -28,7 +28,9 @@ public partial class MbtilesPickerViewModel : ViewModelBase
     [ObservableProperty]
     private bool useTms = Configs.Instance.MbtilesUseTms;
 
-    public MbtilesPickerViewModel()
+    public MbtilesPickerViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,
+        IStorageProviderService storage)
+        : base(mapService, mainView, dialog, storage)
     {
         File = Configs.Instance.MbtilesFile ?? Path.Combine(AppContext.BaseDirectory, "tiles.mbtiles");
     }
@@ -62,14 +64,13 @@ public partial class MbtilesPickerViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync("无法打开目录", ex);
+            await Dialog.ShowErrorDialogAsync("无法打开目录", ex);
         }
     }
 
     [RelayCommand]
     private async Task PickFileAsync()
     {
-        var storageProvider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
         var options = new FilePickerSaveOptions
         {
             DefaultExtension = "mbtiles",
@@ -82,12 +83,10 @@ public partial class MbtilesPickerViewModel : ViewModelBase
             },
             ShowOverwritePrompt = false
         };
-        var file = await storageProvider.SaveFilePickerAsync(options);
-        if (file?.TryGetLocalPath() is not string filePath)
+        var file = await Storage.SaveFilePickerAndGetPathAsync(options);
+        if (file != null)
         {
-            return;
+            File = file;
         }
-
-        File = filePath;
     }
 }

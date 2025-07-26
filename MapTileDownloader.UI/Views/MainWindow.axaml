@@ -14,5 +14,5 @@
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
     mc:Ignorable="d">
-    <views:MainView />
+    <views:DependencyInjection Type="views:MainView" />
 </c:ExtendedWindow>

@@ -1,18 +1,32 @@
 ﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using FzLib.Avalonia.Dialogs;
+using FzLib.Avalonia.Services;
 using Mapsui;
 using MapTileDownloader.Enums;
+using MapTileDownloader.Services;
+using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
-public partial class MainViewModel : ViewModelBase
+public partial class MainViewModel(
+    IMapService mapService,
+    IMainViewControl mainView,
+    IDialogService dialog,
+    IStorageProviderService storage,
+    DownloadViewModel downloadViewModel,
+    LocalToolsViewModel localToolsPanel)
+    : ViewModelBase(mapService, mainView, dialog, storage)
 {
     [ObservableProperty]
     private int selectedTabIndex;
 
-    public DownloadViewModel DownloadViewModel { get; } = new DownloadViewModel();
+    [ObservableProperty]
+    private bool isProgressRingVisible = false;
 
-    public LocalToolsViewModel LocalToolsViewModel { get; } = new LocalToolsViewModel();
+    public DownloadViewModel DownloadViewModel { get; } = downloadViewModel;
+
+    public LocalToolsViewModel LocalToolsViewModel { get; } = localToolsPanel;
 
     public override async ValueTask InitializeAsync()
     {
@@ -31,7 +45,6 @@ public partial class MainViewModel : ViewModelBase
     {
         if (value == 0)
         {
-
             Map.SetEnable(AppLayer.BaseLayer);
         }
         else

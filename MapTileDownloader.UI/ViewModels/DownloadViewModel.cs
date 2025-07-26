@@ -1,9 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FzLib.Avalonia.Messages;
 using MapTileDownloader.Services;
-using MapTileDownloader.UI.Messages;
 using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
@@ -18,6 +16,9 @@ using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
 using BruTile;
+using FzLib.Avalonia.Dialogs;
+using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -70,7 +71,9 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private int totalCount;
 
-    public DownloadViewModel()
+    public DownloadViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,
+        IStorageProviderService storage)
+        : base(mapService, mainView, dialog, storage)
     {
         Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
         if (Configs.Instance.SelectedTileSourcesIndex >= 0 && Configs.Instance.SelectedTileSourcesIndex < Sources.Count)
@@ -97,7 +100,8 @@ public partial class DownloadViewModel : ViewModelBase
     private async Task DownloadTilesAsync(CancellationToken cancellationToken)
     {
         IsDownloading = true;
-        await using var downloader = new TileDownloadService(SelectedDataSource, Configs.Instance.MbtilesFile, MaxConcurrency);
+        await using var downloader =
+            new TileDownloadService(SelectedDataSource, Configs.Instance.MbtilesFile, MaxConcurrency);
         await TryWithTabDisabledAsync(async () =>
         {
             try
@@ -106,7 +110,7 @@ public partial class DownloadViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
-                await ShowErrorAsync("初始化失败", ex);
+                await Dialog.ShowErrorDialogAsync("初始化失败", ex);
                 IsDownloading = false;
                 return;
             }
@@ -118,17 +122,15 @@ public partial class DownloadViewModel : ViewModelBase
 
             try
             {
-                await Task.Run(async () =>
-                {
-                    await downloader.DownloadTilesAsync(Levels, cancellationToken);
-                }, cancellationToken);
+                await Task.Run(async () => { await downloader.DownloadTilesAsync(Levels, cancellationToken); },
+                    cancellationToken);
             }
             catch (OperationCanceledException)
             {
             }
             catch (Exception ex)
             {
-                await ShowErrorAsync("下载失败", ex);
+                await Dialog.ShowErrorDialogAsync("下载失败", ex);
             }
             finally
             {
@@ -144,7 +146,7 @@ public partial class DownloadViewModel : ViewModelBase
     {
         if (Configs.Instance.Coordinates == null || Configs.Instance.Coordinates.Length < 3)
         {
-            await ShowErrorAsync("初始化失败", "请先选择下载区域");
+            await Dialog.ShowErrorDialogAsync("初始化失败", "请先选择下载区域");
             return;
         }
 
@@ -158,7 +160,7 @@ public partial class DownloadViewModel : ViewModelBase
 
         var tileHelper = new TileIntersectionService(false);
         bool succeed = false;
-        await TryWithLoadingAsync(() => Task.Run(async () =>
+        await TryWithLoadingAsync((Func<Task>)(() => Task.Run((Func<Task>)(async () =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
             var count = tileHelper.EstimateIntersectingTileCount(Configs.Instance.Coordinates, MaxLevel);
@@ -166,12 +168,14 @@ public partial class DownloadViewModel : ViewModelBase
             {
                 throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
             }
+
             ISet<TileIndex> existingTiles = null;
             using (var mbtilesService = new MbtilesService(Configs.Instance.MbtilesFile, false))
             {
                 await mbtilesService.InitializeAsync();
                 existingTiles = await mbtilesService.GetExistingTilesAsync();
             }
+
             for (int i = MinLevel; i <= MaxLevel; i++)
             {
                 var tiles = tileHelper.GetIntersectingTiles(Configs.Instance.Coordinates, i);
@@ -182,6 +186,7 @@ public partial class DownloadViewModel : ViewModelBase
                     {
                         tile.SetStatus(DownloadStatus.Skip, null, null);
                     }
+
                     return tile;
                 }));
                 Levels.Add(levelTile);
@@ -190,15 +195,15 @@ public partial class DownloadViewModel : ViewModelBase
             TotalCount = Levels.Select(p => p.Count).Sum();
             DownloadedCount = Levels.Select(p => p.DownloadedCount).Sum();
             SkipCount = Levels.Select(p => p.DownloadedCount).Sum();
-            await Map.LoadTileGridsAsync(SelectedDataSource, Levels);
+            await base.Map.LoadTileGridsAsync(SelectedDataSource, (IEnumerable<IDownloadingLevel>)Levels);
             succeed = true;
-        }));
+        }))));
 
         if (succeed)
         {
             if (Levels.All(p => p.DownloadedCount == p.Count))
             {
-                await ShowOkAsync("无需下载", "所选范围内的指定瓦片均已下载");
+                await Dialog.ShowOkDialogAsync("无需下载", "所选范围内的指定瓦片均已下载");
             }
             else
             {
@@ -265,6 +270,7 @@ public partial class DownloadViewModel : ViewModelBase
             {
                 SelectedLevel = Levels[maxDownloadingLevel];
             }
+
             OnPropertyChanged(nameof(DownloadedCount));
             OnPropertyChanged(nameof(SkipCount));
             OnPropertyChanged(nameof(DownloadedCount));
@@ -280,11 +286,13 @@ public partial class DownloadViewModel : ViewModelBase
         {
             Sources.Remove(SelectedDataSource);
         }
+
         if (Sources.Count == 0)
         {
             Sources.Add(new TileDataSource { Name = "新数据源" });
             SelectedDataSource = Sources[0];
         }
+
         SaveToConfig();
     }
 

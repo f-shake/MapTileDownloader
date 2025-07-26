@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using Avalonia;
+using FzLib.Application;
 using Serilog;
 
 namespace MapTileDownloader.UI;
@@ -15,25 +16,18 @@ class Program
          .WriteTo.File("logs/logs.txt", rollingInterval: RollingInterval.Day)
          .CreateLogger();
         Log.Information("程序启动");
-#if !DEBUG
-        TaskScheduler.UnobservedTaskException += TaskScheduler_UnobservedTaskException;
-        AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-        try
+        UnhandledExceptionCatcher.WithCatcher(() =>
         {
-#endif
-        BuildAvaloniaApp().StartWithClassicDesktopLifetime(args);
-#if !DEBUG
-         }
-        catch (Exception ex)
+            BuildAvaloniaApp()
+                .StartWithClassicDesktopLifetime(args);
+        }).Catch((ex, s) =>
         {
-            Log.Fatal(ex, "未捕获的主线程错误");
-        }
-        finally
-        {
+            Log.Fatal(ex, "未捕获的异常，来源：{ExceptionSource}", s);
             Log.CloseAndFlush();
-        }
-#endif
+        })
+       .Finally(() => { Log.Information("程序结束"); })
+       .Run();
     }
 
     private static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)

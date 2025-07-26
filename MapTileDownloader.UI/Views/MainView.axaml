@@ -21,9 +21,9 @@
             <ColumnDefinition Width="0" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <map:MapView
-            x:Name="map"
-            Grid.Column="2" />
+        <ContentControl Grid.Column="2">
+            <v:DependencyInjection Type="map:MapView" />
+        </ContentControl>
         <Grid RowDefinitions="Auto,8,*">
 
             <StackPanel
@@ -32,12 +32,12 @@
                 <HeaderedContentControl
                     Classes="GroupBox"
                     Header="Mbtiles数据库位置">
-                    <v:MbtilesPicker />
+                    <v:DependencyInjection Type="v:MbtilesPicker" />
                 </HeaderedContentControl>
                 <HeaderedContentControl
                     Classes="GroupBox"
                     Header="感兴趣区域">
-                    <v:MapAreaSelector />
+                    <v:DependencyInjection Type="v:MapAreaSelector" />
                 </HeaderedContentControl>
             </StackPanel>
             <TabControl
@@ -47,14 +47,10 @@
                 SelectedIndex="{Binding SelectedTabIndex}"
                 TabStripPlacement="Top">
                 <TabItem Header="在线地图">
-                    <v:DownloadPanel
-                        Margin="0,8"
-                        DataContext="{Binding DownloadViewModel}" />
+                    <v:DependencyInjection Type="v:DownloadPanel" />
                 </TabItem>
                 <TabItem Header="本地数据">
-                    <v:LocalToolsPanel
-                        Margin="0,8"
-                        DataContext="{Binding LocalToolsViewModel}" />
+                    <v:DependencyInjection Type="v:LocalToolsPanel" />
                 </TabItem>
             </TabControl>
         </Grid>
@@ -63,5 +59,9 @@
             Grid.Column="1"
             Width="8"
             Background="Transparent" />
+
+        <c:ProgressRingOverlay
+            Grid.ColumnSpan="3"
+            IsActive="{Binding IsProgressRingVisible}" />
     </Grid>
 </UserControl>

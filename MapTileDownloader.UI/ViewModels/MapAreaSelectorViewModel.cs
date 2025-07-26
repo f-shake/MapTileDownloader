@@ -1,9 +1,7 @@
 ﻿using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FzLib.Avalonia.Messages;
 using MapTileDownloader.Services;
-using MapTileDownloader.UI.Messages;
 using NetTopologySuite.Geometries;
 using System;
 using System.Collections.Generic;
@@ -17,6 +15,9 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
+using FzLib.Avalonia.Dialogs;
+using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -31,7 +32,9 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     [ObservableProperty]
     private string selectionMessage;
 
-    public MapAreaSelectorViewModel()
+    public MapAreaSelectorViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,
+        IStorageProviderService storage)
+        : base(mapService, mainView, dialog, storage)
     {
         CoordinatesChanged += (s, e) => Coordinates = Configs.Instance.Coordinates;
         OnCoordinatesChanged(Configs.Instance.Coordinates);
@@ -51,7 +54,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     {
         if (Coordinates is not { Length: > 0 })
         {
-            await ShowErrorAsync("范围为空", "下载范围为空");
+            await Dialog.ShowErrorDialogAsync("范围为空", "下载范围为空");
             return;
         }
 
@@ -68,10 +71,8 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
                 }
             }
         };
-        var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
-
-        var filePath = file?.TryGetLocalPath();
-        if (filePath == null)
+        var file =await Storage.SaveFilePickerAndGetPathAsync(options);
+        if (file == null)
         {
             return;
         }
@@ -79,11 +80,11 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
         var content = string.Join(Environment.NewLine, ["X,Y", .. Coordinates.Select(p => $"{p.X},{p.Y}")]);
         try
         {
-            await File.WriteAllTextAsync(filePath, content);
+            await File.WriteAllTextAsync(file, content);
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync("保存失败", ex);
+            await Dialog.ShowErrorDialogAsync("保存失败", ex);
         }
     }
 
@@ -92,8 +93,6 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     {
         try
         {
-            var storageProvider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
-
             // 2. 配置文件选择选项（仅允许CSV）
             var options = new FilePickerOpenOptions
             {
@@ -110,14 +109,14 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
             };
 
             // 3. 显示文件选择对话框
-            var files = await storageProvider.OpenFilePickerAsync(options);
-            if (files.Count == 0 || files[0]?.TryGetLocalPath() is not string filePath)
+            var file = await Storage.OpenFilePickerAndGetFirstAsync(options);
+            if (file == null)
             {
                 return; // 用户取消选择
             }
 
             // 4. 读取文件内容
-            var csvContent = await File.ReadAllTextAsync(filePath);
+            var csvContent = await File.ReadAllTextAsync(file);
 
             // 5. 解析CSV数据（简单实现，可根据需要改用CSV解析库）
             var lines = csvContent.Split([Environment.NewLine], StringSplitOptions.RemoveEmptyEntries);
@@ -141,17 +140,17 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
             // 6. 验证并更新数据
             if (importedCoordinates.Count == 0)
             {
-                await ShowErrorAsync("导入失败", "文件中未找到有效的坐标数据");
+                await Dialog.ShowErrorDialogAsync("导入失败", "文件中未找到有效的坐标数据");
                 return;
             }
 
             Coordinates = importedCoordinates.ToArray();
             Map.DisplayPolygon(Coordinates);
-            await ShowOkAsync("导入成功", $"已导入 {importedCoordinates.Count} 个坐标点");
+            await Dialog.ShowOkDialogAsync("导入成功", $"已导入 {importedCoordinates.Count} 个坐标点");
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync("导入错误", $"发生错误: {ex.Message}");
+            await Dialog.ShowErrorDialogAsync("导入错误", $"发生错误: {ex.Message}");
         }
     }
 
@@ -165,6 +164,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
         {
             SelectionMessage = $"已选择区域（{value.Length}边形）";
         }
+
         Configs.Instance.Coordinates = Coordinates;
         CoordinatesChanged?.Invoke(this, EventArgs.Empty);
     }
@@ -173,10 +173,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     private async Task SelectOnMapAsync(CancellationToken cancellationToken)
     {
         IsSelecting = true;
-        await TryWithTabDisabledAsync(async () =>
-        {
-            Coordinates = await Map.DrawAsync(cancellationToken);
-        }, "地图选择错误");
+        await TryWithTabDisabledAsync(async () => { Coordinates = await Map.DrawAsync(cancellationToken); }, "地图选择错误");
         IsSelecting = false;
     }
 }

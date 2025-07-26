@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:cvt="using:FzLib.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
@@ -40,7 +41,7 @@
                                 Classes="Icon"
                                 Command="{Binding RemoveSourceCommand}"
                                 Content="{StaticResource Delete}"
-                                IsEnabled="{Binding SelectedDataSource, Converter={StaticResource NotNullConverter}}" />
+                                IsEnabled="{Binding SelectedDataSource, Converter={x:Static cvt:Converters.IsNotNull}}" />
                         </Grid>
                         <HeaderedContentControl
                             Classes="GroupBox"
@@ -245,7 +246,7 @@
             <Button
                 Command="{Binding InitializeDownloadingCommand}"
                 Content="初始化"
-                IsEnabled="{Binding IsDownloading, Converter={StaticResource InverseBoolConverter}}" />
+                IsEnabled="{Binding !IsDownloading}" />
             <Button
                 Command="{Binding DownloadTilesCommand}"
                 Content="开始下载"

@@ -1,10 +1,11 @@
 ﻿using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using FzLib.Avalonia.Messages;
+using FzLib.Avalonia.Dialogs;
 using MapTileDownloader.Models;
 using MapTileDownloader.Services;
 using MapTileDownloader.TileSources;
+using MapTileDownloader.UI.Views;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FzLib.Avalonia.Services;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -86,7 +88,8 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool skipExisted = true;
-    public LocalToolsViewModel()
+    public LocalToolsViewModel(IMapService mapService, IMainViewControl mainView, IDialogService dialog,IStorageProviderService storage) 
+        : base(mapService, mainView, dialog, storage)
     {
         MapAreaSelectorViewModel.CoordinatesChanged += MapAreaSelectorViewModelOnCoordinatesChanged;
     }
@@ -157,7 +160,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
         if (dirs.Length > 1)
         {
-            await ShowErrorAsync("转换失败", "请只选择一个目录进行转换");
+            await Dialog.ShowErrorDialogAsync("转换失败", "请只选择一个目录进行转换");
             return;
         }
         await ConvertAsync(async (s, p) =>
@@ -172,14 +175,14 @@ public partial class LocalToolsViewModel : ViewModelBase
         var dirs = Dir.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries);
         if (dirs.Length > 1)
         {
-            await ShowErrorAsync("转换失败", "请只选择一个目录进行转换");
+            await Dialog.ShowErrorDialogAsync("转换失败", "请只选择一个目录进行转换");
             return;
         }
         foreach (var dir in dirs)
         {
             if (!Directory.Exists(dir))
             {
-                await ShowErrorAsync("转换失败", $"目录{dir}不存在");
+                await Dialog.ShowErrorDialogAsync("转换失败", $"目录{dir}不存在");
                 return;
             }
         }
@@ -219,9 +222,7 @@ public partial class LocalToolsViewModel : ViewModelBase
                 }
             }
         };
-        var file = await SendMessage(new GetStorageProviderMessage()).StorageProvider.SaveFilePickerAsync(options);
-
-        return file?.TryGetLocalPath();
+        return await Storage.SaveFilePickerAndGetPathAsync(options);
     }
 
     private void MapAreaSelectorViewModelOnCoordinatesChanged(object sender, EventArgs e)
@@ -236,7 +237,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         (long p, long m) = s.EstimateTileMergeMemory(MergeMinX, MergeMaxX, MergeMinY, MergeMaxY, Size);
         if (m > 0.75 * MemoryInfoService.Instance.TotalPhysicalMemory)
         {
-            await ShowErrorAsync("内存不足",
+            await Dialog.ShowErrorDialogAsync("内存不足",
                 $"预计占用内存{1.0 * m / 1024 / 1024 / 1024:F2}GB，超过系统总内存的75%（共{1.0 * MemoryInfoService.Instance.TotalPhysicalMemory / 1024 / 1024 / 1024:F1}GB）");
             return;
         }
@@ -296,8 +297,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         {
             AllowMultiple = true
         };
-        var provider = SendMessage(new GetStorageProviderMessage()).StorageProvider;
-        var folders = await provider.OpenFolderPickerAsync(options);
+        var folders = await Storage.OpenFolderPickerAsync(options);
         if (folders == null)
         {
             return;
@@ -324,7 +324,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            await ShowErrorAsync("HTTP服务器出现错误", ex);
+            await Dialog.ShowErrorDialogAsync("HTTP服务器出现错误", ex);
         }
         finally
         {

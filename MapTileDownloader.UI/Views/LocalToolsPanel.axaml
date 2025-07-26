@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:cvt="clr-namespace:FzLib.Avalonia.Converters;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
@@ -20,7 +21,7 @@
                 <Grid RowDefinitions="Auto,8,Auto">
                     <c:StackFormItemGroup
                         DataContext="{Binding MbtilesInfo}"
-                        IsVisible="{Binding ., Converter={StaticResource NotNullConverter}}">
+                        IsVisible="{Binding ., Converter={x:Static cvt:Converters.IsNotNull}}">
                         <c:FormItem
                             Content="{Binding TileCount}"
                             Label="数量：" />
@@ -217,7 +218,7 @@
                     <HeaderedContentControl
                         Classes="GroupBox"
                         Header="文件型瓦片"
-                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}">
+                        IsEnabled="{Binding !IsConverting}">
                         <StackPanel
                             Orientation="Vertical"
                             Spacing="8">
@@ -244,7 +245,7 @@
                     <HeaderedContentControl
                         Classes="GroupBox"
                         Header="选项"
-                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}">
+                        IsEnabled="{Binding !IsConverting}">
                         <CheckBox
                             Content="跳过已存在的文件/数据库记录"
                             IsChecked="{Binding SkipExisted}" />
@@ -260,11 +261,11 @@
                     <Button
                         Command="{Binding ConvertToMbtilesCommand}"
                         Content="目录文件瓦片→Mbtiles数据库"
-                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}" />
+                        IsEnabled="{Binding !IsConverting}" />
                     <Button
                         Command="{Binding ConvertToFilesCommand}"
                         Content="Mbtiles数据库→目录文件瓦片"
-                        IsEnabled="{Binding IsConverting, Converter={StaticResource InverseBoolConverter}}" />
+                        IsEnabled="{Binding !IsConverting}" />
                     <Button
                         Command="{Binding CancelCommand}"
                         Content="取消"

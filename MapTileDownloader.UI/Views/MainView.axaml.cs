@@ -4,23 +4,61 @@ using Avalonia.Interactivity;
 using Avalonia.Threading;
 using CommunityToolkit.Mvvm.Messaging;
 using FzLib.Avalonia.Dialogs;
-using FzLib.Avalonia.Messages;
-using MapTileDownloader.UI.Messages;
 using MapTileDownloader.UI.ViewModels;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Linq;
 using System.Threading;
 
 namespace MapTileDownloader.UI.Views;
 
+public class MainViewControl : IMainViewControl
+{
+    public void SetLoadingVisible(bool isVisible)
+    {
+         App.Services.GetRequiredService<MainView>().SetLoadingVisible(isVisible);
+    }
+
+    public void SetTabSelectable(bool isEnabled)
+    {
+        App.Services.GetRequiredService<MainView>().SetTabSelectable(isEnabled);
+    }
+}
+
 public partial class MainView : UserControl
 {
     private CancellationTokenSource loadingToken = null;
 
-    public MainView()
+    public MainView(IDialogService dialog,MainViewModel vm)
     {
+        DataContext = vm;
         InitializeComponent();
-        RegisterMessages();
+        Dialog = dialog;
+    }
+
+    public IDialogService Dialog { get; }
+
+    public void SetLoadingVisible(bool isVisible)
+    {
+        (DataContext as MainViewModel).IsProgressRingVisible = isVisible;
+    }
+
+    public void SetTabSelectable(bool isEnabled)
+    {
+        if (isEnabled)
+        {
+            foreach (var ti in tab.Items.Cast<TabItem>())
+            {
+                ti.IsEnabled = true;
+            }
+        }
+        else
+        {
+            foreach (var ti in tab.Items.Cast<TabItem>())
+            {
+                ti.IsEnabled = ti == tab.SelectedItem;
+            }
+        }
     }
 
     protected override async void OnLoaded(RoutedEventArgs e)
@@ -32,59 +70,7 @@ public partial class MainView : UserControl
         }
         catch (Exception ex)
         {
-            await (DataContext as MainViewModel).ShowErrorAsync("初始化失败", ex);
+            await Dialog.ShowErrorDialogAsync("初始化失败", ex);
         }
-    }
-
-    private void RegisterMessages()
-    {
-        this.RegisterCommonDialogMessage();
-        this.RegisterDialogHostMessage();
-        this.RegisterGetClipboardMessage();
-        this.RegisterGetStorageProviderMessage();
-        WeakReferenceMessenger.Default.Register<GetMapServiceMessage>(this,
-            (o, m) => { m.MapService = map; });
-        WeakReferenceMessenger.Default.Register<TabEnableMessage>(this,
-            (o, m) =>
-            {
-                if (m.Enabled)
-                {
-                    foreach (var ti in tab.Items.Cast<TabItem>())
-                    {
-                        ti.IsEnabled = true;
-                    }
-                }
-                else
-                {
-                    foreach (var ti in tab.Items.Cast<TabItem>())
-                    {
-                        ti.IsEnabled = ti == tab.SelectedItem;
-                    }
-                }
-            });
-        WeakReferenceMessenger.Default.Register<LoadingMessage>(this, (o, m) =>
-        {
-            Dispatcher.UIThread.Invoke(() =>
-            {
-                if (m.IsVisible && o is Visual v)
-                {
-                    try
-                    {
-                        loadingToken ??= LoadingOverlay.ShowLoading(v);
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-                }
-                else
-                {
-                    if (loadingToken != null)
-                    {
-                        loadingToken.Cancel();
-                        loadingToken = null;
-                    }
-                }
-            });
-        });
     }
 }

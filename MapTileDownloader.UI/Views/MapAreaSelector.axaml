@@ -4,6 +4,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:cvt="clr-namespace:FzLib.Avalonia.Converters;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
@@ -37,7 +38,7 @@
                 Classes="Icon"
                 Command="{Binding ClearCommand}"
                 Content="{StaticResource ClearAllInk}"
-                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
+                IsEnabled="{Binding Coordinates, Converter={x:Static cvt:Converters.IsNotNull}}"
                 IsVisible="{Binding !IsSelecting}"
                 ToolTip.Tip="清空" />
             <Button
@@ -53,7 +54,7 @@
                 Classes="Icon"
                 Command="{Binding ExportCoordinatesCommand}"
                 Content="{StaticResource Upload}"
-                IsEnabled="{Binding Coordinates, Converter={StaticResource NotNullConverter}}"
+                IsEnabled="{Binding Coordinates, Converter={x:Static cvt:Converters.IsNotNull}}"
                 ToolTip.Tip="导出" />
         </Grid>
         <TextBlock

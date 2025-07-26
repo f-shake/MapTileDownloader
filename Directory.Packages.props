@@ -10,9 +10,9 @@
     <PackageVersion Include="Avalonia.Fonts.Inter" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Avalonia.Controls.DataGrid" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="BinToss.GroupBox.Avalonia" Version="1.0.0" />
-    <PackageVersion Include="Mapsui.Avalonia" Version="5.0.0-beta.18" />
+    <PackageVersion Include="Mapsui.Avalonia" Version="5.0.0-beta.19" />
     <PackageVersion Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-    <PackageVersion Include="FzLib.Avalonia" Version="2.4.0" />
+    <PackageVersion Include="FzLib.Avalonia" Version="3.0.0-beta.1" />
     <PackageVersion Include="HotAvalonia" Version="3.0.0" PrivateAssets="All" Publish="True" />
     <PackageVersion Include="Avalonia.Desktop" Version="$(AvaloniaVersion)" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="9.0.6" />
@@ -26,5 +26,7 @@
     <PackageVersion Include="SixLabors.ImageSharp.Drawing" Version="2.1.6" />
     <PackageVersion Include="System.Drawing.Common" Version="9.0.7" />
     <PackageVersion Include="Xaml.Behaviors.Avalonia" Version="11.3.2" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="9.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.Hosting" Version="9.0.7" />
   </ItemGroup>
 </Project>
