@@ -75,7 +75,7 @@ public sealed class MemoryInfoService : IDisposable
     private static ulong GetWindowsTotalMemory()
     {
         var memStatus = new MEMORYSTATUSEX();
-        memStatus.dwLength = (uint)Marshal.SizeOf(typeof(MEMORYSTATUSEX));
+        memStatus.dwLength = (uint)Marshal.SizeOf<MEMORYSTATUSEX>();
 
         if (GlobalMemoryStatusEx(ref memStatus))
         {

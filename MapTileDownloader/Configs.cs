@@ -125,7 +125,7 @@ namespace MapTileDownloader
                 ConvertPattern = "{z}/{x}/{y}.{ext}",
                 MaxDownloadConcurrency = 10,
                 MinLevel = 0,
-                MaxLevel = 20,
+                MaxLevel = 19,
                 ServerPort = 8888,
                 MergeImageQuality = 90,
                 ServerLocalHostOnly = true,
