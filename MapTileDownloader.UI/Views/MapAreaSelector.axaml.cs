@@ -6,9 +6,8 @@ namespace MapTileDownloader.UI.Views;
 
 public partial class MapAreaSelector : UserControl
 {
-    public MapAreaSelector(MapAreaSelectorViewModel vm)
+    public MapAreaSelector()
     {
-        DataContext = vm;
         InitializeComponent();
     }
 }

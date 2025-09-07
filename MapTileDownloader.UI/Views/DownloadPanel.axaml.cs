@@ -2,11 +2,11 @@
 using MapTileDownloader.UI.ViewModels;
 
 namespace MapTileDownloader.UI.Views;
+
 public partial class DownloadPanel : UserControl
 {
-    public DownloadPanel(DownloadViewModel vm)
+    public DownloadPanel()
     {
-        DataContext = vm;
         InitializeComponent();
     }
 }

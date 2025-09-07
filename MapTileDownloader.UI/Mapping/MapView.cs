@@ -4,7 +4,7 @@ using Mapsui;
 using Mapsui.Styles;
 using Mapsui.UI.Avalonia;
 using MapTileDownloader.Services;
-using MapTileDownloader.UI.Services;
+
 using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader.UI.Mapping

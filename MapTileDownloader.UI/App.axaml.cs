@@ -12,7 +12,9 @@ using MapTileDownloader.UI.Views;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System;
-using MapTileDownloader.UI.Services;
+using FzLib.Avalonia.DependencyInjection;
+using ViewModelInjection = FzLib.Avalonia.DependencyInjection.ViewModelInjection;
+
 
 namespace MapTileDownloader.UI;
 
@@ -28,6 +30,7 @@ public partial class App : Application
 
         builder.Services.AddStorageProviderService();
         builder.Services.AddClipboardService();
+        builder.Services.AddProgressOverlayService();
 
         builder.Services.AddSingleton<MainViewModel>();
         builder.Services.AddSingleton<DownloadViewModel>();
@@ -35,20 +38,12 @@ public partial class App : Application
         builder.Services.AddSingleton<MapAreaSelectorViewModel>();
         builder.Services.AddSingleton<MbtilesPickerViewModel>();
 
-        builder.Services.AddTransient<MainWindow>();
-        builder.Services.AddSingleton<MainView>();
-        builder.Services.AddTransient<LocalToolsPanel>();
-        builder.Services.AddTransient<DownloadPanel>();
-        builder.Services.AddTransient<MapAreaSelector>();
-        builder.Services.AddTransient<MbtilesPicker>();
-        builder.Services.AddSingleton<MapView>();
-
-        builder.Services.AddSingleton<IMapService>(s => s.GetRequiredService<MapView>());
-        builder.Services.AddSingleton<IMainViewService, MainViewService>();
+        builder.Services.AddSingleton<IMapService, MapService>();
 
 
         var host = builder.Build();
         Services = host.Services;
+        ViewModelInjection.Register(Services);
         host.Start();
     }
 
@@ -66,7 +61,7 @@ public partial class App : Application
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = Services.GetRequiredService<MainWindow>();
+            desktop.MainWindow = new MainWindow();
             desktop.Exit += (s, e) => { Configs.Instance.Save(); };
         }
         else

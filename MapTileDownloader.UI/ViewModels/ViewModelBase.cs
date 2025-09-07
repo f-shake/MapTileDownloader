@@ -3,71 +3,53 @@ using CommunityToolkit.Mvvm.Messaging;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using FzLib.Avalonia.Controls;
 using MapTileDownloader.Models;
 using MapTileDownloader.Services;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
-using MapTileDownloader.UI.Services;
+using MapTileDownloader.UI.Mapping;
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
-public abstract partial class ViewModelBase(IMapService mapService, 
-    IMainViewService mainView,
+public abstract partial class ViewModelBase(
+    IMapService mapService,
+    IProgressOverlayService progressOverlay,
     IDialogService dialog,
-    IStorageProviderService storage) 
+    IStorageProviderService storage)
     : ObservableObject
 {
     [ObservableProperty]
     private bool isInitialized;
 
-    public IDialogService Dialog { get; } = dialog;
-    
-    public IStorageProviderService Storage { get; } = storage;
+    protected IDialogService Dialog { get; } = dialog;
 
-    public IMainViewService MainView { get; } = mainView;
+    protected IProgressOverlayService ProgressOverlay { get; } = progressOverlay;
 
-    public IMapService Map { get; } = mapService;
+    protected IStorageProviderService Storage { get; } = storage;
 
-    public virtual ValueTask InitializeAsync()
+    protected IMapService Map { get; } = mapService;
+
+    public virtual Task InitializeAsync()
     {
         Debug.Assert(IsInitialized == false);
         IsInitialized = true;
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
     }
 
-    public TMessage SendMessage<TMessage>(TMessage message) where TMessage : class
-    {
-        return WeakReferenceMessenger.Default.Send(message);
-    }
+    protected static event EventHandler BeginOperation;
+    protected static event EventHandler EndOperation;
 
-    public async Task TryWithLoadingAsync(Func<Task> func, string errorTitle = "错误")
+    protected async Task TryDoingAsync(Func<Task> func, string errorTitle = "错误")
     {
-        MainView.SetLoadingVisible(true);
-        try
-        {
-            await func();
-        }
-        catch (Exception ex)
-        {
-            await Dialog.ShowErrorDialogAsync(errorTitle, ex);
-        }
-        finally
-        {
-            MainView.SetLoadingVisible(false);
-        }
-    }
-
-    public async Task TryWithTabDisabledAsync(Func<Task> func, string errorTitle = "错误")
-    {
-        MainView.SetTabSelectable(false);
+        BeginOperation?.Invoke(this, EventArgs.Empty);
         try
         {
             await func();
         }
         catch (OperationCanceledException)
         {
-
         }
         catch (Exception ex)
         {
@@ -75,7 +57,7 @@ public abstract partial class ViewModelBase(IMapService mapService,
         }
         finally
         {
-            MainView.SetTabSelectable(true);
+            EndOperation?.Invoke(this, EventArgs.Empty);
         }
     }
 }

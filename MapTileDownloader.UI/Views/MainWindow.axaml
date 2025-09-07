@@ -4,7 +4,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="using:FzLib.Avalonia.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:di="using:FzLib.Avalonia.DependencyInjection"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:v="using:MapTileDownloader.UI.Views"
     xmlns:views="clr-namespace:MapTileDownloader.UI.Views"
     xmlns:vm="using:MapTileDownloader.UI.ViewModels"
     Title="地图瓦片下载器"
@@ -14,5 +16,5 @@
     WindowStartupLocation="CenterScreen"
     WindowState="Maximized"
     mc:Ignorable="d">
-    <views:DependencyInjection Type="views:MainView" />
+    <views:MainView di:ViewModelInjection.ViewModelType="vm:MainViewModel" />
 </c:ExtendedWindow>

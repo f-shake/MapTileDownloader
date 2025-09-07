@@ -15,9 +15,10 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
+using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
-using MapTileDownloader.UI.Services;
+
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -33,9 +34,9 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     [ObservableProperty]
     private string selectionMessage;
 
-    public MapAreaSelectorViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,
+    public MapAreaSelectorViewModel(IMapService mapService, IProgressOverlayService progressOverlay, IDialogService dialog,
         IStorageProviderService storage)
-        : base(mapService, mainView, dialog, storage)
+        : base(mapService, progressOverlay, dialog, storage)
     {
         CoordinatesChanged += (s, e) => Coordinates = Configs.Instance.Coordinates;
         OnCoordinatesChanged(Configs.Instance.Coordinates);
@@ -174,7 +175,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     private async Task SelectOnMapAsync(CancellationToken cancellationToken)
     {
         IsSelecting = true;
-        await TryWithTabDisabledAsync(async () => { Coordinates = await Map.DrawAsync(cancellationToken); }, "地图选择错误");
+        await TryDoingAsync(async () => { Coordinates = await Map.DrawAsync(cancellationToken); }, "地图选择错误");
         IsSelecting = false;
     }
 }

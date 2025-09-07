@@ -35,13 +35,15 @@ namespace MapTileDownloader.Services
             int minY,
             int maxY,
             int tileSize = 256,
-            int quality = 80)
+            int quality = 80,
+            CancellationToken ct = default)
         {
             quality = Math.Clamp(quality, 10, 100);
             if (tileSize is not (256 or 512))
             {
                 throw new ArgumentException("瓦片尺寸应当为256或512像素", nameof(tileSize));
             }
+
             await using var mbtilesService = new MbtilesService(MbtilesPath, true);
             await mbtilesService.InitializeAsync();
 
@@ -54,32 +56,34 @@ namespace MapTileDownloader.Services
             {
                 for (int y = minY; y <= maxY; y++)
                 {
+                    ct.ThrowIfCancellationRequested();
                     int offsetX = (x - minX) * tileSize;
                     int offsetY = useTms
-                         ? (maxY - y) * tileSize  // TMS 是 Y 轴向上，反着画
-                         : (y - minY) * tileSize; // OSM 是 Y 轴向下，正着画
+                        ? (maxY - y) * tileSize // TMS 是 Y 轴向上，反着画
+                        : (y - minY) * tileSize; // OSM 是 Y 轴向下，正着画
 
                     await AddTileToImageAsync(mbtilesService, resultImage, z, x, y, offsetX, offsetY, tileSize);
                 }
             }
+
             if (outputPath.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-               outputPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
+                outputPath.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase))
             {
                 await resultImage.SaveAsync(outputPath, new JpegEncoder
                 {
                     Quality = quality
-                });
+                }, cancellationToken: ct);
             }
             else if (outputPath.EndsWith(".webp", StringComparison.OrdinalIgnoreCase))
             {
                 await resultImage.SaveAsync(outputPath, new WebpEncoder
                 {
                     Quality = quality
-                });
+                }, cancellationToken: ct);
             }
             else
             {
-                await resultImage.SaveAsync(outputPath);
+                await resultImage.SaveAsync(outputPath, cancellationToken: ct);
             }
 
             await WriteWorldFileAsync(outputPath, useTms, z, tileSize, minX, minY, maxY);
@@ -113,19 +117,20 @@ namespace MapTileDownloader.Services
             string basePath = Path.ChangeExtension(imagePath, null);
             string prjPath = basePath + ".prj";
 
-            const string epsg3857Wkt = """PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs"],AUTHORITY["EPSG","3857"]] """;
+            const string epsg3857Wkt =
+                """PROJCS["WGS 84 / Pseudo-Mercator",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.0174532925199433,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Mercator_1SP"],PARAMETER["central_meridian",0],PARAMETER["scale_factor",1],PARAMETER["false_easting",0],PARAMETER["false_northing",0],UNIT["metre",1,AUTHORITY["EPSG","9001"]],AXIS["Easting",EAST],AXIS["Northing",NORTH],EXTENSION["PROJ4","+proj=merc +a=6378137 +b=6378137 +lat_ts=0 +lon_0=0 +x_0=0 +y_0=0 +k=1 +units=m +nadgrids=@null +wktext +no_defs"],AUTHORITY["EPSG","3857"]] """;
 
             await File.WriteAllTextAsync(prjPath, epsg3857Wkt.Trim());
         }
 
         private async Task WriteWorldFileAsync(
-              string imagePath,
-              bool useTms,
-              int z,
-              int tileSize,
-              int minX,
-              int minY,
-              int maxY)
+            string imagePath,
+            bool useTms,
+            int z,
+            int tileSize,
+            int minX,
+            int minY,
+            int maxY)
         {
             var schema = new GlobalSphericalMercator(useTms ? YAxis.TMS : YAxis.OSM);
             double resolution = schema.Resolutions[z].UnitsPerPixel;
@@ -151,9 +156,9 @@ namespace MapTileDownloader.Services
 
             await using var writer = new StreamWriter(worldFilePath);
             await writer.WriteLineAsync($"{pixelSizeX:0.############}"); // A
-            await writer.WriteLineAsync("0");                            // D
-            await writer.WriteLineAsync("0");                            // B
-            await writer.WriteLineAsync($"{-pixelSizeY:0.############}");// E
+            await writer.WriteLineAsync("0"); // D
+            await writer.WriteLineAsync("0"); // B
+            await writer.WriteLineAsync($"{-pixelSizeY:0.############}"); // E
             await writer.WriteLineAsync($"{minLon + pixelSizeX / 2:0.############}"); // C
             await writer.WriteLineAsync($"{topLat - pixelSizeY / 2:0.############}"); // F
         }

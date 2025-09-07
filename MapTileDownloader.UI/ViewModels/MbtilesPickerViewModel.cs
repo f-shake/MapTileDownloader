@@ -14,10 +14,11 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
+using FzLib.Avalonia.Controls;
 using MapTileDownloader.UI.Views;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
-using MapTileDownloader.UI.Services;
+
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -29,9 +30,9 @@ public partial class MbtilesPickerViewModel : ViewModelBase
     [ObservableProperty]
     private bool useTms = Configs.Instance.MbtilesUseTms;
 
-    public MbtilesPickerViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,
+    public MbtilesPickerViewModel(IMapService mapService, IProgressOverlayService progressOverlay, IDialogService dialog,
         IStorageProviderService storage)
-        : base(mapService, mainView, dialog, storage)
+        : base(mapService, progressOverlay, dialog, storage)
     {
         File = Configs.Instance.MbtilesFile ?? Path.Combine(AppContext.BaseDirectory, "tiles.mbtiles");
     }

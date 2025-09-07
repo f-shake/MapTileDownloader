@@ -5,9 +5,8 @@ namespace MapTileDownloader.UI.Views;
 
 public partial class LocalToolsPanel : UserControl
 {
-    public LocalToolsPanel(LocalToolsViewModel vm)
+    public LocalToolsPanel()
     {
-        DataContext = vm;
         InitializeComponent();
     }
 }

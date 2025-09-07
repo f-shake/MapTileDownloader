@@ -16,10 +16,9 @@ using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
 using BruTile;
+using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
-using MapTileDownloader.UI.Services;
-using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -72,15 +71,21 @@ public partial class DownloadViewModel : ViewModelBase
     [ObservableProperty]
     private int totalCount;
 
-    public DownloadViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,
+    public DownloadViewModel(IMapService mapService, IDialogService dialog, IProgressOverlayService progressOverlay,
         IStorageProviderService storage)
-        : base(mapService, mainView, dialog, storage)
+        : base(mapService, progressOverlay, dialog, storage)
     {
         Sources = new ObservableCollection<TileDataSource>(Configs.Instance.TileSources);
+    }
+
+    public override Task InitializeAsync()
+    {
         if (Configs.Instance.SelectedTileSourcesIndex >= 0 && Configs.Instance.SelectedTileSourcesIndex < Sources.Count)
         {
             SelectedDataSource = Sources[Configs.Instance.SelectedTileSourcesIndex];
         }
+
+        return base.InitializeAsync();
     }
 
     [RelayCommand]
@@ -103,7 +108,7 @@ public partial class DownloadViewModel : ViewModelBase
         IsDownloading = true;
         await using var downloader =
             new TileDownloadService(SelectedDataSource, Configs.Instance.MbtilesFile, MaxConcurrency);
-        await TryWithTabDisabledAsync(async () =>
+        await TryDoingAsync(async () =>
         {
             try
             {
@@ -161,7 +166,7 @@ public partial class DownloadViewModel : ViewModelBase
 
         var tileHelper = new TileIntersectionService(false);
         bool succeed = false;
-        await TryWithLoadingAsync((Func<Task>)(() => Task.Run((Func<Task>)(async () =>
+        await ProgressOverlay.WithOverlayAsync(async () =>
         {
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
             var count = tileHelper.EstimateIntersectingTileCount(Configs.Instance.Coordinates, MaxLevel);
@@ -198,7 +203,7 @@ public partial class DownloadViewModel : ViewModelBase
             SkipCount = Levels.Select(p => p.DownloadedCount).Sum();
             await base.Map.LoadTileGridsAsync(SelectedDataSource, (IEnumerable<IDownloadingLevel>)Levels);
             succeed = true;
-        }))));
+        }, async ex => { await Dialog.ShowErrorDialogAsync("初始化失败", ex); });
 
         if (succeed)
         {

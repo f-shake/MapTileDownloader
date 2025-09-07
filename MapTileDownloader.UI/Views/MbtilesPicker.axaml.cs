@@ -5,9 +5,8 @@ namespace MapTileDownloader.UI.Views;
 
 public partial class MbtilesPicker : UserControl
 {
-    public MbtilesPicker(MbtilesPickerViewModel vm)
+    public MbtilesPicker()
     {
-        DataContext = vm;
         InitializeComponent();
     }
 }

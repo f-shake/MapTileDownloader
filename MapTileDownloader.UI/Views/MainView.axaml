@@ -4,6 +4,7 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:di="using:FzLib.Avalonia.DependencyInjection"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:v="using:MapTileDownloader.UI.Views"
@@ -12,7 +13,11 @@
     d:DesignWidth="800"
     x:DataType="vm:MainViewModel"
     mc:Ignorable="d">
-
+    <Interaction.Behaviors>
+        <RoutedEventTriggerBehavior RoutedEvent="{x:Static Control.LoadedEvent}">
+            <InvokeCommandAction Command="{Binding InitializeCommand}" />
+        </RoutedEventTriggerBehavior>
+    </Interaction.Behaviors>
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition
@@ -22,7 +27,7 @@
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
         <ContentControl Grid.Column="2">
-            <v:DependencyInjection Type="map:MapView" />
+            <map:MapView x:Name="map" />
         </ContentControl>
         <Grid RowDefinitions="Auto,8,*">
 
@@ -31,13 +36,15 @@
                 Spacing="8">
                 <HeaderedContentControl
                     Classes="GroupBox"
-                    Header="Mbtiles数据库位置">
-                    <v:DependencyInjection Type="v:MbtilesPicker" />
+                    Header="Mbtiles数据库位置"
+                    IsEnabled="{Binding CanPickMbtiles}">
+                    <v:MbtilesPicker di:ViewModelInjection.ViewModelType="vm:MbtilesPickerViewModel" />
                 </HeaderedContentControl>
                 <HeaderedContentControl
                     Classes="GroupBox"
-                    Header="感兴趣区域">
-                    <v:DependencyInjection Type="v:MapAreaSelector" />
+                    Header="感兴趣区域"
+                    IsEnabled="{Binding CanSelectMapArea}">
+                    <v:MapAreaSelector di:ViewModelInjection.ViewModelType="vm:MapAreaSelectorViewModel" />
                 </HeaderedContentControl>
             </StackPanel>
             <TabControl
@@ -46,11 +53,15 @@
                 Padding="0"
                 SelectedIndex="{Binding SelectedTabIndex}"
                 TabStripPlacement="Top">
-                <TabItem Header="在线地图">
-                    <v:DependencyInjection Type="v:DownloadPanel" />
+                <TabItem
+                    Header="在线地图"
+                    IsEnabled="{Binding IsOnlineTabEnabled}">
+                    <v:DownloadPanel di:ViewModelInjection.ViewModelType="vm:DownloadViewModel" />
                 </TabItem>
-                <TabItem Header="本地数据">
-                    <v:DependencyInjection Type="v:LocalToolsPanel" />
+                <TabItem
+                    Header="本地数据"
+                    IsEnabled="{Binding IsLocalTabEnabled}">
+                    <v:LocalToolsPanel di:ViewModelInjection.ViewModelType="vm:LocalToolsViewModel" />
                 </TabItem>
             </TabControl>
         </Grid>
@@ -60,8 +71,9 @@
             Width="8"
             Background="Transparent" />
 
-        <c:ProgressRingOverlay
+        <c:ProgressRingBoxOverlay
+            x:Name="ring"
             Grid.ColumnSpan="3"
-            IsActive="{Binding IsProgressRingVisible}" />
+            IsActive="False" />
     </Grid>
 </UserControl>

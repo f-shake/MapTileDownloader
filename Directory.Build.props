@@ -1,9 +1,46 @@
 <Project>
     <PropertyGroup>
         <Nullable>disable</Nullable>
-        <FzLibVersion>3.0.8</FzLibVersion>
-        <AvaloniaVersion>11.3.2</AvaloniaVersion>
         <StripSymbols>false</StripSymbols>
        <OptimizationPreference>Size</OptimizationPreference>
+
+
+        <!--Avalonia库版本-->
+        <AvaloniaVersion>11.3.5</AvaloniaVersion>
+        
+        <!--FzLib库版本-->
+        <FzLibVersion>3.0.13</FzLibVersion>
+
+        <!--使用本地FzLib库。非作者使用时，应改为F-->
+        <FzLocal>T</FzLocal>
+
+        <!--在Windows上开发，可以设置输出到临时文件夹-->
+        <OutputToTempDir>F</OutputToTempDir>
     </PropertyGroup>
+
+    <PropertyGroup Condition="'$(OutputToTempDir)' == 'T'" >
+        <OutputPath>$(Temp)\$(SolutionName)\$(Configuration)</OutputPath>
+        <BaseIntermediateOutputPath>$(Temp)\$(SolutionName)\obj\$(Configuration)</BaseIntermediateOutputPath>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'$(OutputToTempDir)' == 'T'" >
+        <AvaloniaXaml Remove="obj\**" />
+        <Compile Remove="obj\**" />
+        <EmbeddedResource Remove="obj\**" />
+        <None Remove="obj\**" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(Configuration)' == 'Release' or '$(FzLocal)' == 'F'" >
+        <PackageReference Include="FzLib" />
+        <PackageReference Include="FzLib.Avalonia" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(Configuration)' == 'Debug' and '$(FzLocal)' == 'T'">
+        <Reference Include="FzLib">
+            <HintPath>..\..\FzLib\Publish\libs\FzLib.dll</HintPath>
+        </Reference>
+        <Reference Include="FzLib.Avalonia">
+            <HintPath>..\..\FzLib\Publish\libs\FzLib.Avalonia.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 </Project>

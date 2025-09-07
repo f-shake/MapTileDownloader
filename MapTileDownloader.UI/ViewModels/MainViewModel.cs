@@ -1,45 +1,82 @@
 ﻿using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
 using Mapsui;
 using MapTileDownloader.Enums;
 using MapTileDownloader.Services;
-using MapTileDownloader.UI.Services;
+using MapTileDownloader.UI.Mapping;
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
 
-public partial class MainViewModel(
-    IMapService mapService,
-    IMainViewService mainView,
-    IDialogService dialog,
-    IStorageProviderService storage,
-    DownloadViewModel downloadViewModel,
-    LocalToolsViewModel localToolsPanel)
-    : ViewModelBase(mapService, mainView, dialog, storage)
+public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty]
     private int selectedTabIndex;
 
     [ObservableProperty]
-    private bool isProgressRingVisible = false;
+    private bool isOnlineTabEnabled = true;
 
-    public DownloadViewModel DownloadViewModel { get; } = downloadViewModel;
+    [ObservableProperty]
+    private bool isLocalTabEnabled = true;
 
-    public LocalToolsViewModel LocalToolsViewModel { get; } = localToolsPanel;
+    [ObservableProperty]
+    private bool canPickMbtiles = true;
 
-    public override async ValueTask InitializeAsync()
+    [ObservableProperty]
+    private bool canSelectMapArea = true;
+
+    /// <inheritdoc/>
+    public MainViewModel(IMapService mapService,
+        IDialogService dialog,
+        IStorageProviderService storage,
+        IProgressOverlayService progressOverlay,
+        DownloadViewModel downloadViewModel,
+        LocalToolsViewModel localToolsPanel) : base(mapService, progressOverlay, dialog, storage)
     {
-        await DownloadViewModel.InitializeAsync();
-        await LocalToolsViewModel.InitializeAsync();
-        Map.LoadTileMaps(DownloadViewModel.SelectedDataSource);
-        if (Configs.Instance.Coordinates != null && Configs.Instance.Coordinates.Length >= 3)
-        {
-            Map.DisplayPolygon(Configs.Instance.Coordinates);
-        }
+        DownloadViewModel = downloadViewModel;
+        LocalToolsViewModel = localToolsPanel;
 
-        await base.InitializeAsync();
+        BeginOperation += (s, e) =>
+        {
+
+            IsOnlineTabEnabled = SelectedTabIndex == 0;
+            IsLocalTabEnabled = SelectedTabIndex == 1;
+            CanPickMbtiles = false;
+            CanSelectMapArea = false;
+        };
+
+        EndOperation += (s, e) =>
+        {
+            IsOnlineTabEnabled = true;
+            IsLocalTabEnabled = true;
+            CanPickMbtiles = true;
+            CanSelectMapArea = true;
+        };
+    }
+    public DownloadViewModel DownloadViewModel { get; }
+
+    public LocalToolsViewModel LocalToolsViewModel { get; }
+
+    [RelayCommand]
+    public override async Task InitializeAsync()
+    {
+        await ProgressOverlay.WithOverlayAsync(async () =>
+        {
+            await Task.Delay(1000);
+            await DownloadViewModel.InitializeAsync();
+            await LocalToolsViewModel.InitializeAsync();
+            Map.LoadTileMaps(DownloadViewModel.SelectedDataSource);
+            if (Configs.Instance.Coordinates != null && Configs.Instance.Coordinates.Length >= 3)
+            {
+                Map.DisplayPolygon(Configs.Instance.Coordinates);
+            }
+
+            await base.InitializeAsync();
+        }, initialMessage: "正在初始化");
     }
 
     async partial void OnSelectedTabIndexChanged(int value)

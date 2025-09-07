@@ -15,8 +15,10 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Services;
-using MapTileDownloader.UI.Services;
+using MapTileDownloader.UI.Mapping;
+
 
 namespace MapTileDownloader.UI.ViewModels;
 
@@ -89,22 +91,21 @@ public partial class LocalToolsViewModel : ViewModelBase
 
     [ObservableProperty]
     private bool skipExisted = true;
-    public LocalToolsViewModel(IMapService mapService, IMainViewService mainView, IDialogService dialog,IStorageProviderService storage) 
-        : base(mapService, mainView, dialog, storage)
+
+    public LocalToolsViewModel(IMapService mapService, IProgressOverlayService progressOverlay, IDialogService dialog,
+        IStorageProviderService storage)
+        : base(mapService, progressOverlay, dialog, storage)
     {
         MapAreaSelectorViewModel.CoordinatesChanged += MapAreaSelectorViewModelOnCoordinatesChanged;
     }
 
-    public override async ValueTask InitializeAsync()
+    public override async Task InitializeAsync()
     {
         UpdateMergeRange();
         UpdateMergeMessage();
         await UpdateLocalTileAsync();
         await base.InitializeAsync();
-        MbtilesPickerViewModel.FileChanged += async (s, e) =>
-        {
-            await UpdateLocalTileAsync();
-        };
+        MbtilesPickerViewModel.FileChanged += async (s, e) => { await UpdateLocalTileAsync(); };
     }
 
     public async Task UpdateLocalTileAsync()
@@ -140,9 +141,8 @@ public partial class LocalToolsViewModel : ViewModelBase
     {
         IsConvertingProgressIndeterminate = true;
         IsConverting = true;
-        await TryWithTabDisabledAsync(async () =>
+        await TryDoingAsync(async () =>
         {
-
             var convertService = new TileConvertService();
             var p = new Progress<double>(v =>
             {
@@ -164,9 +164,11 @@ public partial class LocalToolsViewModel : ViewModelBase
             await Dialog.ShowErrorDialogAsync("转换失败", "请只选择一个目录进行转换");
             return;
         }
+
         await ConvertAsync(async (s, p) =>
         {
-            await s.ConvertToFilesAsync(Configs.Instance.MbtilesFile, dirs[0], Pattern, SkipExisted, p, cancellationToken);
+            await s.ConvertToFilesAsync(Configs.Instance.MbtilesFile, dirs[0], Pattern, SkipExisted, p,
+                cancellationToken);
         });
     }
 
@@ -179,6 +181,7 @@ public partial class LocalToolsViewModel : ViewModelBase
             await Dialog.ShowErrorDialogAsync("转换失败", "请只选择一个目录进行转换");
             return;
         }
+
         foreach (var dir in dirs)
         {
             if (!Directory.Exists(dir))
@@ -187,9 +190,11 @@ public partial class LocalToolsViewModel : ViewModelBase
                 return;
             }
         }
+
         await ConvertAsync(async (s, p) =>
         {
-            await s.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p, cancellationToken);
+            await s.ConvertToMbtilesAsync(Configs.Instance.MbtilesFile, dirs, Pattern, SkipExisted, p,
+                cancellationToken);
         });
     }
 
@@ -249,11 +254,20 @@ public partial class LocalToolsViewModel : ViewModelBase
             return;
         }
 
-        await TryWithLoadingAsync(
-            () => Task.Run(async () =>
+        await ProgressOverlay.WithOverlayAsync(ct =>
             {
-                await s.MergeTilesAsync(filePath, Configs.Instance.MbtilesUseTms, Level, MergeMinX, MergeMaxX, MergeMinY, MergeMaxY, Size, ImageQuality);
-            }), "拼接失败");
+                return Task.Run(async () =>
+                {
+                    await s.MergeTilesAsync(filePath, Configs.Instance.MbtilesUseTms, Level, MergeMinX, MergeMaxX,
+                        MergeMinY, MergeMaxY, Size, ImageQuality, ct);
+                }, ct);
+            },
+            () =>
+            {
+                ProgressOverlay.SetVisible(false);
+                return Task.CompletedTask;
+            },
+            async ex => { await Dialog.ShowErrorDialogAsync("拼接失败", ex); });
     }
 
     partial void OnDirChanged(string value)
@@ -376,6 +390,7 @@ public partial class LocalToolsViewModel : ViewModelBase
             MbtilesInfo = null;
         }
     }
+
     private void UpdateMergeMessage()
     {
         var tileServer = new TileMergeService(Configs.Instance.MbtilesFile);
