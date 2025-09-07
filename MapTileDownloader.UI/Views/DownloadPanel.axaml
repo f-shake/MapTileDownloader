@@ -149,6 +149,11 @@
             <StackPanel
                 Orientation="Vertical"
                 Spacing="8">
+                <StackPanel.Resources>
+                    <cvt:EqualToBoolConverter
+                        x:Key="NotEqualConverter"
+                        InverseResult="True" />
+                </StackPanel.Resources>
                 <ListBox
                     MaxHeight="200"
                     ItemsSource="{Binding Levels}"
@@ -176,20 +181,25 @@
                 </ListBox>
                 <ProgressBar
                     Height="24"
+                    IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}"
                     Maximum="{Binding TotalCount}"
                     Minimum="0"
                     ProgressTextFormat="{}{1:0}%"
                     ShowProgressText="True"
                     Value="{Binding DownloadedCount}" />
 
-                <TextBlock HorizontalAlignment="Center">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}">
                     <Run Text="共" />
                     <Run Text="{Binding TotalCount}" />
                     <Run Text="个瓦片，已处理" />
                     <Run Text="{Binding DownloadedCount}" />
                     <Run Text="个" />
                 </TextBlock>
-                <Grid ColumnDefinitions="*,8,*,8,*">
+                <Grid
+                    ColumnDefinitions="*,8,*,8,*"
+                    IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}">
                     <TextBlock Text="{Binding SkipCount, StringFormat={}跳过：{0}}" />
                     <TextBlock
                         Grid.Column="2"
