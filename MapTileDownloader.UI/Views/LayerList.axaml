@@ -24,15 +24,34 @@
         Background="{DynamicResource Background1}"
         BorderThickness="0"
         CornerRadius="8">
+        <Border.Resources>
+            <Thickness x:Key="ExpanderHeaderBorderThickness">0</Thickness>
+        </Border.Resources>
+        <Border.Styles>
+            <Style Selector="Expander">
+                <Style Selector="^ /template/ ToggleButton#ExpanderHeader">
+                    <Setter Property="Background" Value="Transparent" />
+
+                    <Style Selector="^:pointerover /template/ Border#ToggleButtonBackground">
+                        <Setter Property="Background" Value="Transparent" />
+                    </Style>
+                </Style>
+            </Style>
+        </Border.Styles>
         <Expander
             Margin="0"
             Background="Transparent"
-            BorderThickness="0"
             Header="图层列表"
             IsExpanded="True">
             <ListBox
                 Width="200"
                 ItemsSource="{Binding Layers}">
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="Padding" Value="4,0" />
+                        <Setter Property="CornerRadius" Value="4" />
+                    </Style>
+                </ListBox.Styles>
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <CheckBox

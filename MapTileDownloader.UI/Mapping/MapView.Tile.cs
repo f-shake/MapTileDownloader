@@ -23,7 +23,7 @@ public partial class MapView
     public void ClearTileGrids()
     {
         featuresPerLevel = null;
-        overlayTileGridLayer.Features = [];
+        downloadingTileGridLayer.Features = [];
     }
 
     public void DisplayTileGrids(int level)
@@ -38,9 +38,9 @@ public partial class MapView
             throw new ArgumentException($"已加载的瓦片中不包含级别{level}", nameof(level));
         }
 
-        overlayTileGridLayer.Features = features;
+        downloadingTileGridLayer.Features = features;
 
-        overlayTileGridLayer.Layer.MaxVisible = 5 * GetDisplayThreshold(level);
+        downloadingTileGridLayer.Layer.MaxVisible = 5 * GetDisplayThreshold(level);
         Refresh();
     }
 

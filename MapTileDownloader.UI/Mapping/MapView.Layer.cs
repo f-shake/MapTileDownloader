@@ -16,9 +16,11 @@ using Brush = Mapsui.Styles.Brush;
 using Color = Mapsui.Styles.Color;
 using Pen = Mapsui.Styles.Pen;
 using BruTile.Wms;
+using Mapsui.Nts;
 using MapTileDownloader.Services;
 using MapTileDownloader.TileSources;
 using MapTileDownloader.UI.Enums;
+using NetTopologySuite.Geometries;
 
 namespace MapTileDownloader.UI.Mapping;
 
@@ -27,7 +29,7 @@ public partial class MapView
     /// <summary>
     /// 切片网格
     /// </summary>
-    private LayerInfo downloadingTileGridLayer;
+    private LayerInfo overlayTileGridLayer;
 
     /// <summary>
     /// 绘制和范围图层
@@ -52,17 +54,45 @@ public partial class MapView
     /// <summary>
     /// 瓦片网格图层
     /// </summary>
-    private LayerInfo overlayTileGridLayer;
+    private LayerInfo downloadingTileGridLayer;
+
+    /// <summary>
+    ///  本地瓦片图层的范围指示
+    /// </summary>
+    private LayerInfo localExtentLayer;
 
     public LayerInfo[] Layers { get; private set; }
-    public void LoadLocalTileMaps(MbtilesTileSource tileSource)
+
+    public void LoadLocalTileMaps(MbtilesTileSource tileSource, MbtilesInfo mbtilesInfo)
     {
         var layer = new TileLayer(tileSource)
         {
             Name = nameof(localBaseLayer),
         };
         localBaseLayer.Replace(layer);
-        localBaseLayer.IsVisible = true;
+
+        if (mbtilesInfo == null)
+        {
+            localExtentLayer.Features = [];
+            return;
+        }
+
+        var (x1, x2, y1, y2) =
+            (mbtilesInfo.MinLongitude, mbtilesInfo.MaxLongitude, mbtilesInfo.MinLatitude, mbtilesInfo.MaxLatitude);
+
+        (x1, y1) = CoordinateSystemUtility.Wgs84ToWebMercator.MathTransform.Transform(x1, y1);
+        (x2, y2) = CoordinateSystemUtility.Wgs84ToWebMercator.MathTransform.Transform(x2, y2);
+
+        var rect = new Polygon(new LinearRing([
+            new Coordinate(x1, y1),
+            new Coordinate(x1, y2),
+            new Coordinate(x2, y2),
+            new Coordinate(x2, y1),
+            new Coordinate(x1, y1)
+        ]));
+        var feature = new GeometryFeature(rect);
+        localExtentLayer.Features = [feature];
+        Refresh();
     }
 
     public void LoadOnlineTileMaps(TileDataSource tileDataSource)
@@ -103,7 +133,6 @@ public partial class MapView
 
         var layer = new TileLayer(s) { Name = nameof(BaseLayer) };
         onlineBaseLayer.Replace(layer);
-        onlineBaseLayer.IsVisible = true;
     }
 
     public void RefreshBaseTileGrid()
@@ -119,20 +148,20 @@ public partial class MapView
         }
         else
         {
-            downloadingTileGridLayer.IsVisible = false;
+            overlayTileGridLayer.IsVisible = false;
             return;
         }
 
 
         var s = new TileGridSource((currentLayer.Layer as TileLayer).TileSource.Schema);
-        downloadingTileGridLayer.Replace(new TileLayer(s));
+        overlayTileGridLayer.Replace(new TileLayer(s));
     }
 
     public void SetEnable(PanelType type)
     {
-        onlineBaseLayer.IsVisible = type==PanelType.Online;
-        localBaseLayer.IsVisible = type==PanelType.Local;
-        downloadingTileGridLayer.IsVisible = type==PanelType.Online;
+        onlineBaseLayer.IsVisible = type == PanelType.Online;
+        localBaseLayer.IsVisible = type == PanelType.Local;
+        overlayTileGridLayer.IsVisible = type == PanelType.Online;
 
         RefreshBaseTileGrid();
         Refresh();
@@ -141,7 +170,7 @@ public partial class MapView
     private TileLayer GetBaseTileGridLayer()
     {
         var s = new TileGridSource(new GlobalSphericalMercator(YAxis.OSM));
-        return new TileLayer(s) { Name = nameof(downloadingTileGridLayer) };
+        return new TileLayer(s) { Name = nameof(overlayTileGridLayer) };
     }
 
     private MemoryLayer GetDrawingLayer()
@@ -149,7 +178,7 @@ public partial class MapView
         return new MemoryLayer
         {
             Name = nameof(drawingLayer),
-            Style = new VectorStyle // 直接设置默认样式
+            Style = new VectorStyle
             {
                 Fill = new Brush(Color.FromArgb(32, 255, 255, 255)),
                 Outline = new Pen(Color.Red, 2),
@@ -163,7 +192,7 @@ public partial class MapView
         return new MemoryLayer
         {
             Name = nameof(mousePositionLayer),
-            Style = new SymbolStyle // 直接设置默认样式
+            Style = new SymbolStyle
             {
                 SymbolType = SymbolType.Rectangle,
                 Fill = new Brush(Color.White),
@@ -173,12 +202,25 @@ public partial class MapView
         };
     }
 
+    private MemoryLayer GetLocalExtentLayer()
+    {
+        return new MemoryLayer
+        {
+            Name = nameof(localExtentLayer),
+            Style = new VectorStyle
+            {
+                Fill = new Brush(Color.Transparent),
+                Outline = new Pen(Color.Yellow, 2) ,
+            }
+        };
+    }
+
     private MemoryLayer GetOverlayTileGridLayer()
     {
         return new MemoryLayer
         {
-            Name = nameof(overlayTileGridLayer),
-            Style = new VectorStyle // 直接设置默认样式
+            Name = nameof(downloadingTileGridLayer),
+            Style = new VectorStyle
             {
                 Fill = new Brush(Color.Transparent),
                 Outline = new Pen(Color.Gray, 2),
@@ -193,15 +235,17 @@ public partial class MapView
     {
         onlineBaseLayer = LayerInfo.CreateEmptyTileLayerAndInsert("在线底图", Map.Layers);
         localBaseLayer = LayerInfo.CreateEmptyTileLayerAndInsert("本地底图", Map.Layers);
-        downloadingTileGridLayer = LayerInfo.CreateAndInsert("切片网格（待下载）", Map.Layers, GetBaseTileGridLayer());
-        overlayTileGridLayer = LayerInfo.CreateAndInsert("切片网格（显示中）", Map.Layers, GetOverlayTileGridLayer());
+        overlayTileGridLayer = LayerInfo.CreateAndInsert("切片网格（显示中）", Map.Layers, GetBaseTileGridLayer());
+        downloadingTileGridLayer = LayerInfo.CreateAndInsert("切片网格（待下载）", Map.Layers, GetOverlayTileGridLayer());
+        localExtentLayer = LayerInfo.CreateAndInsert("本地底图范围", Map.Layers, GetLocalExtentLayer());
         drawingLayer = LayerInfo.CreateAndInsert("绘制范围", Map.Layers, GetDrawingLayer());
         mousePositionLayer = LayerInfo.CreateAndInsert("鼠标位置", Map.Layers, GetMousePositionLayer());
 
         Layers =
         [
-            overlayTileGridLayer,
+            localExtentLayer,
             downloadingTileGridLayer,
+            overlayTileGridLayer,
             localBaseLayer,
             onlineBaseLayer
         ];

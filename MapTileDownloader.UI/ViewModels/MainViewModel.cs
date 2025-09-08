@@ -28,8 +28,8 @@ public partial class MainViewModel : ViewModelBase
     private bool isOnlineTabEnabled = true;
 
     [ObservableProperty]
-    private int selectedTabIndex;
-    /// <inheritdoc/>
+    private int selectedTabIndex = -1;
+
     public MainViewModel(IMapService mapService,
         IDialogService dialog,
         IStorageProviderService storage,
@@ -68,11 +68,13 @@ public partial class MainViewModel : ViewModelBase
         {
             await DownloadViewModel.InitializeAsync();
             await LocalToolsViewModel.InitializeAsync();
-            Map.LoadOnlineTileMaps(DownloadViewModel.SelectedDataSource);
+            // Map.LoadOnlineTileMaps(DownloadViewModel.SelectedDataSource);
             if (Configs.Instance.Coordinates != null && Configs.Instance.Coordinates.Length >= 3)
             {
                 Map.DisplayPolygon(Configs.Instance.Coordinates);
             }
+
+            Map.SetEnable(PanelType.Online);
 
             await base.InitializeAsync();
         }, initialMessage: "正在初始化");
@@ -89,6 +91,7 @@ public partial class MainViewModel : ViewModelBase
             await LocalToolsViewModel.UpdateLocalTileAsync();
             CurrentPanelType = PanelType.Local;
         }
+
         Map.SetEnable(CurrentPanelType);
     }
 }

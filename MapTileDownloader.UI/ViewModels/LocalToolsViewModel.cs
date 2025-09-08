@@ -105,13 +105,13 @@ public partial class LocalToolsViewModel : ViewModelBase
         UpdateMergeMessage();
         await UpdateLocalTileAsync();
         await base.InitializeAsync();
-        MbtilesPickerViewModel.FileChanged += async (s, e) => { await UpdateLocalTileAsync(); };
+        MbtilesPickerViewModel.FileChanged += async (s, e) => await UpdateLocalTileAsync();
     }
 
     public async Task UpdateLocalTileAsync()
     {
-        await UpdateLocalTileLayerAsync();
         await UpdateMbtilesInfoAsync();
+        await UpdateLocalTileLayerAsync();
     }
 
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
@@ -366,7 +366,7 @@ public partial class LocalToolsViewModel : ViewModelBase
             localTileSource = null;
         }
 
-        Map.LoadLocalTileMaps(localTileSource);
+        Map.LoadLocalTileMaps(localTileSource, MbtilesInfo);
     }
 
     [RelayCommand]
@@ -376,7 +376,7 @@ public partial class LocalToolsViewModel : ViewModelBase
         {
             try
             {
-                using var s = new MbtilesService(Configs.Instance.MbtilesFile, true);
+                await using var s = new MbtilesService(Configs.Instance.MbtilesFile, true);
                 await s.InitializeAsync();
                 MbtilesInfo = await s.GetMbtilesInfoAsync(Configs.Instance.MbtilesUseTms);
             }

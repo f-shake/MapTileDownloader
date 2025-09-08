@@ -53,10 +53,10 @@ public class MapService : IMapService
         return mapView.DrawAsync(cancellationToken);
     }
 
-    public void LoadLocalTileMaps(MbtilesTileSource tileSource)
+    public void LoadLocalTileMaps(MbtilesTileSource tileSource, MbtilesInfo mbtilesInfo)
     {
         CheckIsAttached();
-        mapView.LoadLocalTileMaps(tileSource);
+        mapView.LoadLocalTileMaps(tileSource, mbtilesInfo);
     }
 
     public void LoadOnlineTileMaps(TileDataSource tileDataSource)

@@ -40,8 +40,10 @@ public class LayerInfo : INotifyPropertyChanged
             {
                 ml.Features = value;
             }
-
-            throw new InvalidOperationException("要素操作仅针对MemoryLayer");
+            else
+            {
+                throw new InvalidOperationException("要素操作仅针对MemoryLayer");
+            }
         }
     }
 
@@ -83,6 +85,7 @@ public class LayerInfo : INotifyPropertyChanged
 
     public void Replace(BaseLayer newLayer)
     {
+        bool isVisible = IsVisible;
         var index = Layers.IndexOf(Layer);
         if (!Layers.Remove(Layer))
         {
@@ -94,6 +97,7 @@ public class LayerInfo : INotifyPropertyChanged
         Layer = newLayer;
         Layer.PropertyChanged += Layer_PropertyChanged;
         Layers.Insert(index, Layer);
+        IsVisible = isVisible;
     }
 
     protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)

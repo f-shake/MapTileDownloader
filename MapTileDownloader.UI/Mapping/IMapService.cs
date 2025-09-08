@@ -21,7 +21,7 @@ public interface IMapService
 
     Task<Coordinate[]> DrawAsync(CancellationToken cancellationToken);
 
-    void LoadLocalTileMaps(MbtilesTileSource tileSource);
+    void LoadLocalTileMaps(MbtilesTileSource tileSource, MbtilesInfo mbtilesInfo);
 
     void LoadOnlineTileMaps(TileDataSource tileDataSource);
 
