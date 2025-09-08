@@ -20,22 +20,6 @@ public partial class MapView
     private Dictionary<int, List<GeometryFeature>> featuresPerLevel;
     private bool refreshPending = false;
 
-    private void RequestRefresh()
-    {
-        if (refreshPending)
-        {
-            return;
-        }
-
-        refreshPending = true;
-
-        _ = Task.Delay(1000).ContinueWith(_ =>
-        {
-            refreshPending = false;
-            Dispatcher.UIThread.Post(() => { Refresh(); });
-        });
-    }
-
     public void ClearTileGrids()
     {
         featuresPerLevel = null;
@@ -56,7 +40,7 @@ public partial class MapView
 
         overlayTileGridLayer.Features = features;
 
-        overlayTileGridLayer.MaxVisible = 5 * GetDisplayThreshold(level);
+        overlayTileGridLayer.Layer.MaxVisible = 5 * GetDisplayThreshold(level);
         Refresh();
     }
 
@@ -134,10 +118,7 @@ public partial class MapView
                         }
                     }
 
-                    tile.DownloadStatusChanged += (s, e) =>
-                    {
-                        UpdateColor(e.NewStatus, true);
-                    };
+                    tile.DownloadStatusChanged += (s, e) => { UpdateColor(e.NewStatus, true); };
 
                     UpdateColor(tile.Status, false);
                     features.Add(feature);
@@ -160,5 +141,21 @@ public partial class MapView
 
     private void NavigatorOnViewportChanged(object sender, PropertyChangedEventArgs e)
     {
+    }
+
+    private void RequestRefresh()
+    {
+        if (refreshPending)
+        {
+            return;
+        }
+
+        refreshPending = true;
+
+        _ = Task.Delay(1000).ContinueWith(_ =>
+        {
+            refreshPending = false;
+            Dispatcher.UIThread.Post(() => { Refresh(); });
+        });
     }
 }

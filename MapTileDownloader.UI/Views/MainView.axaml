@@ -1,7 +1,10 @@
 <UserControl
+    d:DesignHeight="600"
+    d:DesignWidth="800"
+    mc:Ignorable="d"
     x:Class="MapTileDownloader.UI.Views.MainView"
+    x:DataType="vm:MainViewModel"
     xmlns="https://github.com/avaloniaui"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:di="using:FzLib.Avalonia.DependencyInjection"
@@ -9,10 +12,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:v="using:MapTileDownloader.UI.Views"
     xmlns:vm="using:MapTileDownloader.UI.ViewModels"
-    d:DesignHeight="600"
-    d:DesignWidth="800"
-    x:DataType="vm:MainViewModel"
-    mc:Ignorable="d">
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Interaction.Behaviors>
         <RoutedEventTriggerBehavior RoutedEvent="{x:Static Control.LoadedEvent}">
             <InvokeCommandAction Command="{Binding InitializeCommand}" />
@@ -20,20 +20,19 @@
     </Interaction.Behaviors>
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition
-                Width="300"
-                MinWidth="300" />
+            <ColumnDefinition MinWidth="300" Width="300" />
             <ColumnDefinition Width="0" />
             <ColumnDefinition />
         </Grid.ColumnDefinitions>
-        <ContentControl Grid.Column="2">
-            <map:MapView x:Name="map" />
-        </ContentControl>
+        <map:MapView Grid.Column="2" x:Name="map" />
+        <v:LayerList
+            Grid.Column="2"
+            HorizontalAlignment="Right"
+            VerticalAlignment="Top"
+            di:ViewModelInjection.ViewModelType="vm:LayerListViewModel" />
         <Grid RowDefinitions="Auto,8,*">
 
-            <StackPanel
-                Margin="4"
-                Spacing="8">
+            <StackPanel Margin="4" Spacing="8">
                 <HeaderedContentControl
                     Classes="GroupBox"
                     Header="Mbtiles数据库位置"
@@ -48,32 +47,28 @@
                 </HeaderedContentControl>
             </StackPanel>
             <TabControl
-                x:Name="tab"
                 Grid.Row="2"
                 Padding="0"
                 SelectedIndex="{Binding SelectedTabIndex}"
-                TabStripPlacement="Top">
-                <TabItem
-                    Header="在线地图"
-                    IsEnabled="{Binding IsOnlineTabEnabled}">
+                TabStripPlacement="Top"
+                x:Name="tab">
+                <TabItem Header="在线地图" IsEnabled="{Binding IsOnlineTabEnabled}">
                     <v:DownloadPanel di:ViewModelInjection.ViewModelType="vm:DownloadViewModel" />
                 </TabItem>
-                <TabItem
-                    Header="本地数据"
-                    IsEnabled="{Binding IsLocalTabEnabled}">
+                <TabItem Header="本地数据" IsEnabled="{Binding IsLocalTabEnabled}">
                     <v:LocalToolsPanel di:ViewModelInjection.ViewModelType="vm:LocalToolsViewModel" />
                 </TabItem>
             </TabControl>
         </Grid>
 
         <GridSplitter
+            Background="Transparent"
             Grid.Column="1"
-            Width="8"
-            Background="Transparent" />
+            Width="8" />
 
         <c:ProgressRingBoxOverlay
-            x:Name="ring"
             Grid.ColumnSpan="3"
-            IsActive="False" />
+            IsActive="False"
+            x:Name="ring" />
     </Grid>
 </UserControl>

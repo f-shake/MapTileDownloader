@@ -236,7 +236,7 @@ public partial class DownloadViewModel : ViewModelBase
 
     partial void OnSelectedDataSourceChanged(TileDataSource value)
     {
-        Map.LoadTileMaps(value);
+        Map.LoadOnlineTileMaps(value);
         SaveToConfig();
     }
 

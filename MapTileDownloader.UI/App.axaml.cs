@@ -22,31 +22,6 @@ public partial class App : Application
 {
     public static IServiceProvider Services { get; private set; }
 
-    private void InitializeHost()
-    {
-        var builder = Host.CreateApplicationBuilder();
-
-        builder.Services.AddDialogService();
-
-        builder.Services.AddStorageProviderService();
-        builder.Services.AddClipboardService();
-        builder.Services.AddProgressOverlayService();
-
-        builder.Services.AddSingleton<MainViewModel>();
-        builder.Services.AddSingleton<DownloadViewModel>();
-        builder.Services.AddSingleton<LocalToolsViewModel>();
-        builder.Services.AddSingleton<MapAreaSelectorViewModel>();
-        builder.Services.AddSingleton<MbtilesPickerViewModel>();
-
-        builder.Services.AddSingleton<IMapService, MapService>();
-
-
-        var host = builder.Build();
-        Services = host.Services;
-        ViewModelInjection.Register(Services);
-        host.Start();
-    }
-
     public override void Initialize()
     {
         InitializeHost();
@@ -70,5 +45,31 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private void InitializeHost()
+    {
+        var builder = Host.CreateApplicationBuilder();
+
+        builder.Services.AddDialogService();
+
+        builder.Services.AddStorageProviderService();
+        builder.Services.AddClipboardService();
+        builder.Services.AddProgressOverlayService();
+
+        builder.Services.AddSingleton<MainViewModel>();
+        builder.Services.AddSingleton<DownloadViewModel>();
+        builder.Services.AddSingleton<LocalToolsViewModel>();
+        builder.Services.AddSingleton<MapAreaSelectorViewModel>();
+        builder.Services.AddSingleton<MbtilesPickerViewModel>();
+        builder.Services.AddSingleton<LayerListViewModel>();
+
+        builder.Services.AddSingleton<IMapService, MapService>();
+
+
+        var host = builder.Build();
+        Services = host.Services;
+        ViewModelInjection.Register(Services);
+        host.Start();
     }
 }

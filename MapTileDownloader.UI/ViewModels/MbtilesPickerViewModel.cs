@@ -17,20 +17,21 @@ using System.Diagnostics;
 using FzLib.Avalonia.Controls;
 using MapTileDownloader.UI.Views;
 using FzLib.Avalonia.Dialogs;
+using FzLib.Avalonia.Dialogs.Pickers;
 using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Enums;
 
 
 namespace MapTileDownloader.UI.ViewModels;
 
 public partial class MbtilesPickerViewModel : ViewModelBase
 {
-    [ObservableProperty]
-    private string file;
+    [ObservableProperty] private string file;
 
-    [ObservableProperty]
-    private bool useTms = Configs.Instance.MbtilesUseTms;
+    [ObservableProperty] private bool useTms = Configs.Instance.MbtilesUseTms;
 
-    public MbtilesPickerViewModel(IMapService mapService, IProgressOverlayService progressOverlay, IDialogService dialog,
+    public MbtilesPickerViewModel(IMapService mapService, IProgressOverlayService progressOverlay,
+        IDialogService dialog,
         IStorageProviderService storage)
         : base(mapService, progressOverlay, dialog, storage)
     {
@@ -73,19 +74,18 @@ public partial class MbtilesPickerViewModel : ViewModelBase
     [RelayCommand]
     private async Task PickFileAsync()
     {
-        var options = new FilePickerSaveOptions
+        var builder = FilePickerOptionsBuilder.Create()
+            .AddFilter("MB Tiles 地图瓦片数据库文件", "mbtiles");
+        string file;
+        if (CurrentPanelType == PanelType.Online)
         {
-            DefaultExtension = "mbtiles",
-            FileTypeChoices = new List<FilePickerFileType>
-            {
-                new FilePickerFileType("MB Tiles 地图瓦片数据库文件")
-                {
-                    Patterns = ["*.mbtiles"],
-                }
-            },
-            ShowOverwritePrompt = false
-        };
-        var file = await Storage.SaveFilePickerAndGetPathAsync(options);
+            file = await Storage.SaveFilePickerAndGetPathAsync(builder.BuildSaveOptions());
+        }
+        else
+        {
+            file = await Storage.OpenFilePickerAndGetFirstAsync(builder.BuildOpenOptions());
+        }
+
         if (file != null)
         {
             File = file;

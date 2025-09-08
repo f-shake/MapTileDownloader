@@ -8,6 +8,7 @@ using MapTileDownloader.Models;
 using MapTileDownloader.Services;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
+using MapTileDownloader.UI.Enums;
 using MapTileDownloader.UI.Mapping;
 using MapTileDownloader.UI.Views;
 
@@ -23,24 +24,23 @@ public abstract partial class ViewModelBase(
     [ObservableProperty]
     private bool isInitialized;
 
+    protected static event EventHandler BeginOperation;
+
+    protected static event EventHandler EndOperation;
+
+    protected static PanelType CurrentPanelType { get; set; } = PanelType.Online;
     protected IDialogService Dialog { get; } = dialog;
 
+    protected IMapService Map { get; } = mapService;
     protected IProgressOverlayService ProgressOverlay { get; } = progressOverlay;
 
     protected IStorageProviderService Storage { get; } = storage;
-
-    protected IMapService Map { get; } = mapService;
-
     public virtual Task InitializeAsync()
     {
         Debug.Assert(IsInitialized == false);
         IsInitialized = true;
         return Task.CompletedTask;
     }
-
-    protected static event EventHandler BeginOperation;
-    protected static event EventHandler EndOperation;
-
     protected async Task TryDoingAsync(Func<Task> func, string errorTitle = "错误")
     {
         BeginOperation?.Invoke(this, EventArgs.Empty);

@@ -6,6 +6,7 @@ using Mapsui.Styles;
 using Mapsui.Tiling.Layers;
 using MapTileDownloader.Models;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -17,76 +18,55 @@ using Pen = Mapsui.Styles.Pen;
 using BruTile.Wms;
 using MapTileDownloader.Services;
 using MapTileDownloader.TileSources;
+using MapTileDownloader.UI.Enums;
 
 namespace MapTileDownloader.UI.Mapping;
 
 public partial class MapView
 {
     /// <summary>
-    /// XYZ底图
+    /// 切片网格
     /// </summary>
-    private TileLayer baseLayer;
-
-    /// <summary>
-    /// 本地服务底图
-    /// </summary>
-    private TileLayer baseTileGridLayer;
+    private LayerInfo downloadingTileGridLayer;
 
     /// <summary>
     /// 绘制和范围图层
     /// </summary>
-    private MemoryLayer drawingLayer;
+    private LayerInfo drawingLayer;
 
     /// <summary>
-    /// 本地服务底图
+    /// 本地底图
     /// </summary>
-    private TileLayer localBaseLayer;
+    private LayerInfo localBaseLayer;
+
     /// <summary>
     /// 绘制时鼠标位置图层
     /// </summary>
-    private MemoryLayer mousePositionLayer;
+    private LayerInfo mousePositionLayer;
+
+    /// <summary>
+    /// 在线底图
+    /// </summary>
+    private LayerInfo onlineBaseLayer;
 
     /// <summary>
     /// 瓦片网格图层
     /// </summary>
-    private MemoryLayer overlayTileGridLayer;
+    private LayerInfo overlayTileGridLayer;
 
+    public LayerInfo[] Layers { get; private set; }
     public void LoadLocalTileMaps(MbtilesTileSource tileSource)
     {
-        bool isEnabled = true;
-        if (Map.Layers.Count > (int)AppLayer.LocalBaseLayer)
-        {
-            isEnabled = Map.Layers.Get((int)AppLayer.LocalBaseLayer).Enabled;
-            Map.Layers.Remove(Map.Layers.Get((int)AppLayer.LocalBaseLayer));
-        }
-
-        if (tileSource == null)
-        {
-            Map.Layers.Insert((int)AppLayer.LocalBaseLayer, new MemoryLayer());
-            return;
-        }
-
-        localBaseLayer = new TileLayer(tileSource)
+        var layer = new TileLayer(tileSource)
         {
             Name = nameof(localBaseLayer),
-            Enabled = isEnabled
         };
-        Map.Layers.Insert((int)AppLayer.LocalBaseLayer, localBaseLayer);
+        localBaseLayer.Replace(layer);
+        localBaseLayer.IsVisible = true;
     }
 
-    public void LoadTileMaps(TileDataSource tileDataSource)
+    public void LoadOnlineTileMaps(TileDataSource tileDataSource)
     {
-        if (Map.Layers.Count > 0)
-        {
-            Map.Layers.Remove(Map.Layers.Get((int)AppLayer.BaseLayer));
-        }
-
-        if (tileDataSource == null || string.IsNullOrEmpty(tileDataSource.Url))
-        {
-            Map.Layers.Insert((int)AppLayer.BaseLayer, new MemoryLayer());
-            return;
-        }
-
         var s = new HttpTileSource(
             new GlobalSphericalMercator(0, tileDataSource.MaxLevel),
             tileDataSource.Url,
@@ -121,52 +101,52 @@ public partial class MapView
         );
 
 
-        baseLayer = new TileLayer(s) { Name = nameof(BaseLayer) };
-        Map.Layers.Insert(0, baseLayer);
+        var layer = new TileLayer(s) { Name = nameof(BaseLayer) };
+        onlineBaseLayer.Replace(layer);
+        onlineBaseLayer.IsVisible = true;
     }
 
     public void RefreshBaseTileGrid()
     {
-        TileLayer currentLayer = baseLayer.Enabled ? baseLayer : localBaseLayer;
-        var s = new TileGridSource(currentLayer.TileSource.Schema);
-        baseTileGridLayer = new TileLayer(s);
-        Map.Layers.Remove(Map.Layers.Get((int)AppLayer.BaseTileGridLayer));
-        Map.Layers.Insert((int)AppLayer.BaseTileGridLayer, baseTileGridLayer);
-    }
-
-    public void SetEnable(AppLayer index)
-    {
-        TileLayer currentLayer;
-        if (index == AppLayer.BaseLayer)
+        LayerInfo currentLayer = null;
+        if (onlineBaseLayer.IsVisible)
         {
-            currentLayer = baseLayer;
-            baseLayer.Enabled = true;
-            localBaseLayer.Enabled = false;
+            currentLayer = onlineBaseLayer;
         }
-        else if (index == AppLayer.LocalBaseLayer)
+        else if (localBaseLayer.IsVisible)
         {
             currentLayer = localBaseLayer;
-            baseLayer.Enabled = false;
-            localBaseLayer.Enabled = true;
         }
         else
         {
-            throw new ArgumentException($"仅支持设置底图的Enable");
+            downloadingTileGridLayer.IsVisible = false;
+            return;
         }
+
+
+        var s = new TileGridSource((currentLayer.Layer as TileLayer).TileSource.Schema);
+        downloadingTileGridLayer.Replace(new TileLayer(s));
+    }
+
+    public void SetEnable(PanelType type)
+    {
+        onlineBaseLayer.IsVisible = type==PanelType.Online;
+        localBaseLayer.IsVisible = type==PanelType.Local;
+        downloadingTileGridLayer.IsVisible = type==PanelType.Online;
+
         RefreshBaseTileGrid();
         Refresh();
     }
 
-    private void AddBaseTileGridLayer()
+    private TileLayer GetBaseTileGridLayer()
     {
         var s = new TileGridSource(new GlobalSphericalMercator(YAxis.OSM));
-        baseTileGridLayer = new TileLayer(s) { Name = nameof(baseTileGridLayer) };
-        Map.Layers.Add(baseTileGridLayer);
+        return new TileLayer(s) { Name = nameof(downloadingTileGridLayer) };
     }
 
-    private void AddDrawingLayer()
+    private MemoryLayer GetDrawingLayer()
     {
-        drawingLayer = new MemoryLayer
+        return new MemoryLayer
         {
             Name = nameof(drawingLayer),
             Style = new VectorStyle // 直接设置默认样式
@@ -176,12 +156,11 @@ public partial class MapView
                 Line = new Pen(Color.Red, 2),
             }
         };
-        Map.Layers.Add(drawingLayer);
     }
 
-    private void AddMousePositionLayer()
+    private MemoryLayer GetMousePositionLayer()
     {
-        mousePositionLayer = new MemoryLayer
+        return new MemoryLayer
         {
             Name = nameof(mousePositionLayer),
             Style = new SymbolStyle // 直接设置默认样式
@@ -192,12 +171,11 @@ public partial class MapView
                 SymbolScale = 0.2,
             },
         };
-        Map.Layers.Add(mousePositionLayer);
     }
 
-    private void AddOverlayTileGridLayer()
+    private MemoryLayer GetOverlayTileGridLayer()
     {
-        overlayTileGridLayer = new MemoryLayer
+        return new MemoryLayer
         {
             Name = nameof(overlayTileGridLayer),
             Style = new VectorStyle // 直接设置默认样式
@@ -208,36 +186,24 @@ public partial class MapView
                 Opacity = 0.33f
             },
         };
-        Map.Layers.Add(overlayTileGridLayer);
     }
 
-    private void AddPlaceholderBaseLayer()
-    {
-        var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            "http://localhost/{x}/{y}/{z}"
-        );
-        baseLayer = new TileLayer(s) { Name = nameof(baseLayer) };
-        baseLayer.Enabled = false;
-        Map.Layers.Add(baseLayer);
-    }
-    private void AddPlaceholderLocalBaseLayer()
-    {
-        var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            "http://localhost/{x}/{y}/{z}"
-        );
-        localBaseLayer = new TileLayer(s) { Name = nameof(localBaseLayer) };
-        localBaseLayer.Enabled = false;
-        Map.Layers.Add(localBaseLayer);
-    }
+
     private void InitializeLayers()
     {
-        AddPlaceholderBaseLayer();
-        AddPlaceholderLocalBaseLayer();
-        AddBaseTileGridLayer();
-        AddOverlayTileGridLayer();
-        AddDrawingLayer();
-        AddMousePositionLayer();
+        onlineBaseLayer = LayerInfo.CreateEmptyTileLayerAndInsert("在线底图", Map.Layers);
+        localBaseLayer = LayerInfo.CreateEmptyTileLayerAndInsert("本地底图", Map.Layers);
+        downloadingTileGridLayer = LayerInfo.CreateAndInsert("切片网格（待下载）", Map.Layers, GetBaseTileGridLayer());
+        overlayTileGridLayer = LayerInfo.CreateAndInsert("切片网格（显示中）", Map.Layers, GetOverlayTileGridLayer());
+        drawingLayer = LayerInfo.CreateAndInsert("绘制范围", Map.Layers, GetDrawingLayer());
+        mousePositionLayer = LayerInfo.CreateAndInsert("鼠标位置", Map.Layers, GetMousePositionLayer());
+
+        Layers =
+        [
+            overlayTileGridLayer,
+            downloadingTileGridLayer,
+            localBaseLayer,
+            onlineBaseLayer
+        ];
     }
 }

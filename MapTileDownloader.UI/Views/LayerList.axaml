@@ -1,0 +1,46 @@
+<UserControl
+    x:Class="MapTileDownloader.UI.Views.LayerList"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
+    xmlns:map="using:MapTileDownloader.UI.Mapping"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:mtd="using:MapTileDownloader"
+    xmlns:sys="clr-namespace:System;assembly=System.Runtime"
+    xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
+    Margin="8"
+    d:DesignHeight="100"
+    d:DesignWidth="300"
+    x:DataType="vm:LayerListViewModel"
+    mc:Ignorable="d">
+    <Interaction.Behaviors>
+        <RoutedEventTriggerBehavior RoutedEvent="{x:Static Control.LoadedEvent}">
+            <InvokeCommandAction Command="{Binding InitializeCommand}" />
+        </RoutedEventTriggerBehavior>
+    </Interaction.Behaviors>
+    <Border
+        Background="{DynamicResource Background1}"
+        BorderThickness="0"
+        CornerRadius="8">
+        <Expander
+            Margin="0"
+            Background="Transparent"
+            BorderThickness="0"
+            Header="图层列表"
+            IsExpanded="True">
+            <ListBox
+                Width="200"
+                ItemsSource="{Binding Layers}">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <CheckBox
+                            Content="{Binding Name}"
+                            IsChecked="{Binding IsVisible}" />
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </Expander>
+    </Border>
+</UserControl>

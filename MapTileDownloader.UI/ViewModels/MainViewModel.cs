@@ -7,6 +7,7 @@ using FzLib.Avalonia.Services;
 using Mapsui;
 using MapTileDownloader.Enums;
 using MapTileDownloader.Services;
+using MapTileDownloader.UI.Enums;
 using MapTileDownloader.UI.Mapping;
 using MapTileDownloader.UI.Views;
 
@@ -15,20 +16,19 @@ namespace MapTileDownloader.UI.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     [ObservableProperty]
-    private int selectedTabIndex;
-
-    [ObservableProperty]
-    private bool isOnlineTabEnabled = true;
-
-    [ObservableProperty]
-    private bool isLocalTabEnabled = true;
-
-    [ObservableProperty]
     private bool canPickMbtiles = true;
 
     [ObservableProperty]
     private bool canSelectMapArea = true;
 
+    [ObservableProperty]
+    private bool isLocalTabEnabled = true;
+
+    [ObservableProperty]
+    private bool isOnlineTabEnabled = true;
+
+    [ObservableProperty]
+    private int selectedTabIndex;
     /// <inheritdoc/>
     public MainViewModel(IMapService mapService,
         IDialogService dialog,
@@ -42,7 +42,6 @@ public partial class MainViewModel : ViewModelBase
 
         BeginOperation += (s, e) =>
         {
-
             IsOnlineTabEnabled = SelectedTabIndex == 0;
             IsLocalTabEnabled = SelectedTabIndex == 1;
             CanPickMbtiles = false;
@@ -57,6 +56,7 @@ public partial class MainViewModel : ViewModelBase
             CanSelectMapArea = true;
         };
     }
+
     public DownloadViewModel DownloadViewModel { get; }
 
     public LocalToolsViewModel LocalToolsViewModel { get; }
@@ -66,10 +66,9 @@ public partial class MainViewModel : ViewModelBase
     {
         await ProgressOverlay.WithOverlayAsync(async () =>
         {
-            await Task.Delay(1000);
             await DownloadViewModel.InitializeAsync();
             await LocalToolsViewModel.InitializeAsync();
-            Map.LoadTileMaps(DownloadViewModel.SelectedDataSource);
+            Map.LoadOnlineTileMaps(DownloadViewModel.SelectedDataSource);
             if (Configs.Instance.Coordinates != null && Configs.Instance.Coordinates.Length >= 3)
             {
                 Map.DisplayPolygon(Configs.Instance.Coordinates);
@@ -83,12 +82,13 @@ public partial class MainViewModel : ViewModelBase
     {
         if (value == 0)
         {
-            Map.SetEnable(AppLayer.BaseLayer);
+            CurrentPanelType = PanelType.Online;
         }
         else
         {
             await LocalToolsViewModel.UpdateLocalTileAsync();
-            Map.SetEnable(AppLayer.LocalBaseLayer);
+            CurrentPanelType = PanelType.Local;
         }
+        Map.SetEnable(CurrentPanelType);
     }
 }
