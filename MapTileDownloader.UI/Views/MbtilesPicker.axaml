@@ -3,6 +3,7 @@
     xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
+    xmlns:cvt="clr-namespace:FzLib.Avalonia.Converters;assembly=FzLib.Avalonia"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:m="clr-namespace:MapTileDownloader.Models;assembly=MapTileDownloader"
     xmlns:map="using:MapTileDownloader.UI.Mapping"
@@ -16,39 +17,72 @@
     mc:Ignorable="d">
     <Grid
         VerticalAlignment="Center"
-        ColumnDefinitions="*,8,Auto,8,Auto">
+        RowDefinitions="*,8,Auto">
         <TextBox Text="{Binding File}" />
-        <Button
-            Grid.Column="2"
-            Classes="Icon"
-            Command="{Binding PickFileCommand}"
-            Content="{StaticResource OpenFile}"
-            ToolTip.Tip="浏览.." />
+        <Grid
+            Grid.Row="2"
+            ColumnDefinitions="*,8,Auto">
+            <Button
+                Command="{Binding PickFileCommand}"
+                Content="浏览.." />
+            <ListBox
+                Grid.Column="2"
+                SelectedIndex="{Binding UseTms, Converter={x:Static cvt:Converters.BoolZeroOne}}">
+                <ListBox.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ListBox.ItemsPanel>
+                <ListBox.Styles>
+                    <Style Selector="ListBoxItem">
+                        <Setter Property="CornerRadius" Value="6" />
+                        <Setter Property="BorderThickness" Value="2" />
+                        <Setter Property="Padding" Value="4" />
+                        <Setter Property="VerticalContentAlignment" Value="Center" />
+                        <Style Selector="^:selected">
+                            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                <Setter Property="BorderBrush" Value="{DynamicResource Foreground1}" />
+                                <Setter Property="Background" Value="Transparent" />
+                                <!-- <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAltBaseHighBrush}" /> -->
+                            </Style>
+                        </Style>
+                    </Style>
+                </ListBox.Styles>
+                <ListBoxItem Content="OSM方案" />
+                <ListBoxItem Content="TMS方案" />
+            </ListBox>
+            <!--  <ToggleSwitch  -->
+            <!--  Grid.Column="2"  -->
+            <!--  IsChecked="{Binding UseTms}"  -->
+            <!--  OffContent="OSM方案"  -->
+            <!--  OnContent="TMS方案" />  -->
+        </Grid>
 
-        <Button
-            Grid.Column="4"
-            Classes="Icon"
-            Content="{StaticResource More}">
-            <Button.Flyout>
-                <Flyout>
-                    <StackPanel Spacing="8">
-                        <c:FormItem Header="打开目录">
-                            <Button
-                                Grid.Row="2"
-                                Grid.Column="2"
-                                Classes="Icon"
-                                Command="{Binding OpenDirCommand}"
-                                Content="打开目录" />
-                        </c:FormItem>
-                        <c:FormItem Header="方案">
-                            <ToggleSwitch
-                                IsChecked="{Binding UseTms}"
-                                OffContent="OSM方案"
-                                OnContent="TMS方案" />
-                        </c:FormItem>
-                    </StackPanel>
-                </Flyout>
-            </Button.Flyout>
-        </Button>
+
+        <!--  <Button  -->
+        <!--  Grid.Row="4"  -->
+        <!--  Classes="Icon"  -->
+        <!--  Content="{StaticResource More}">  -->
+        <!--     <Button.Flyout> -->
+        <!--         <Flyout> -->
+        <!--             <StackPanel Spacing="8"> -->
+        <!--                 <c:FormItem Header="打开目录"> -->
+        <!--  <Button  -->
+        <!--  Grid.Row="2"  -->
+        <!--  Grid.Column="2"  -->
+        <!--  Classes="Icon"  -->
+        <!--  Command="{Binding OpenDirCommand}"  -->
+        <!--  Content="打开目录" />  -->
+        <!--                 </c:FormItem> -->
+        <!--                 <c:FormItem Header="方案"> -->
+        <!--  <ToggleSwitch  -->
+        <!--  IsChecked="{Binding UseTms}"  -->
+        <!--  OffContent="OSM方案"  -->
+        <!--  OnContent="TMS方案" />  -->
+        <!--                 </c:FormItem> -->
+        <!--             </StackPanel> -->
+        <!--         </Flyout> -->
+        <!--     </Button.Flyout> -->
+        <!-- </Button> -->
     </Grid>
 </UserControl>

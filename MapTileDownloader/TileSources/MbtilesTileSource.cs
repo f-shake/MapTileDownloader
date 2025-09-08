@@ -10,6 +10,7 @@ public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
     private readonly MbtilesService mbtilesService;
     private bool disposed = false;
     private bool initialized;
+
     public MbtilesTileSource(string mbtilesFile, bool useTms)
     {
         mbtilesService = new MbtilesService(mbtilesFile, true);
@@ -40,7 +41,8 @@ public class MbtilesTileSource : ILocalTileSource, IDisposable, IAsyncDisposable
         }
 
         var index = tileInfo.Index;
-        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level) ;
+        return await mbtilesService.GetTileAsync(index.Col, index.Row, index.Level)
+               ?? throw new Exception("Tile not found"); //如果返回null，会导致缩放范围之外的瓦片无法显示，所以这里抛出异常
     }
 
     public ValueTask InitializeAsync()

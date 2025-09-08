@@ -74,7 +74,7 @@ public partial class MainViewModel : ViewModelBase
                 Map.DisplayPolygon(Configs.Instance.Coordinates);
             }
 
-            Map.SetEnable(PanelType.Online);
+            Map.SetVisible(PanelType.Online);
 
             await base.InitializeAsync();
         }, initialMessage: "正在初始化");
@@ -92,6 +92,6 @@ public partial class MainViewModel : ViewModelBase
             CurrentPanelType = PanelType.Local;
         }
 
-        Map.SetEnable(CurrentPanelType);
+        Map.SetVisible(CurrentPanelType);
     }
 }

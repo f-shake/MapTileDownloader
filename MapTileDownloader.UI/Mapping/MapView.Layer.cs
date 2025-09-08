@@ -157,11 +157,12 @@ public partial class MapView
         overlayTileGridLayer.Replace(new TileLayer(s));
     }
 
-    public void SetEnable(PanelType type)
+    public void SetVisible(PanelType type)
     {
         onlineBaseLayer.IsVisible = type == PanelType.Online;
         localBaseLayer.IsVisible = type == PanelType.Local;
-        overlayTileGridLayer.IsVisible = type == PanelType.Online;
+        downloadingTileGridLayer.IsVisible = type == PanelType.Online;
+        localExtentLayer.IsVisible = type == PanelType.Local;
 
         RefreshBaseTileGrid();
         Refresh();

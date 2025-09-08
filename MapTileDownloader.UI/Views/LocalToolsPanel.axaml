@@ -228,6 +228,7 @@
                                     <TextBox
                                         AcceptsReturn="True"
                                         MaxLines="5"
+                                        ScrollViewer.HorizontalScrollBarVisibility="Hidden"
                                         Text="{Binding Dir}" />
                                     <Button
                                         Grid.Column="2"

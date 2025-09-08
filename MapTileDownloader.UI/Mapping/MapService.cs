@@ -77,10 +77,10 @@ public class MapService : IMapService
         mapView.RefreshBaseTileGrid();
     }
 
-    public void SetEnable(PanelType type)
+    public void SetVisible(PanelType type)
     {
         CheckIsAttached();
-        mapView.SetEnable(type);
+        mapView.SetVisible(type);
     }
 
     public void ZoomToGeometry(Geometry geometry, double growFactor)

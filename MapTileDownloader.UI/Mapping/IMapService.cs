@@ -29,7 +29,7 @@ public interface IMapService
 
     void RefreshBaseTileGrid();
 
-    void SetEnable(PanelType type);
+    void SetVisible(PanelType type);
 
     void ZoomToGeometry(Geometry geometry, double growFactor);
 }
