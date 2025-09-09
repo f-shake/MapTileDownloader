@@ -41,13 +41,13 @@
                 Spacing="8">
                 <HeaderedContentControl
                     Classes="GroupBox"
-                    Header="Mbtiles数据库位置"
+                    Header="本地Mbtiles数据库"
                     IsEnabled="{Binding CanPickMbtiles}">
                     <v:MbtilesPicker di:ViewModelInjection.ViewModelType="vm:MbtilesPickerViewModel" />
                 </HeaderedContentControl>
                 <HeaderedContentControl
                     Classes="GroupBox"
-                    Header="感兴趣区域"
+                    Header="地图区域选择"
                     IsEnabled="{Binding CanSelectMapArea}">
                     <v:MapAreaSelector di:ViewModelInjection.ViewModelType="vm:MapAreaSelectorViewModel" />
                 </HeaderedContentControl>

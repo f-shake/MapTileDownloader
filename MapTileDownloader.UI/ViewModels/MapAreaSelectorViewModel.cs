@@ -179,13 +179,21 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
         {
             try
             {
+                SelectionMessage = "正在选择（双击结束选择，右键撤销）";
                 Coordinates = await Map.DrawAsync(cancellationToken);
+            }
+            catch (OperationCanceledException)
+            {
+                SelectionMessage = "还未选择区域";
             }
             catch (Exception ex)
             {
                 await Dialog.ShowErrorDialogAsync("地图选择错误", ex);
             }
-        }, new OperationEventArgs { DisablePickingMbtiles = false });
+        }, new OperationEventArgs
+        {
+            DisableSelectingMapArea = false
+        });
         IsSelecting = false;
     }
 }

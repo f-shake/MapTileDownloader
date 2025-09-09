@@ -282,7 +282,8 @@ public partial class LocalToolsViewModel : ViewModelBase
                 ProgressOverlay.SetVisible(false);
                 return Task.CompletedTask;
             },
-            async ex => { await Dialog.ShowErrorDialogAsync("拼接失败", ex); });
+            async ex => await Dialog.ShowErrorDialogAsync("拼接失败", ex),
+            "正在拼接图片");
     }
 
     partial void OnDirChanged(string value)

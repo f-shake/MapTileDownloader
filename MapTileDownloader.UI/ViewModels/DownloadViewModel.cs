@@ -168,6 +168,7 @@ public partial class DownloadViewModel : ViewModelBase
         bool succeed = false;
         await ProgressOverlay.WithOverlayAsync(async () =>
         {
+            ProgressOverlay.SetMessage("正在初始化");
             Levels = new ObservableCollection<DownloadingLevelViewModel>();
             var count = tileHelper.EstimateIntersectingTileCount(Configs.Instance.Coordinates, MaxLevel);
             if (count > 1_000_000)
@@ -175,32 +176,39 @@ public partial class DownloadViewModel : ViewModelBase
                 throw new Exception("当前设置下，需要下载的瓦片数量可能超过100万个，请缩小区域或降低最大级别");
             }
 
-            ISet<TileIndex> existingTiles = null;
-            using (var mbtilesService = new MbtilesService(Configs.Instance.MbtilesFile, false))
+            await Task.Run(async () =>
             {
-                await mbtilesService.InitializeAsync();
-                existingTiles = await mbtilesService.GetExistingTilesAsync();
-            }
-
-            for (int i = MinLevel; i <= MaxLevel; i++)
-            {
-                var tiles = tileHelper.GetIntersectingTiles(Configs.Instance.Coordinates, i);
-                var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p =>
+                ProgressOverlay.SetMessage("正在初始化数据库");
+                ISet<TileIndex> existingTiles = null;
+                await using (var mbtilesService = new MbtilesService(Configs.Instance.MbtilesFile, false))
                 {
-                    var tile = new DownloadingTileViewModel(p);
-                    if (existingTiles.Contains(p))
+                    await mbtilesService.InitializeAsync();
+                    existingTiles = await mbtilesService.GetExistingTilesAsync();
+                }
+
+                ProgressOverlay.SetMessage("正在初始化瓦片列表");
+                for (int i = MinLevel; i <= MaxLevel; i++)
+                {
+                    var tiles = tileHelper.GetIntersectingTiles(Configs.Instance.Coordinates, i);
+                    var levelTile = new DownloadingLevelViewModel(i, tiles.Select(p =>
                     {
-                        tile.SetStatus(DownloadStatus.Skip, null, null);
-                    }
+                        var tile = new DownloadingTileViewModel(p);
+                        if (existingTiles.Contains(p))
+                        {
+                            tile.SetStatus(DownloadStatus.Skip, null, null);
+                        }
 
-                    return tile;
-                }));
-                Levels.Add(levelTile);
-            }
+                        return tile;
+                    }));
+                    Levels.Add(levelTile);
+                }
 
-            TotalCount = Levels.Select(p => p.Count).Sum();
-            DownloadedCount = Levels.Select(p => p.DownloadedCount).Sum();
-            SkipCount = Levels.Select(p => p.DownloadedCount).Sum();
+                TotalCount = Levels.Select(p => p.Count).Sum();
+                DownloadedCount = Levels.Select(p => p.DownloadedCount).Sum();
+                SkipCount = Levels.Select(p => p.DownloadedCount).Sum();
+            });
+
+            ProgressOverlay.SetMessage("正在加载网格");
             await base.Map.LoadTileGridsAsync(SelectedDataSource, (IEnumerable<IDownloadingLevel>)Levels);
             succeed = true;
         }, async ex => { await Dialog.ShowErrorDialogAsync("初始化失败", ex); });

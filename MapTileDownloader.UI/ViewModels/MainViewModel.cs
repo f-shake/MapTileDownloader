@@ -77,7 +77,9 @@ public partial class MainViewModel : ViewModelBase
     {
         await ProgressOverlay.WithOverlayAsync(async () =>
         {
+            ProgressOverlay.SetMessage("正在初始化在线地图");
             await DownloadViewModel.InitializeAsync();
+            ProgressOverlay.SetMessage("正在初始化本地地图");
             await LocalToolsViewModel.InitializeAsync();
             // Map.LoadOnlineTileMaps(DownloadViewModel.SelectedDataSource);
             if (Configs.Instance.Coordinates != null && Configs.Instance.Coordinates.Length >= 3)
