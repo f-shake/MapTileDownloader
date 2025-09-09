@@ -63,8 +63,23 @@ public partial class MapView
 
     public LayerInfo[] Layers { get; private set; }
 
+    private TileLayer GetEmptyTileLayer()
+    {
+        var s = new HttpTileSource(
+            new GlobalSphericalMercator(0, 20),
+            "http://localhost/{x}/{y}/{z}"
+        );
+   return new TileLayer(s);
+    }
+    
     public void LoadLocalTileMaps(MbtilesTileSource tileSource, MbtilesInfo mbtilesInfo)
     {
+        if (tileSource == null)
+        {
+            localBaseLayer.Replace(GetEmptyTileLayer());
+            localExtentLayer.Features = [];
+            return;
+        }
         var layer = new TileLayer(tileSource)
         {
             Name = nameof(localBaseLayer),
@@ -79,6 +94,12 @@ public partial class MapView
 
         var (x1, x2, y1, y2) =
             (mbtilesInfo.MinLongitude, mbtilesInfo.MaxLongitude, mbtilesInfo.MinLatitude, mbtilesInfo.MaxLatitude);
+
+        if (x2 - x1 <= 0 || y2 - y1 <= 0)
+        {
+            localExtentLayer.Features = [];
+            return;
+        }
 
         (x1, y1) = CoordinateSystemUtility.Wgs84ToWebMercator.MathTransform.Transform(x1, y1);
         (x2, y2) = CoordinateSystemUtility.Wgs84ToWebMercator.MathTransform.Transform(x2, y2);
@@ -211,7 +232,7 @@ public partial class MapView
             Style = new VectorStyle
             {
                 Fill = new Brush(Color.Transparent),
-                Outline = new Pen(Color.Yellow, 2) ,
+                Outline = new Pen(Color.Yellow, 2),
             }
         };
     }
@@ -234,10 +255,10 @@ public partial class MapView
 
     private void InitializeLayers()
     {
-        onlineBaseLayer = LayerInfo.CreateEmptyTileLayerAndInsert("在线底图", Map.Layers);
-        localBaseLayer = LayerInfo.CreateEmptyTileLayerAndInsert("本地底图", Map.Layers);
-        overlayTileGridLayer = LayerInfo.CreateAndInsert("切片网格（显示中）", Map.Layers, GetBaseTileGridLayer());
-        downloadingTileGridLayer = LayerInfo.CreateAndInsert("切片网格（待下载）", Map.Layers, GetOverlayTileGridLayer());
+        onlineBaseLayer = LayerInfo.CreateAndInsert("在线底图", Map.Layers,GetEmptyTileLayer());
+        localBaseLayer = LayerInfo.CreateAndInsert("本地底图", Map.Layers,GetEmptyTileLayer());
+        overlayTileGridLayer = LayerInfo.CreateAndInsert("切片网格（显示）", Map.Layers, GetBaseTileGridLayer());
+        downloadingTileGridLayer = LayerInfo.CreateAndInsert("切片网格（下载）", Map.Layers, GetOverlayTileGridLayer());
         localExtentLayer = LayerInfo.CreateAndInsert("本地底图范围", Map.Layers, GetLocalExtentLayer());
         drawingLayer = LayerInfo.CreateAndInsert("绘制范围", Map.Layers, GetDrawingLayer());
         mousePositionLayer = LayerInfo.CreateAndInsert("鼠标位置", Map.Layers, GetMousePositionLayer());

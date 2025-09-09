@@ -70,19 +70,6 @@ public class LayerInfo : INotifyPropertyChanged
         return layerInfo;
     }
 
-    public static LayerInfo CreateEmptyTileLayerAndInsert(string name, LayerCollection layers)
-    {
-        var s = new HttpTileSource(
-            new GlobalSphericalMercator(0, 20),
-            "http://localhost/{x}/{y}/{z}"
-        );
-        var layer = new TileLayer(s);
-        layer.Enabled = false;
-        var layerInfo = new LayerInfo(name, layers, layer);
-        layers.Add(layer);
-        return layerInfo;
-    }
-
     public void Replace(BaseLayer newLayer)
     {
         bool isVisible = IsVisible;

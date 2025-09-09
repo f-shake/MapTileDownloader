@@ -19,6 +19,10 @@
         <StackPanel Orientation="Vertical">
             <Expander Header="基本信息">
                 <Grid RowDefinitions="Auto,8,Auto">
+                    <TextBlock
+                        IsVisible="{Binding MbtilesInfo, Converter={x:Static cvt:Converters.IsNull}}"
+                        Text="数据源不可用"
+                        TextAlignment="Center" />
                     <c:StackFormItemGroup
                         DataContext="{Binding MbtilesInfo}"
                         IsVisible="{Binding ., Converter={x:Static cvt:Converters.IsNotNull}}">

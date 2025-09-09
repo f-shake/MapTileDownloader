@@ -42,10 +42,21 @@ public partial class MainViewModel : ViewModelBase
 
         BeginOperation += (s, e) =>
         {
-            IsOnlineTabEnabled = SelectedTabIndex == 0;
-            IsLocalTabEnabled = SelectedTabIndex == 1;
-            CanPickMbtiles = false;
-            CanSelectMapArea = false;
+            if (e.DisablePickingMbtiles)
+            {
+                CanPickMbtiles = false;
+            }
+
+            if (e.DisableSelectingMapArea)
+            {
+                CanSelectMapArea = false;
+            }
+
+            if (e.DisableSelectingTab)
+            {
+                IsOnlineTabEnabled = SelectedTabIndex == 0;
+                IsLocalTabEnabled = SelectedTabIndex == 1;
+            }
         };
 
         EndOperation += (s, e) =>

@@ -1,10 +1,7 @@
 <UserControl
-    d:DesignHeight="600"
-    d:DesignWidth="300"
-    mc:Ignorable="d"
     x:Class="MapTileDownloader.UI.Views.DownloadPanel"
-    x:DataType="vm:DownloadViewModel"
     xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:c="clr-namespace:FzLib.Avalonia.Controls;assembly=FzLib.Avalonia"
     xmlns:cvt="using:FzLib.Avalonia.Converters"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,40 +12,55 @@
     xmlns:sys="clr-namespace:System;assembly=System.Runtime"
     xmlns:v="clr-namespace:MapTileDownloader.UI.Views"
     xmlns:vm="clr-namespace:MapTileDownloader.UI.ViewModels"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    d:DesignHeight="600"
+    d:DesignWidth="300"
+    x:DataType="vm:DownloadViewModel"
+    mc:Ignorable="d">
     <Grid RowDefinitions="*,16,Auto,16,Auto">
         <ScrollViewer>
             <StackPanel Orientation="Vertical">
-                <Expander Header="数据源" IsEnabled="{Binding !IsDownloading}">
-                    <StackPanel Orientation="Vertical" Spacing="8">
+                <Expander
+                    Header="数据源"
+                    IsEnabled="{Binding !IsDownloading}">
+                    <StackPanel
+                        Orientation="Vertical"
+                        Spacing="8">
                         <Grid ColumnDefinitions="*,8,Auto,8,Auto">
                             <ComboBox
-                                DisplayMemberBinding="{Binding Name}"
                                 HorizontalAlignment="Stretch"
+                                DisplayMemberBinding="{Binding Name}"
                                 ItemsSource="{Binding Sources}"
                                 SelectedItem="{Binding SelectedDataSource}" />
                             <Button
+                                Grid.Column="2"
                                 Classes="Icon"
                                 Command="{Binding AddSourceCommand}"
-                                Content="{StaticResource Add}"
-                                Grid.Column="2" />
+                                Content="{StaticResource Add}" />
                             <Button
+                                Grid.Column="4"
                                 Classes="Icon"
                                 Command="{Binding RemoveSourceCommand}"
                                 Content="{StaticResource Delete}"
-                                Grid.Column="4"
                                 IsEnabled="{Binding SelectedDataSource, Converter={x:Static cvt:Converters.IsNotNull}}" />
                         </Grid>
-                        <HeaderedContentControl Classes="GroupBox" Header="基本设置">
-                            <StackPanel Orientation="Vertical" Spacing="8">
+                        <HeaderedContentControl
+                            Classes="GroupBox"
+                            Header="基本设置">
+                            <StackPanel
+                                Orientation="Vertical"
+                                Spacing="8">
                                 <c:FormItem Header="名称">
                                     <TextBox Text="{Binding SelectedDataSource.Name}" />
                                 </c:FormItem>
                                 <c:FormItem Header="地址">
-                                    <TextBox Text="{Binding SelectedDataSource.Url}" TextWrapping="Wrap" />
+                                    <TextBox
+                                        Text="{Binding SelectedDataSource.Url}"
+                                        TextWrapping="Wrap" />
                                 </c:FormItem>
                                 <c:FormItem Header="格式">
-                                    <ComboBox HorizontalAlignment="Stretch" SelectedItem="{Binding SelectedDataSource.Format}">
+                                    <ComboBox
+                                        HorizontalAlignment="Stretch"
+                                        SelectedItem="{Binding SelectedDataSource.Format}">
                                         <sys:String>JPG</sys:String>
                                         <sys:String>PNG</sys:String>
                                         <sys:String>WebP</sys:String>
@@ -64,10 +76,12 @@
                             </StackPanel>
                         </HeaderedContentControl>
                         <HeaderedContentControl
-                            Classes="GroupBox"
                             Grid.Row="4"
+                            Classes="GroupBox"
                             Header="下载网络设置">
-                            <StackPanel Orientation="Vertical" Spacing="8">
+                            <StackPanel
+                                Orientation="Vertical"
+                                Spacing="8">
                                 <c:FormItem Header="Host">
                                     <TextBox Text="{Binding SelectedDataSource.Host}" />
                                 </c:FormItem>
@@ -83,32 +97,36 @@
                             </StackPanel>
                         </HeaderedContentControl>
                         <Button
+                            Grid.Row="4"
                             Command="{Binding CallSelectedSourceChangedCommand}"
-                            Content="刷新地图"
-                            Grid.Row="4" />
+                            Content="刷新地图" />
                     </StackPanel>
                 </Expander>
 
-                <Expander Header="下载选项" IsEnabled="{Binding !IsDownloading}">
+                <Expander
+                    Header="下载选项"
+                    IsEnabled="{Binding !IsDownloading}">
 
-                    <StackPanel Orientation="Vertical" Spacing="8">
+                    <StackPanel
+                        Orientation="Vertical"
+                        Spacing="8">
                         <c:FormItem Header="最小级别">
                             <Slider
+                                x:Name="sldMin"
                                 Maximum="{Binding MaxLevel}"
                                 Minimum="0"
                                 Theme="{StaticResource LabelSlider}"
                                 TickFrequency="1"
-                                Value="{Binding MinLevel}"
-                                x:Name="sldMin" />
+                                Value="{Binding MinLevel}" />
                         </c:FormItem>
                         <c:FormItem Header="最大级别">
                             <Slider
+                                x:Name="sldMax"
                                 Maximum="19"
                                 Minimum="{Binding MinLevel}"
                                 Theme="{StaticResource LabelSlider}"
                                 TickFrequency="1"
-                                Value="{Binding MaxLevel}"
-                                x:Name="sldMax" />
+                                Value="{Binding MaxLevel}" />
                         </c:FormItem>
                         <c:FormItem Header="最大并行数量">
                             <Slider
@@ -124,17 +142,21 @@
             </StackPanel>
         </ScrollViewer>
         <HeaderedContentControl
-            Classes="GroupBox"
             Grid.Row="2"
-            Header="下载进度"
-            Margin="8,0">
-            <StackPanel Orientation="Vertical" Spacing="8">
+            Margin="8,0"
+            Classes="GroupBox"
+            Header="下载进度">
+            <StackPanel
+                Orientation="Vertical"
+                Spacing="8">
                 <StackPanel.Resources>
-                    <cvt:EqualToBoolConverter InverseResult="True" x:Key="NotEqualConverter" />
+                    <cvt:EqualToBoolConverter
+                        x:Key="NotEqualConverter"
+                        InverseResult="True" />
                 </StackPanel.Resources>
                 <ListBox
+                    MaxHeight="160"
                     ItemsSource="{Binding Levels}"
-                    MaxHeight="200"
                     SelectedItem="{Binding SelectedLevel}">
                     <ListBox.ItemTemplate>
                         <DataTemplate>
@@ -147,10 +169,10 @@
                                 </TextBlock>
 
                                 <ProgressBar
-                                    Foreground="{Binding $parent[UserControl].Foreground}"
                                     Grid.Column="2"
-                                    Maximum="{Binding Count}"
                                     MinWidth="0"
+                                    Foreground="{Binding $parent[UserControl].Foreground}"
+                                    Maximum="{Binding Count}"
                                     Minimum="0"
                                     Value="{Binding DownloadedCount}" />
                             </Grid>
@@ -166,31 +188,37 @@
                     ShowProgressText="True"
                     Value="{Binding DownloadedCount}" />
 
-                <TextBlock HorizontalAlignment="Center" IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}">
+                <TextBlock
+                    HorizontalAlignment="Center"
+                    IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}">
                     <Run Text="共" />
                     <Run Text="{Binding TotalCount}" />
                     <Run Text="个瓦片，已处理" />
                     <Run Text="{Binding DownloadedCount}" />
                     <Run Text="个" />
                 </TextBlock>
-                <Grid ColumnDefinitions="*,8,*,8,*" IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}">
+                <Grid
+                    ColumnDefinitions="*,8,*,8,*"
+                    IsVisible="{Binding TotalCount, Converter={StaticResource NotEqualConverter}, ConverterParameter=0}">
                     <TextBlock Text="{Binding SkipCount, StringFormat={}跳过：{0}}" />
-                    <TextBlock Grid.Column="2" Text="{Binding SuccessCount, StringFormat={}成功：{0}}" />
+                    <TextBlock
+                        Grid.Column="2"
+                        Text="{Binding SuccessCount, StringFormat={}成功：{0}}" />
 
                     <Button
-                        Background="Transparent"
                         Grid.Column="4"
-                        HorizontalAlignment="Left"
                         Margin="-4"
-                        Padding="3,4">
+                        Padding="3,4"
+                        HorizontalAlignment="Left"
+                        Background="Transparent">
                         <TextBlock Text="{Binding FailedCount, StringFormat={}失败：{0}}" />
                         <Button.Flyout>
                             <Flyout>
                                 <DataGrid
+                                    Width="400"
                                     Height="300"
                                     IsReadOnly="True"
-                                    ItemsSource="{Binding ErrorTiles}"
-                                    Width="400">
+                                    ItemsSource="{Binding ErrorTiles}">
                                     <DataGrid.RowDetailsTemplate>
                                         <DataTemplate DataType="mtd:DownloadStatusChangedEventArgs">
                                             <SelectableTextBlock
@@ -200,10 +228,18 @@
                                         </DataTemplate>
                                     </DataGrid.RowDetailsTemplate>
                                     <DataGrid.Columns>
-                                        <DataGridTextColumn Binding="{Binding Tile.TileIndex.Level}" Header="Z" />
-                                        <DataGridTextColumn Binding="{Binding Tile.TileIndex.Col}" Header="X" />
-                                        <DataGridTextColumn Binding="{Binding Tile.TileIndex.Row}" Header="Y" />
-                                        <DataGridTextColumn Binding="{Binding Message}" Header="信息" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Tile.TileIndex.Level}"
+                                            Header="Z" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Tile.TileIndex.Col}"
+                                            Header="X" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Tile.TileIndex.Row}"
+                                            Header="Y" />
+                                        <DataGridTextColumn
+                                            Binding="{Binding Message}"
+                                            Header="信息" />
                                     </DataGrid.Columns>
                                 </DataGrid>
                             </Flyout>
@@ -213,10 +249,10 @@
             </StackPanel>
         </HeaderedContentControl>
         <UniformGrid
-            ColumnSpacing="8"
-            Columns="3"
             Grid.Row="4"
-            Margin="8">
+            Margin="8"
+            ColumnSpacing="8"
+            Columns="3">
             <Button
                 Command="{Binding InitializeDownloadingCommand}"
                 Content="初始化"
@@ -225,7 +261,9 @@
                 Command="{Binding DownloadTilesCommand}"
                 Content="开始下载"
                 IsEnabled="{Binding CanDownload}" />
-            <Button Command="{Binding DownloadTilesCancelCommand}" Content="停止" />
+            <Button
+                Command="{Binding DownloadTilesCancelCommand}"
+                Content="停止" />
         </UniformGrid>
 
     </Grid>

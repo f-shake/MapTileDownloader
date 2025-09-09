@@ -108,7 +108,7 @@ public partial class DownloadViewModel : ViewModelBase
         IsDownloading = true;
         await using var downloader =
             new TileDownloadService(SelectedDataSource, Configs.Instance.MbtilesFile, MaxConcurrency);
-        await TryDoingAsync(async () =>
+        await WithLockingConfigAsync(async () =>
         {
             try
             {
@@ -143,7 +143,7 @@ public partial class DownloadViewModel : ViewModelBase
                 CanDownload = false;
                 DownloadTilesCommand.NotifyCanExecuteChanged();
             }
-        }, "地图选择错误");
+        });
         IsDownloading = false;
     }
 

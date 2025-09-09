@@ -24,7 +24,7 @@ public abstract partial class ViewModelBase(
     [ObservableProperty]
     private bool isInitialized;
 
-    protected static event EventHandler BeginOperation;
+    protected static event EventHandler<OperationEventArgs> BeginOperation;
 
     protected static event EventHandler EndOperation;
 
@@ -35,29 +35,34 @@ public abstract partial class ViewModelBase(
     protected IProgressOverlayService ProgressOverlay { get; } = progressOverlay;
 
     protected IStorageProviderService Storage { get; } = storage;
+
     public virtual Task InitializeAsync()
     {
         Debug.Assert(IsInitialized == false);
         IsInitialized = true;
         return Task.CompletedTask;
     }
-    protected async Task TryDoingAsync(Func<Task> func, string errorTitle = "错误")
+
+    protected async Task WithLockingConfigAsync(Func<Task> task, OperationEventArgs args = null)
     {
-        BeginOperation?.Invoke(this, EventArgs.Empty);
+        BeginOperation?.Invoke(this, args ?? new OperationEventArgs());
         try
         {
-            await func();
+            await task();
         }
         catch (OperationCanceledException)
         {
-        }
-        catch (Exception ex)
-        {
-            await Dialog.ShowErrorDialogAsync(errorTitle, ex);
         }
         finally
         {
             EndOperation?.Invoke(this, EventArgs.Empty);
         }
+    }
+
+    public class OperationEventArgs : EventArgs
+    {
+        public bool DisablePickingMbtiles { get; set; } = true;
+        public bool DisableSelectingMapArea { get; set; } = true;
+        public bool DisableSelectingTab { get; set; } = true;
     }
 }

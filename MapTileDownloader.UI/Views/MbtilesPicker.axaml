@@ -45,6 +45,15 @@
                                 <Setter Property="Background" Value="Transparent" />
                                 <!-- <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAltBaseHighBrush}" /> -->
                             </Style>
+                            <Style Selector="^:disabled">
+                                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
+                                    <Setter Property="Opacity" Value="0.5" />
+                                    <!-- <Setter Property="BorderBrush" Value="{DynamicResource Background3}" /> -->
+                                    <!-- <Setter Property="Background" Value="Transparent" /> -->
+                                    <!-- <Setter Property="Foreground" Value="{DynamicResource Background3}" /> -->
+                                    <!-- <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAltBaseHighBrush}" /> -->
+                                </Style>
+                            </Style>
                         </Style>
                     </Style>
                 </ListBox.Styles>

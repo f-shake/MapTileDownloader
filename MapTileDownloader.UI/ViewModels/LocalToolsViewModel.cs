@@ -141,15 +141,30 @@ public partial class LocalToolsViewModel : ViewModelBase
     {
         IsConvertingProgressIndeterminate = true;
         IsConverting = true;
-        await TryDoingAsync(async () =>
+        await WithLockingConfigAsync(async () =>
         {
-            var convertService = new TileConvertService();
-            var p = new Progress<double>(v =>
+            try
             {
-                IsConvertingProgressIndeterminate = false;
-                Progress = v;
-            });
-            await convertAction(convertService, p);
+                var convertService = new TileConvertService();
+                var p = new Progress<double>(v =>
+                {
+                    IsConvertingProgressIndeterminate = false;
+                    Progress = v;
+                });
+                await Task.Run(async () => await convertAction(convertService, p));
+            }
+            catch (OperationCanceledException)
+            {
+                
+            }
+            catch (OutOfMemoryException)
+            {
+                await Dialog.ShowErrorDialogAsync("转换失败", "内存不足");
+            }
+            catch (Exception ex)
+            {
+                await Dialog.ShowErrorDialogAsync("转换失败", ex.Message);
+            }
         });
         IsConverting = false;
         IsConvertingProgressIndeterminate = false;
@@ -325,28 +340,31 @@ public partial class LocalToolsViewModel : ViewModelBase
     private async Task StartServerAsync(CancellationToken cancellationToken)
     {
         ServerMessage = $"http://(IP):{Port}/{{z}}/{{x}}/{{y}}";
-        try
+        await WithLockingConfigAsync(async () =>
         {
-            IsServerOn = true;
-            // Map.LoadLocalTileMaps($"http://localhost:{port}/{{z}}/{{x}}/{{y}}", 20);
-            await TileServerService.RunAsync(new TileServerService.TileServerOptions
+            try
             {
-                LocalhostOnly = LocalHostOnly,
-                MbtilesPath = Configs.Instance.MbtilesFile,
-                ReturnEmptyPngWhenNotFound = ReturnEmptyPngWhenNotFound,
-                Port = Port
-            }, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            await Dialog.ShowErrorDialogAsync("HTTP服务器出现错误", ex);
-        }
-        finally
-        {
-            // Map.LoadLocalTileMaps(null, 0);
-            ServerMessage = null;
-            IsServerOn = false;
-        }
+                IsServerOn = true;
+                // Map.LoadLocalTileMaps($"http://localhost:{port}/{{z}}/{{x}}/{{y}}", 20);
+                await TileServerService.RunAsync(new TileServerService.TileServerOptions
+                {
+                    LocalhostOnly = LocalHostOnly,
+                    MbtilesPath = Configs.Instance.MbtilesFile,
+                    ReturnEmptyPngWhenNotFound = ReturnEmptyPngWhenNotFound,
+                    Port = Port
+                }, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await Dialog.ShowErrorDialogAsync("HTTP服务器出现错误", ex);
+            }
+            finally
+            {
+                // Map.LoadLocalTileMaps(null, 0);
+                ServerMessage = null;
+                IsServerOn = false;
+            }
+        });
     }
 
     private async Task UpdateLocalTileLayerAsync()

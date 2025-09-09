@@ -18,7 +18,6 @@ using System.Diagnostics;
 using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Dialogs;
 using FzLib.Avalonia.Services;
-
 using MapTileDownloader.UI.Views;
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -34,7 +33,8 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     [ObservableProperty]
     private string selectionMessage;
 
-    public MapAreaSelectorViewModel(IMapService mapService, IProgressOverlayService progressOverlay, IDialogService dialog,
+    public MapAreaSelectorViewModel(IMapService mapService, IProgressOverlayService progressOverlay,
+        IDialogService dialog,
         IStorageProviderService storage)
         : base(mapService, progressOverlay, dialog, storage)
     {
@@ -73,7 +73,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
                 }
             }
         };
-        var file =await Storage.SaveFilePickerAndGetPathAsync(options);
+        var file = await Storage.SaveFilePickerAndGetPathAsync(options);
         if (file == null)
         {
             return;
@@ -175,7 +175,17 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
     private async Task SelectOnMapAsync(CancellationToken cancellationToken)
     {
         IsSelecting = true;
-        await TryDoingAsync(async () => { Coordinates = await Map.DrawAsync(cancellationToken); }, "地图选择错误");
+        await WithLockingConfigAsync(async () =>
+        {
+            try
+            {
+                Coordinates = await Map.DrawAsync(cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                await Dialog.ShowErrorDialogAsync("地图选择错误", ex);
+            }
+        }, new OperationEventArgs { DisablePickingMbtiles = false });
         IsSelecting = false;
     }
 }
