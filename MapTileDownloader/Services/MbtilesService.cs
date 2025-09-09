@@ -25,7 +25,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         {
             throw new ArgumentException($"“{nameof(mbtilesPath)}”不能为 null 或空白。", nameof(mbtilesPath));
         }
-        if(readOnly && !File.Exists(mbtilesPath))
+
+        if (readOnly && !File.Exists(mbtilesPath))
         {
             throw new FileNotFoundException($"数据库{mbtilesPath}不存在");
         }
@@ -51,6 +52,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         {
             return;
         }
+
         disposed = true;
         try
         {
@@ -61,6 +63,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                 cmd.CommandText = "PRAGMA journal_mode=DELETE;";
                 cmd.ExecuteNonQuery();
             }
+
             mbtilesConnection?.Dispose();
         }
         catch
@@ -74,6 +77,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         {
             return;
         }
+
         disposed = true;
         try
         {
@@ -158,16 +162,15 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             {
                 await ExecuteAsync("""
 
-                                   PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
-                                   PRAGMA temp_store=MEMORY;         -- 临时表用内存
-                                   PRAGMA mmap_size=268435456;       -- 256MB 内存映射（减少I/O）
-                                   PRAGMA cache_size=-64000;         -- 64MB 缓存
+                                       PRAGMA journal_mode=OFF;          -- 完全禁用日志（纯读时安全）
+                                       PRAGMA temp_store=MEMORY;         -- 临时表用内存
+                                       PRAGMA mmap_size=268435456;       -- 256MB 内存映射（减少I/O）
+                                       PRAGMA cache_size=-64000;         -- 64MB 缓存
 
-                               """);
+                                   """);
             }
             catch (Exception ex)
             {
-
             }
         }
         else
@@ -175,18 +178,17 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             try
             {
                 await ExecuteAsync("""
-                PRAGMA journal_mode=WAL;
-                PRAGMA wal_autocheckpoint = 8192;
-                """);
+                                   PRAGMA journal_mode=WAL;
+                                   PRAGMA wal_autocheckpoint = 8192;
+                                   """);
             }
             catch (Exception ex)
             {
-
             }
+
             await EnsureSchemaAsync();
             await ValidateMBTilesSchemaAsync();
         }
-
     }
 
     public async Task UpdateMetadataAsync(string name, string description, bool useTms)
@@ -200,7 +202,8 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         await InsertOrUpdateMetadataAsync("minzoom", mbtilesInfo.MinZoom.ToString());
         await InsertOrUpdateMetadataAsync("maxzoom", mbtilesInfo.MaxZoom.ToString());
         await InsertOrUpdateMetadataAsync("bounds", "-180.0,-85.0511,180.0,85.0511");
-        await InsertOrUpdateMetadataAsync("bounds", $"{mbtilesInfo.MinLongitude:F6},{mbtilesInfo.MinLatitude:F6},{mbtilesInfo.MaxLongitude:F6},{mbtilesInfo.MaxLatitude:F6}");
+        await InsertOrUpdateMetadataAsync("bounds",
+            $"{mbtilesInfo.MinLongitude:F6},{mbtilesInfo.MinLatitude:F6},{mbtilesInfo.MaxLongitude:F6},{mbtilesInfo.MaxLatitude:F6}");
         await InsertOrUpdateMetadataAsync("scheme", useTms ? "tms" : "xyz");
     }
 
@@ -210,6 +213,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         {
             return;
         }
+
         await ExecuteAsync(
             "INSERT OR REPLACE INTO metadata (name, value) VALUES (@name, @value)",
             ("@name", name),
@@ -334,6 +338,41 @@ public class MbtilesService : IAsyncDisposable, IDisposable
         int minZoom = zoomLevels.Any() ? zoomLevels.Min() : -1;
         int maxZoom = zoomLevels.Any() ? zoomLevels.Max() : -1;
 
+        string sql = @"
+                    SELECT 
+                        zoom_level, 
+                        COUNT(1),  
+                        SUM(
+                            6371*6371 
+                            * ABS(
+                                sin(atan(sinh(pi() * (1 - 2.0 * tile_row / power(2, zoom_level))))) 
+                                - sin(atan(sinh(pi() * (1 - 2.0 * (tile_row+1) / power(2, zoom_level)))))
+                            ) 
+                            * (2 * pi() / power(2, zoom_level))
+                        ) AS area_km2
+                    FROM tiles
+                    GROUP BY zoom_level
+                    ORDER BY zoom_level
+                    ";
+        var tileLevelCounts = await QueryAsync(sql,r => new MbtilesInfo.TileLevelInfo
+        {
+            Level =  r.GetInt32(0),
+            Count = r.GetInt32(1),
+            Area = r.GetDouble(2)
+        }).ConfigureAwait(false);
+        long  totalLength = new FileInfo(SqlitePath).Length;
+        // foreach (var zoomLevel in zoomLevels)
+        // {
+        //     var countForLevel = await QueryAsync(
+        //         $"SELECT COUNT(1) FROM tiles WHERE zoom_level = {zoomLevel}",
+        //         r => r.GetInt32(0)).ConfigureAwait(false);
+        //     tileLevelCounts.Add(new MbtilesInfo.TileLevelCount
+        //     {
+        //         Level = zoomLevel,
+        //         Count = countForLevel[0]
+        //     });
+        // }
+
         // 获取一个瓦片样本以确定格式和大小
         string format = UnknownFormat;
         int size = 0;
@@ -395,13 +434,16 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             MaxZoom = maxZoom,
             TileSize = size,
             TileCount = count,
+            TileLevels = tileLevelCounts,
             Format = format,
             MinLatitude = worldExtent.MinY,
             MaxLatitude = worldExtent.MaxY,
             MinLongitude = worldExtent.MinX,
-            MaxLongitude = worldExtent.MaxX
+            MaxLongitude = worldExtent.MaxX,
+            TotalLength =  totalLength
         };
     }
+
     private Task<SqliteDataReader> GetReaderAsync(SqliteCommand cmd, string sql, (string, object)[] parameters)
     {
         cmd.CommandText = sql;

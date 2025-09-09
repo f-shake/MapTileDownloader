@@ -36,12 +36,47 @@
                             Content="{Binding Format}"
                             Label="格式：" />
                         <c:FormItem Label="级别：">
-                            <TextBlock>
-                                <Run Text="{Binding MinZoom}" />
-                                <Run Text="~" />
-                                <Run Text="{Binding MaxZoom}" />
-                            </TextBlock>
+                            <StackPanel
+                                Orientation="Horizontal"
+                                Spacing="8">
+                                <TextBlock>
+                                    <Run Text="{Binding MinZoom}" />
+                                    <Run Text="~" />
+                                    <Run Text="{Binding MaxZoom}" />
+                                </TextBlock>
+                                <Button
+                                    Padding="8,0"
+                                    VerticalAlignment="Stretch"
+                                    VerticalContentAlignment="Center"
+                                    Background="Transparent"
+                                    Classes="Icon"
+                                    Content="{StaticResource More}">
+                                    <Button.Flyout>
+                                        <Flyout>
+                                            <DataGrid
+                                                GridLinesVisibility="All"
+                                                IsReadOnly="True"
+                                                ItemsSource="{Binding TileLevels}">
+                                                <DataGrid.Columns>
+                                                    <DataGridTextColumn
+                                                        Binding="{Binding Level}"
+                                                        Header="级别" />
+                                                    <DataGridTextColumn
+                                                        Binding="{Binding Count}"
+                                                        Header="数量" />
+                                                    <DataGridTextColumn
+                                                        Binding="{Binding Area, StringFormat=N2}"
+                                                        Header="大致覆盖面积（㎡）" />
+                                                </DataGrid.Columns>
+                                            </DataGrid>
+                                        </Flyout>
+                                    </Button.Flyout>
+                                </Button>
+                            </StackPanel>
                         </c:FormItem>
+                        <c:FormItem
+                            Content="{Binding TotalLength, Converter={x:Static cvt:Converters.FileLength}}"
+                            Label="总大小：" />
                         <c:FormItem Label="经度范围：">
                             <TextBlock>
                                 <Run Text="{Binding MinLongitude, StringFormat=F6}" />

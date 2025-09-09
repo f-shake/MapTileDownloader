@@ -18,5 +18,15 @@ namespace MapTileDownloader.Models
         public string Path { get; set; }
         public int TileSize { get; set; }
         public int TileCount { get; set; }
+        public List<TileLevelInfo> TileLevels { get; set; }
+        public long  TotalLength { get; set; }
+
+        public class TileLevelInfo
+        {
+            public int Count { get; set; }
+            public int Level { get; set; }
+            public long TotalLength { get; set; }
+            public double Area { get; set; }
+        }
     }
 }
