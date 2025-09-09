@@ -125,10 +125,10 @@ public class TileIntersectionService(bool useTms)
         var extent3857 = TileTransform.TileToWorld(new TileRange(minX, minY, maxX - minX + 1, maxY - minY + 1),
             zoomLevel, TileSchema);
         var westSouth =
-            CoordinateSystemUtility.WebMercatorToWgs84.MathTransform.Transform(extent3857.MinX, extent3857.MinY);
+            CoordinateSystemUtility.WebMercatorToWgs84(extent3857.MinX, extent3857.MinY);
         var eastNorth =
-            CoordinateSystemUtility.WebMercatorToWgs84.MathTransform.Transform(extent3857.MaxX, extent3857.MaxY);
-        return new Extent(westSouth.x, westSouth.y, eastNorth.x, eastNorth.y);
+            CoordinateSystemUtility.WebMercatorToWgs84(extent3857.MaxX, extent3857.MaxY);
+        return new Extent(westSouth.lon, westSouth.lat, eastNorth.lon, eastNorth.lat);
     }
 
     private (int minRow, int maxRow, int minColumn, int maxColumn) GetTileRange(Polygon polygon3857, int zoomLevel)

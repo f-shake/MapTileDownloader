@@ -101,8 +101,8 @@ public partial class MapView
             return;
         }
 
-        (x1, y1) = CoordinateSystemUtility.Wgs84ToWebMercator.MathTransform.Transform(x1, y1);
-        (x2, y2) = CoordinateSystemUtility.Wgs84ToWebMercator.MathTransform.Transform(x2, y2);
+        (x1, y1) = CoordinateSystemUtility.Wgs84ToWebMercator(x1, y1);
+        (x2, y2) = CoordinateSystemUtility.Wgs84ToWebMercator(x2, y2);
 
         var rect = new Polygon(new LinearRing([
             new Coordinate(x1, y1),

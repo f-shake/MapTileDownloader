@@ -1,23 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>disable</Nullable>
-    <PublishAot>true</PublishAot>
-    <InvariantGlobalization>true</InvariantGlobalization>
-    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>disable</Nullable>
+        <PublishAot>true</PublishAot>
+        <InvariantGlobalization>true</InvariantGlobalization>
+        <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="BruTile" />
-    <PackageReference Include="Microsoft.Data.Sqlite" />
-    <PackageReference Include="NetTopologySuite" />
-    <PackageReference Include="EmbedIO" />
-    <PackageReference Include="ProjNet" />
-    <PackageReference Include="SixLabors.Fonts" />
-    <PackageReference Include="SixLabors.ImageSharp" />
-    <PackageReference Include="SixLabors.ImageSharp.Drawing" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Serilog"/>
+        <PackageReference Include="BruTile"/>
+        <PackageReference Include="Microsoft.Data.Sqlite"/>
+        <PackageReference Include="NetTopologySuite"/>
+        <PackageReference Include="EmbedIO"/>
+        <PackageReference Include="ProjNet"/>
+        <PackageReference Include="SixLabors.Fonts"/>
+        <PackageReference Include="SixLabors.ImageSharp"/>
+        <PackageReference Include="SixLabors.ImageSharp.Drawing"/>
+    </ItemGroup>
 
 </Project>

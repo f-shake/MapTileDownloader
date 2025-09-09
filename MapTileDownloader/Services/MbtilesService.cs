@@ -5,6 +5,7 @@ using MapTileDownloader.Models;
 using Microsoft.Data.Sqlite;
 using ProjNet.CoordinateSystems;
 using ProjNet.CoordinateSystems.Transformations;
+using Serilog;
 using SixLabors.ImageSharp;
 
 namespace MapTileDownloader.Services;
@@ -324,7 +325,12 @@ public class MbtilesService : IAsyncDisposable, IDisposable
     }
 
 
-    public async Task<MbtilesInfo> GetMbtilesInfoAsync(bool useTms)
+    public Task<MbtilesInfo> GetMbtilesInfoAsync(bool useTms)
+    {
+        return Task.Run(async () => await GetMbtilesInfoAsyncInternal(useTms));
+    }
+
+    private async Task<MbtilesInfo> GetMbtilesInfoAsyncInternal(bool useTms)
     {
         CheckConnectionOpen();
 
@@ -354,13 +360,13 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                     GROUP BY zoom_level
                     ORDER BY zoom_level
                     ";
-        var tileLevelCounts = await QueryAsync(sql,r => new MbtilesInfo.TileLevelInfo
+        var tileLevelCounts = await QueryAsync(sql, r => new MbtilesInfo.TileLevelInfo
         {
-            Level =  r.GetInt32(0),
+            Level = r.GetInt32(0),
             Count = r.GetInt32(1),
             Area = r.GetDouble(2)
         }).ConfigureAwait(false);
-        long  totalLength = new FileInfo(SqlitePath).Length;
+        long totalLength = new FileInfo(SqlitePath).Length;
         // foreach (var zoomLevel in zoomLevels)
         // {
         //     var countForLevel = await QueryAsync(
@@ -421,8 +427,10 @@ public class MbtilesService : IAsyncDisposable, IDisposable
                     worldExtent = s.GetWorldExtent(maxZoom, extent.MinX, extent.MinY, extent.MaxX, extent.MaxY);
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Log.Error(ex, "计算MBTiles bounds失败");
+                throw;
                 // 如果计算失败，使用默认bounds
             }
         }
@@ -440,7 +448,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             MaxLatitude = worldExtent.MaxY,
             MinLongitude = worldExtent.MinX,
             MaxLongitude = worldExtent.MaxX,
-            TotalLength =  totalLength
+            TotalLength = totalLength
         };
     }
 
