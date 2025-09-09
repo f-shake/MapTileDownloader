@@ -2,10 +2,12 @@ using EmbedIO;
 using EmbedIO.Routing;
 using EmbedIO.WebApi;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using EmbedIO.Actions;
 
 namespace MapTileDownloader.Services
 {
@@ -46,6 +48,7 @@ namespace MapTileDownloader.Services
             return mbtilesService.DisposeAsync();
         }
 
+
         public async Task RunAsync(CancellationToken cancellationToken)
         {
             await mbtilesService.InitializeAsync().ConfigureAwait(false);
@@ -53,12 +56,49 @@ namespace MapTileDownloader.Services
             var url = $"http://{host}:{options.Port}/";
 
             server = new WebServer(o => o
-                .WithUrlPrefix(url)
-                .WithMode(HttpListenerMode.EmbedIO))
-                .WithWebApi("/", m => m.WithController(() => new TileController(mbtilesService, options.ReturnEmptyPngWhenNotFound)));
+                    .WithUrlPrefix(url)
+                    .WithMode(HttpListenerMode.EmbedIO))
+                .WithModule(new ActionModule("/", HttpVerbs.Get, HandleTileRequestAsync));
 
             await server.RunAsync(cancellationToken);
         }
+
+        private async Task HandleTileRequestAsync(IHttpContext ctx)
+        {
+            var path = ctx.RequestedPath.Trim('/');
+            var parts = path.Split('/');
+            if (parts.Length == 3 &&
+                int.TryParse(parts[0], out var z) &&
+                int.TryParse(parts[1], out var x) &&
+                int.TryParse(parts[2], out var y))
+            {
+                var data = await mbtilesService.GetTileAsync(x, y, z).ConfigureAwait(false);
+                if (data == null)
+                {
+                    if (options.ReturnEmptyPngWhenNotFound)
+                    {
+                        ctx.Response.ContentType = "image/png";
+                        await ctx.Response.OutputStream.WriteAsync(ImageUtility.GetEmptyTileImage(x, y, z));
+                    }
+                    else
+                    {
+                        ctx.Response.StatusCode = 404;
+                        await ctx.Response.OutputStream.WriteAsync("Tile not found"u8.ToArray());
+                    }
+                }
+                else
+                {
+                    ctx.Response.ContentType = ImageUtility.GetImageType(data).mime;
+                    await ctx.Response.OutputStream.WriteAsync(data);
+                }
+            }
+            else
+            {
+                ctx.Response.StatusCode = 400;
+                await ctx.Response.OutputStream.WriteAsync("Invalid path"u8.ToArray());
+            }
+        }
+
 
         public class TileServerOptions
         {
@@ -66,40 +106,6 @@ namespace MapTileDownloader.Services
             public string MbtilesPath { get; set; }
             public int Port { get; set; } = 8888;
             public bool ReturnEmptyPngWhenNotFound { get; set; } = true;
-        }
-        private class TileController : WebApiController
-        {
-            private readonly bool returnEmptyPngWhenNotFound;
-
-            public TileController(MbtilesService mbtilesService, bool returnEmptyPngWhenNotFound)
-            {
-                MbtilesService = mbtilesService;
-                this.returnEmptyPngWhenNotFound = returnEmptyPngWhenNotFound;
-            }
-
-            public MbtilesService MbtilesService { get; }
-
-            [Route(HttpVerbs.Get, "/{z}/{x}/{y}")]
-            public async Task GetTileAsync(int z, int x, int y)
-            {
-                var data = await MbtilesService.GetTileAsync(x, y, z).ConfigureAwait(false);
-                if (data == null)
-                {
-                    if (returnEmptyPngWhenNotFound)
-                    {
-                        await HttpContext.Response.OutputStream.WriteAsync(ImageUtility.GetEmptyTileImage(x, y, z));
-                    }
-                    else
-                    {
-                        Response.StatusCode = 404;
-                        await Response.OutputStream.WriteAsync("Tile not found"u8.ToArray());
-                    }
-                    return;
-                }
-
-                HttpContext.Response.ContentType = ImageUtility.GetImageType(data).mime;
-                await HttpContext.Response.OutputStream.WriteAsync(data);
-            }
         }
     }
 }
