@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using MapTileDownloader.Models;
 using NetTopologySuite.Geometries;
+using Serilog;
 
 namespace MapTileDownloader
 {
@@ -10,34 +11,7 @@ namespace MapTileDownloader
         private const string CONFIG_FILE = "config.json";
         private static readonly Lazy<Configs> lazyInstance = new Lazy<Configs>(LoadOrCreateConfig);
         private static readonly object lockObj = new object();
-        private static Timer savingTimer;
-        static Configs()
-        {
-            return;
-            savingTimer = new Timer(state =>
-                {
-                    try
-                    {
-                        lock (lockObj)
-                        {
-                            Instance.Save();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        Debug.Assert(false);
-                    }
-                },
-                null,
-#if DEBUG
-                TimeSpan.FromSeconds(10),
-                TimeSpan.FromSeconds(10)
-#else
-            TimeSpan.FromMinutes(1),
-            TimeSpan.FromMinutes(10)
-#endif
-            );
-        }
+
 
         public static Configs Instance => lazyInstance.Value;
 
@@ -90,6 +64,7 @@ namespace MapTileDownloader
                 }
                 catch (Exception ex)
                 {
+                    Log.Error(ex, "保存配置失败");
                     Debug.Assert(false);
                     throw;
                 }
@@ -146,6 +121,7 @@ namespace MapTileDownloader
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "读取配置失败");
                 Debug.Assert(false);
             }
 

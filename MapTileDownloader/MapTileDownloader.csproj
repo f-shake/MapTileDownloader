@@ -10,15 +10,21 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Serilog"/>
-        <PackageReference Include="BruTile"/>
-        <PackageReference Include="Microsoft.Data.Sqlite"/>
-        <PackageReference Include="NetTopologySuite"/>
-        <PackageReference Include="EmbedIO"/>
-        <PackageReference Include="ProjNet"/>
-        <PackageReference Include="SixLabors.Fonts"/>
-        <PackageReference Include="SixLabors.ImageSharp"/>
-        <PackageReference Include="SixLabors.ImageSharp.Drawing"/>
+      <Compile Remove="obj\**" />
+      <EmbeddedResource Remove="obj\**" />
+      <None Remove="obj\**" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Serilog" />
+        <PackageReference Include="BruTile" />
+        <PackageReference Include="Microsoft.Data.Sqlite" />
+        <PackageReference Include="NetTopologySuite" />
+        <PackageReference Include="EmbedIO" />
+        <PackageReference Include="ProjNet" />
+        <PackageReference Include="SixLabors.Fonts" />
+        <PackageReference Include="SixLabors.ImageSharp" />
+        <PackageReference Include="SixLabors.ImageSharp.Drawing" />
     </ItemGroup>
 
 </Project>

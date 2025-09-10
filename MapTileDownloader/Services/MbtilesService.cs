@@ -172,6 +172,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "初始化Mbtiles数据库失败");
             }
         }
         else
@@ -185,6 +186,7 @@ public class MbtilesService : IAsyncDisposable, IDisposable
             }
             catch (Exception ex)
             {
+                Log.Error(ex, "初始化Mbtiles数据库失败");
             }
 
             await EnsureSchemaAsync();

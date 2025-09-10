@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Services;
 using MapTileDownloader.UI.Mapping;
+using Serilog;
 
 
 namespace MapTileDownloader.UI.ViewModels;
@@ -401,6 +402,7 @@ public partial class LocalToolsViewModel : ViewModelBase
             }
             catch (Exception ex)
             {
+                Log.Error(ex,"更新Mbtiles信息失败");
                 MbtilesInfo = null;
             }
         }

@@ -9,26 +9,19 @@
         <AvaloniaVersion>11.3.5</AvaloniaVersion>
         
         <!--FzLib库版本-->
-        <FzLibVersion>3.0.13</FzLibVersion>
+        <FzLibVersion>3.0.14</FzLibVersion>
 
         <!--使用本地FzLib库。非作者使用时，应改为F-->
         <FzLocal>T</FzLocal>
 
         <!--在Windows上开发，可以设置输出到临时文件夹-->
-        <OutputToTempDir>F</OutputToTempDir>
+        <OutputToTempDir>T</OutputToTempDir>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(OutputToTempDir)' == 'T'" >
         <OutputPath>$(Temp)\$(SolutionName)\$(Configuration)</OutputPath>
         <BaseIntermediateOutputPath>$(Temp)\$(SolutionName)\obj\$(Configuration)</BaseIntermediateOutputPath>
     </PropertyGroup>
-
-    <ItemGroup Condition="'$(OutputToTempDir)' == 'T'" >
-        <AvaloniaXaml Remove="obj\**" />
-        <Compile Remove="obj\**" />
-        <EmbeddedResource Remove="obj\**" />
-        <None Remove="obj\**" />
-    </ItemGroup>
     
     <ItemGroup Condition="'$(Configuration)' == 'Release' or '$(FzLocal)' == 'F'" >
         <PackageReference Include="FzLib" />

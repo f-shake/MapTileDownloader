@@ -262,6 +262,7 @@ public partial class DownloadViewModel : ViewModelBase
     {
         level.DownloadedCountIncrease += (s, e) =>
         {
+#pragma warning disable MVVMTK0034
             Interlocked.Increment(ref downloadedCount);
             switch (e.NewStatus)
             {
@@ -278,6 +279,7 @@ public partial class DownloadViewModel : ViewModelBase
                 default:
                     throw new ArgumentOutOfRangeException();
             }
+#pragma warning restore MVVMTK0034
 
             maxDownloadingLevel = Math.Max(maxDownloadingLevel, e.Tile.TileIndex.Level);
             if (SelectedLevel != Levels[maxDownloadingLevel])
