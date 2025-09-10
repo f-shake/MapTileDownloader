@@ -45,17 +45,28 @@
                 Grid.Column="4"
                 Height="{Binding #btn1.Bounds.Height}"
                 Classes="Icon"
-                Command="{Binding ImportCoordinatesCommand}"
-                Content="{StaticResource Download}"
-                ToolTip.Tip="导入" />
+                Command="{Binding ToRectCommand}"
+                Content="{StaticResource ChromeMaximize}"
+                ToolTip.Tip="选择外接矩形" />
             <Button
                 Grid.Column="6"
                 Height="{Binding #btn1.Bounds.Height}"
                 Classes="Icon"
-                Command="{Binding ExportCoordinatesCommand}"
-                Content="{StaticResource Upload}"
-                IsEnabled="{Binding Coordinates, Converter={x:Static cvt:Converters.IsNotNull}}"
-                ToolTip.Tip="导出" />
+                Content="{StaticResource TreeFolderFolder}"
+                ToolTip.Tip="导入和导出范围">
+                <Button.Flyout>
+                    <MenuFlyout>
+                        <MenuItem
+                            Command="{Binding ImportCoordinatesCommand}"
+                            Header="导入" />
+                        <MenuItem
+                            Command="{Binding ExportCoordinatesCommand}"
+                            Header="导出" />
+                    </MenuFlyout>
+                </Button.Flyout>
+            </Button>
+
+
         </Grid>
         <TextBlock
             HorizontalAlignment="Center"

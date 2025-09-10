@@ -196,4 +196,28 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
         });
         IsSelecting = false;
     }
+
+    [RelayCommand]
+    private async Task ToRectAsync()
+    {
+        if (Coordinates is null || Coordinates.Length < 3)
+        {
+            await Dialog.ShowErrorDialogAsync("区域为空", "请先选择区域");
+            return;
+        }
+
+        var minX = Coordinates.Min(c => c.X);
+        var minY = Coordinates.Min(c => c.Y);
+        var maxX = Coordinates.Max(c => c.X);
+        var maxY = Coordinates.Max(c => c.Y);
+        Coordinates =
+        [
+            new Coordinate(minX, minY),
+            new Coordinate(maxX, minY),
+            new Coordinate(maxX, maxY),
+            new Coordinate(minX, maxY),
+            new Coordinate(minX, minY) // 闭合多边形
+        ];
+        Map.DisplayPolygon(Coordinates);
+    }
 }

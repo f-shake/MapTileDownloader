@@ -15,7 +15,7 @@
         <FzLocal>T</FzLocal>
 
         <!--在Windows上开发，可以设置输出到临时文件夹-->
-        <OutputToTempDir>T</OutputToTempDir>
+        <OutputToTempDir>F</OutputToTempDir>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(OutputToTempDir)' == 'T'" >

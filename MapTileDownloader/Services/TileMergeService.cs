@@ -36,6 +36,7 @@ namespace MapTileDownloader.Services
             int maxY,
             int tileSize = 256,
             int quality = 80,
+            Action<double> progress = null,
             CancellationToken ct = default)
         {
             quality = Math.Clamp(quality, 10, 100);
@@ -52,10 +53,14 @@ namespace MapTileDownloader.Services
 
             using var resultImage = new Image<Rgba32>(totalWidth, totalHeight);
 
+            long totalCount = (maxX - minX + 1) * (maxY - minY + 1);
+            long current = 0;
             for (int x = minX; x <= maxX; x++)
             {
                 for (int y = minY; y <= maxY; y++)
                 {
+                    current++;
+                    progress?.Invoke(0.9 * current / totalCount);
                     ct.ThrowIfCancellationRequested();
                     int offsetX = (x - minX) * tileSize;
                     int offsetY = useTms
@@ -86,8 +91,12 @@ namespace MapTileDownloader.Services
                 await resultImage.SaveAsync(outputPath, cancellationToken: ct);
             }
 
+            progress?.Invoke(0.99);
+
             await WriteWorldFileAsync(outputPath, useTms, z, tileSize, minX, minY, maxY);
             await WritePrjFileAsync(outputPath);
+
+            progress?.Invoke(1.0);
         }
 
         private async Task AddTileToImageAsync(

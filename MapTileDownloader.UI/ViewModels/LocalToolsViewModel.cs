@@ -275,7 +275,9 @@ public partial class LocalToolsViewModel : ViewModelBase
                 return Task.Run(async () =>
                 {
                     await s.MergeTilesAsync(filePath, Configs.Instance.MbtilesUseTms, Level, MergeMinX, MergeMaxX,
-                        MergeMinY, MergeMaxY, Size, ImageQuality, ct);
+                        MergeMinY, MergeMaxY, Size, ImageQuality, 
+                        p => ProgressOverlay.SetMessage($"正在拼接图片（{p * 100:N0}%）")
+                        ,ct);
                 }, ct);
             },
             () =>
