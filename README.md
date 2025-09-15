@@ -2,9 +2,9 @@
 
 一个用于下载地图瓦片的工具，支持多种地图服务，方便离线使用和数据采集。
 
-![主界面1](C:\Users\autod\OneDrive\开发\MapTileDownloader\imgs\主界面1.jpg)
+![主界面1](imgs\主界面1.jpg)
 
-![主界面2](C:\Users\autod\OneDrive\开发\MapTileDownloader\imgs\主界面2.jpg)
+![主界面2](imgs\主界面2.jpg)
 
 ## 功能特性
 
