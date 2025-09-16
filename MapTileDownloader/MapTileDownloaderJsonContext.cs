@@ -66,22 +66,11 @@ public class CoordinateConverter : JsonConverter<Coordinate>
 )]
 internal partial class MapTileDownloaderJsonContext : JsonSerializerContext
 {
-    static MapTileDownloaderJsonContext()
-    {
-        Config = new MapTileDownloaderJsonContext(new JsonSerializerOptions
-        {
-            Encoder = JavaScriptEncoder.Create(UnicodeRanges.All),
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            PropertyNameCaseInsensitive = true,
-            WriteIndented = true,
-            NumberHandling = JsonNumberHandling.AllowNamedFloatingPointLiterals,
-            Converters = { new CoordinateConverter(), new CoordinateArrayConverter() } // 添加转换器
-        });
-    }
-
-    public static MapTileDownloaderJsonContext Config { get; }
 }
-// 自定义 Coordinate[] 转换器
+
+/// <summary>
+/// 自定义 Coordinate[] 转换器
+/// </summary>
 public class CoordinateArrayConverter : JsonConverter<Coordinate[]>
 {
     public override Coordinate[] Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)

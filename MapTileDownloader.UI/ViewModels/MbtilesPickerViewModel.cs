@@ -26,9 +26,11 @@ namespace MapTileDownloader.UI.ViewModels;
 
 public partial class MbtilesPickerViewModel : ViewModelBase
 {
-    [ObservableProperty] private string file;
+    [ObservableProperty]
+    private string file;
 
-    [ObservableProperty] private bool useTms = Configs.Instance.MbtilesUseTms;
+    [ObservableProperty]
+    private bool useTms = Configs.Instance.MbtilesUseTms;
 
     public MbtilesPickerViewModel(IMapService mapService, IProgressOverlayService progressOverlay,
         IDialogService dialog,
