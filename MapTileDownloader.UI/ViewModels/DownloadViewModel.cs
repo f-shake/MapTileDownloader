@@ -306,8 +306,9 @@ public partial class DownloadViewModel : ViewModelBase
         if (Sources.Count == 0)
         {
             Sources.Add(new TileDataSource { Name = "新数据源" });
-            SelectedDataSource = Sources[0];
         }
+
+        SelectedDataSource = Sources[0];
 
         SaveToConfig();
     }

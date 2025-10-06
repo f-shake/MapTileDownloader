@@ -45,7 +45,8 @@
                         </Grid>
                         <HeaderedContentControl
                             Classes="GroupBox"
-                            Header="基本设置">
+                            Header="基本设置"
+                            IsEnabled="{Binding SelectedDataSource, Converter={x:Static cvt:Converters.IsNotNull}}">
                             <StackPanel
                                 Orientation="Vertical"
                                 Spacing="8">
@@ -76,9 +77,9 @@
                             </StackPanel>
                         </HeaderedContentControl>
                         <HeaderedContentControl
-                            Grid.Row="4"
                             Classes="GroupBox"
-                            Header="下载网络设置">
+                            Header="下载网络设置"
+                            IsEnabled="{Binding SelectedDataSource, Converter={x:Static cvt:Converters.IsNotNull}}">
                             <StackPanel
                                 Orientation="Vertical"
                                 Spacing="8">
@@ -97,9 +98,9 @@
                             </StackPanel>
                         </HeaderedContentControl>
                         <Button
-                            Grid.Row="4"
                             Command="{Binding CallSelectedSourceChangedCommand}"
-                            Content="刷新地图" />
+                            Content="刷新地图"
+                            IsEnabled="{Binding SelectedDataSource, Converter={x:Static cvt:Converters.IsNotNull}}" />
                     </StackPanel>
                 </Expander>
 

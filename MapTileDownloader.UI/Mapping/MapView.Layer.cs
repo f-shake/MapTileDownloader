@@ -69,9 +69,9 @@ public partial class MapView
             new GlobalSphericalMercator(0, 20),
             "http://localhost/{x}/{y}/{z}"
         );
-   return new TileLayer(s);
+        return new TileLayer(s);
     }
-    
+
     public void LoadLocalTileMaps(MbtilesTileSource tileSource, MbtilesInfo mbtilesInfo)
     {
         if (tileSource == null)
@@ -80,6 +80,7 @@ public partial class MapView
             localExtentLayer.Features = [];
             return;
         }
+
         var layer = new TileLayer(tileSource)
         {
             Name = nameof(localBaseLayer),
@@ -118,6 +119,14 @@ public partial class MapView
 
     public void LoadOnlineTileMaps(TileDataSource tileDataSource)
     {
+        if (tileDataSource == null
+            || string.IsNullOrWhiteSpace(tileDataSource.Url)
+            || !Uri.TryCreate(tileDataSource.Url, UriKind.Absolute, out _))
+        {
+            onlineBaseLayer.Replace(GetEmptyTileLayer());
+            return;
+        }
+
         var s = new HttpTileSource(
             new GlobalSphericalMercator(0, tileDataSource.MaxLevel),
             tileDataSource.Url,
@@ -255,8 +264,8 @@ public partial class MapView
 
     private void InitializeLayers()
     {
-        onlineBaseLayer = LayerInfo.CreateAndInsert("在线底图", Map.Layers,GetEmptyTileLayer());
-        localBaseLayer = LayerInfo.CreateAndInsert("本地底图", Map.Layers,GetEmptyTileLayer());
+        onlineBaseLayer = LayerInfo.CreateAndInsert("在线底图", Map.Layers, GetEmptyTileLayer());
+        localBaseLayer = LayerInfo.CreateAndInsert("本地底图", Map.Layers, GetEmptyTileLayer());
         overlayTileGridLayer = LayerInfo.CreateAndInsert("切片网格（显示）", Map.Layers, GetBaseTileGridLayer());
         downloadingTileGridLayer = LayerInfo.CreateAndInsert("切片网格（下载）", Map.Layers, GetOverlayTileGridLayer());
         localExtentLayer = LayerInfo.CreateAndInsert("本地底图范围", Map.Layers, GetLocalExtentLayer());
