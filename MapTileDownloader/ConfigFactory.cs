@@ -47,6 +47,7 @@ namespace MapTileDownloader
                     {
                         Name = "谷歌卫星",
                         Url = "https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",
+                        UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
                         Format = "JPG"
                     },
                     new TileDataSource

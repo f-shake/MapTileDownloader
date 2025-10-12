@@ -25,41 +25,12 @@
             <Button
                 Command="{Binding PickFileCommand}"
                 Content="浏览.." />
-            <ListBox
+            <c:RadioButtonGroup
                 Grid.Column="2"
                 SelectedIndex="{Binding UseTms, Converter={x:Static cvt:Converters.BoolZeroOne}}">
-                <ListBox.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <StackPanel Orientation="Horizontal" />
-                    </ItemsPanelTemplate>
-                </ListBox.ItemsPanel>
-                <ListBox.Styles>
-                    <Style Selector="ListBoxItem">
-                        <Setter Property="CornerRadius" Value="6" />
-                        <Setter Property="BorderThickness" Value="2" />
-                        <Setter Property="Padding" Value="4" />
-                        <Setter Property="VerticalContentAlignment" Value="Center" />
-                        <Style Selector="^:selected">
-                            <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                <Setter Property="BorderBrush" Value="{DynamicResource Foreground1}" />
-                                <Setter Property="Background" Value="Transparent" />
-                                <!-- <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAltBaseHighBrush}" /> -->
-                            </Style>
-                            <Style Selector="^:disabled">
-                                <Style Selector="^ /template/ ContentPresenter#PART_ContentPresenter">
-                                    <Setter Property="Opacity" Value="0.5" />
-                                    <!-- <Setter Property="BorderBrush" Value="{DynamicResource Background3}" /> -->
-                                    <!-- <Setter Property="Background" Value="Transparent" /> -->
-                                    <!-- <Setter Property="Foreground" Value="{DynamicResource Background3}" /> -->
-                                    <!-- <Setter Property="Foreground" Value="{DynamicResource SystemControlHighlightAltBaseHighBrush}" /> -->
-                                </Style>
-                            </Style>
-                        </Style>
-                    </Style>
-                </ListBox.Styles>
                 <ListBoxItem Content="OSM方案" />
                 <ListBoxItem Content="TMS方案" />
-            </ListBox>
+            </c:RadioButtonGroup>
             <!--  <ToggleSwitch  -->
             <!--  Grid.Column="2"  -->
             <!--  IsChecked="{Binding UseTms}"  -->

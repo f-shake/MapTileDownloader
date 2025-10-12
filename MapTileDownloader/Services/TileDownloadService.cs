@@ -64,6 +64,7 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
         {
             return;
         }
+
         disposed = true;
         httpClient?.Dispose();
         mbtilesService.Dispose();
@@ -75,6 +76,7 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
         {
             return;
         }
+
         disposed = true;
         httpClient?.Dispose();
         await mbtilesService.DisposeAsync();
@@ -126,9 +128,16 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
 
                         if (data is { Length: > 0 })
                         {
-                            await mbtilesService.WriteTileAsync(tile.TileIndex.Col, tile.TileIndex.Row, tile.TileIndex.Level, data);
-                            // existingTiles.TryAdd(key, default); // 添加到存在列表
-                            tile.SetStatus(DownloadStatus.Success, "下载成功", null);
+                            if (ImageUtility.GetImageType(data).type != null)
+                            {
+                                await mbtilesService.WriteTileAsync(tile.TileIndex.Col, tile.TileIndex.Row,
+                                    tile.TileIndex.Level, data);
+                                tile.SetStatus(DownloadStatus.Success, "下载成功", null);
+                            }
+                            else
+                            {
+                                tile.SetStatus(DownloadStatus.Success, $"下载完成，但未得到图片格式的数据（长度为{data.Length}）", null);
+                            }
                         }
                         else
                         {
@@ -150,7 +159,8 @@ public class TileDownloadService : IDisposable, IAsyncDisposable
                 }, cancellationToken));
             }
         }
-        await Task.WhenAll(downloadTasks); 
+
+        await Task.WhenAll(downloadTasks);
         await mbtilesService.UpdateMetadataAsync(tileSource.Name, $"download from {tileSource.Url}", false);
     }
 

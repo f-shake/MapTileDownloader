@@ -59,13 +59,11 @@
                                         TextWrapping="Wrap" />
                                 </c:FormItem>
                                 <c:FormItem Header="格式">
-                                    <ComboBox
-                                        HorizontalAlignment="Stretch"
-                                        SelectedItem="{Binding SelectedDataSource.Format}">
+                                    <c:RadioButtonGroup SelectedItem="{Binding SelectedDataSource.Format}">
                                         <sys:String>JPG</sys:String>
                                         <sys:String>PNG</sys:String>
                                         <sys:String>WebP</sys:String>
-                                    </ComboBox>
+                                    </c:RadioButtonGroup>
                                 </c:FormItem>
                                 <c:FormItem Header="最大级别">
                                     <Slider

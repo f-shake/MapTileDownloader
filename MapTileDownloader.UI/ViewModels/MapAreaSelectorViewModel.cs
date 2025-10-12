@@ -219,5 +219,7 @@ public partial class MapAreaSelectorViewModel : ViewModelBase
             new Coordinate(minX, minY) // 闭合多边形
         ];
         Map.DisplayPolygon(Coordinates);
+        
+        SelectionMessage = "已正规化为四边形";
     }
 }

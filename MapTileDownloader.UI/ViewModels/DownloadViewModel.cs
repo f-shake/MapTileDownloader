@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using MapTileDownloader.Models;
 using MapTileDownloader.UI.Mapping;
 using System.Diagnostics;
+using Avalonia.Threading;
 using BruTile;
 using FzLib.Avalonia.Controls;
 using FzLib.Avalonia.Dialogs;
@@ -262,36 +263,31 @@ public partial class DownloadViewModel : ViewModelBase
     {
         level.DownloadedCountIncrease += (s, e) =>
         {
-#pragma warning disable MVVMTK0034
-            Interlocked.Increment(ref downloadedCount);
-            switch (e.NewStatus)
+            Dispatcher.UIThread.Post(() =>
             {
-                case DownloadStatus.Success:
-                    Interlocked.Increment(ref successCount);
-                    break;
-                case DownloadStatus.Skip:
-                    Interlocked.Increment(ref skipCount);
-                    break;
-                case DownloadStatus.Failed:
-                    Interlocked.Increment(ref failedCount);
-                    ErrorTiles.Add(e);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
-#pragma warning restore MVVMTK0034
+                DownloadedCount++;
+                switch (e.NewStatus)
+                {
+                    case DownloadStatus.Success:
+                        SuccessCount++;
+                        break;
+                    case DownloadStatus.Skip:
+                        SkipCount++;
+                        break;
+                    case DownloadStatus.Failed:
+                        FailedCount++;
+                        ErrorTiles.Add(e);
+                        break;
+                    default:
+                        throw new ArgumentOutOfRangeException();
+                }
 
-            maxDownloadingLevel = Math.Max(maxDownloadingLevel, e.Tile.TileIndex.Level);
-            if (SelectedLevel != Levels[maxDownloadingLevel])
-            {
-                SelectedLevel = Levels[maxDownloadingLevel];
-            }
-
-            OnPropertyChanged(nameof(DownloadedCount));
-            OnPropertyChanged(nameof(SkipCount));
-            OnPropertyChanged(nameof(DownloadedCount));
-            OnPropertyChanged(nameof(SuccessCount));
-            OnPropertyChanged(nameof(FailedCount));
+                maxDownloadingLevel = Math.Max(maxDownloadingLevel, e.Tile.TileIndex.Level);
+                if (SelectedLevel != Levels[maxDownloadingLevel - MinLevel])
+                {
+                    SelectedLevel = Levels[maxDownloadingLevel - MinLevel];
+                }
+            });
         };
     }
 
